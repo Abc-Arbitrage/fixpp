@@ -165,6 +165,8 @@ namespace Tag
 
     using SenderCompID = TagT<49, Type::String, Required>;
     using TargetCompID = TagT<56, Type::String, Required>;
+    using RawDataLength = TagT<95, Type::Int>;
+    using RawData = TagT<96, Type::Data>;
     using OnBehalfOfCompID = TagT<115, Type::String>;
     using DeliverToCompID = TagT<128, Type::String>;
     using SecureDataLen = TagT<90, Type::Int>;
