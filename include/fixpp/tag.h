@@ -34,9 +34,15 @@ namespace Type
     {
         struct Boxed
         {
-            Boxed(bool value)
+            Boxed(bool value = false)
                 : m_value(value)
             { }
+
+            Boxed(const Boxed& other) = default;
+            Boxed(Boxed&& other) = default;
+
+            Boxed& operator=(const Boxed& other) = default;
+            Boxed& operator=(Boxed&& other) = default;
 
             operator bool() const
             {

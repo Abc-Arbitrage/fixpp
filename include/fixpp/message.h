@@ -136,6 +136,7 @@ namespace details
         void set(T&& value)
         {
             val_ = std::forward<T>(value);
+            empty_ = false;
         }
 
         const Type& get() const
@@ -192,6 +193,11 @@ namespace details
         void push_back(GroupValues&& values)
         {
             val_.push_back(std::move(values));
+        }
+
+        bool empty() const
+        {
+            return val_.empty();
         }
 
     private:

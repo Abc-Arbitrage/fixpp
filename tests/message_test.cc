@@ -1,5 +1,6 @@
 #include "gtest/gtest.h"
 #include <fixpp/versions/v42.h>
+#include <fixpp/writer.h>
 
 TEST(message_test, get_and_set)
 {
@@ -24,14 +25,24 @@ TEST(message_test, group_tests)
     auto instance = group.instance();
 
     Fix::set<Tag::RefMsgType>(instance, "TEST");
-    Fix::set<Tag::MsgDirection>(instance, 'S');
+    //Fix::set<Tag::MsgDirection>(instance, 'S');
 
     group.add(instance);
 
     Fix::set<Tag::RefMsgType>(instance, "MD");
-    Fix::set<Tag::MsgDirection>(instance, 'S');
+    //Fix::set<Tag::MsgDirection>(instance, 'S');
 
     group.add(instance);
 
     ASSERT_EQ(group.size(), 2);
+
+    Fix::v42::Header header;
+    Fix::set<Tag::SenderCompID>(header, "ABCA");
+    Fix::set<Tag::TargetCompID>(header, "BRKER");
+
+    Fix::set<Tag::EncryptMethod>(logon, 1);
+    Fix::set<Tag::HeartBtInt>(logon, 30);
+
+    Fix::Writer writer;
+    std::cout << writer.write(header, logon) << std::endl;
 }
