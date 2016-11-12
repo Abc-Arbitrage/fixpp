@@ -190,12 +190,16 @@ namespace Tag
     using HeartBtInt = TagT<108, Type::Int, Required>;
     using ResetSeqNumFlag = TagT<141, Type::Int>;
     using MaxMessageSize = TagT<383, Type::Int>;
+    using NoMsgTypes = TagT<384, Type::Int>;
+    using RefMsgType = TagT<372, Type::String>;
+    using MsgDirection = TagT<385, Type::Char>;
 
     using List = std::tuple<Account, AdvId, AdvRefID, AdvSide, AdvTransType, AvgPx, BeginSeqNo, BeginString, BodyLength, CheckSum,
                             SenderCompID, TargetCompID, OnBehalfOfCompID, DeliverToCompID, SecureDataLen, SecureData, SenderSubID,
                             SenderLocationID, TargetSubID, TargetLocationID, OnBehalfOfSubID, OnBehalfOfLocationID, PossDupFlag,
                             PossResend, SendingTime, OrigSendingTime, XmlDataLen, XmlData, MessageEncoding, LastMsgSeqNumProcessed,
-                            OnBehalfOfSendingTime, MsgSeqNum, MsgType, TestReqID, EncryptMethod, HeartBtInt, ResetSeqNumFlag>;
+                            OnBehalfOfSendingTime, MsgSeqNum, MsgType, TestReqID, EncryptMethod, HeartBtInt, ResetSeqNumFlag,
+                            MaxMessageSize, NoMsgTypes, RefMsgType, MsgDirection>;
 
 } // namespace Tag
 

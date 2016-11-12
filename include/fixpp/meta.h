@@ -63,6 +63,34 @@ namespace ops
         enum { value = Result::value == -1 ? -1 : Result::value + 1 };
     };
 
+    namespace impl {
+
+        template<size_t, size_t, typename> struct At;
+
+        template<size_t Index, size_t Current>
+        struct At<Index, Current, NullType>
+        {
+            using Result = NullType;
+        };
+
+        template<size_t Index, size_t Current, typename Head, typename Tail>
+        struct At<Index, Current, TypeList<Head, Tail>>
+        {
+            using Result = typename At<Index, Current + 1, Tail>::Result;
+        };
+
+        template<size_t Index, typename Head, typename Tail>
+        struct At<Index, Index, TypeList<Head, Tail>>
+        {
+            using Result = Head;
+        };
+    }
+
+    template<size_t Index, typename List>
+    struct At : public impl::At<Index, 0, List>
+    {
+    };
+
     template<typename, template<typename> class Pred> struct Filter;
 
     template<template<typename> class Pred>

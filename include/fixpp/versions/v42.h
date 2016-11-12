@@ -19,7 +19,11 @@ namespace v42
 namespace Message
 {
     using Heartbeat = MessageT<'0', Tag::TestReqID>;
-    using Logon = MessageT<'A', Tag::EncryptMethod, Tag::HeartBtInt, Tag::ResetSeqNumFlag, Tag::MaxMessageSize>;
+    using Logon = MessageT<
+                     'A',
+                      Tag::EncryptMethod, Tag::HeartBtInt, Tag::ResetSeqNumFlag, Tag::MaxMessageSize,
+                      RepeatingGroup<Tag::NoMsgTypes, Tag::RefMsgType, Tag::MsgDirection>
+                   >;
 
     using LogonRef = MessageRef<Logon>;
 
