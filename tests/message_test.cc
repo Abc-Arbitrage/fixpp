@@ -1,8 +1,10 @@
 #include "gtest/gtest.h"
-#include <fixpp/versions/v42.h>
-#include <fixpp/writer.h>
 
-TEST(message_test, get_and_set)
+#include <cstring>
+
+#include <fixpp/versions/v42.h>
+
+TEST(message_test, should_get_and_set_tags)
 {
     Fix::v42::Message::Logon logon;
 
@@ -15,13 +17,13 @@ TEST(message_test, get_and_set)
     ASSERT_EQ(Fix::get<Tag::HeartBtInt>(logon), 30);
 }
 
-TEST(message_test, group_tests)
+TEST(message_test, should_create_repeating_group)
 {
     Fix::v42::Message::Logon logon;
 
     using namespace Fix;
 
-    // First, we create a new group add 2 instances
+    // First, we create a new group and add 2 instances
 
     auto group = Fix::createGroup<Tag::NoMsgTypes>(logon, 2);
     auto instance = group.instance();

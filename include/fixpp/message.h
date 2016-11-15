@@ -15,89 +15,119 @@
 
 namespace Fix {
 
-template<typename GroupTag, typename... Tags>
-struct RepeatingGroup
-{
-    using Type = GroupTag;
-    static constexpr bool Required = GroupTag::Required;
-};
-
-namespace details
-{
-
-    template<
-        typename Message,
-        typename Tag,
-        int Index = meta::typelist::ops::IndexOf<typename Message::List, Tag>::value
-    > struct IsValidTag : public std::true_type { };
-
-    template<typename Tag, typename Message>
-    struct IsValidTag<Tag, Message, -1> : public std::false_type { };
-
-    template<
-        typename Tag,
-        typename Value,
-        typename CleanV = typename std::decay<Value>::type,
-        bool Valid = std::is_convertible<CleanV, typename Tag::Type>::value>
-    struct IsValidTypeFor;
-
-    template<
-        typename Tag,
-        typename Value,
-        typename CleanV>
-    struct IsValidTypeFor<Tag, Value, CleanV, false> : public std::false_type { };
-
-    template<
-        typename Tag,
-        typename Value,
-        typename CleanV>
-    struct IsValidTypeFor<Tag, Value, CleanV, true> : public std::true_type { };
-
-    template<typename Message, typename Tag>
-    struct FilterGroup
+    template<typename GroupTag, typename... Tags>
+    struct RepeatingGroup
     {
-        template<typename TagT>
-        struct IsGroupOf
-        {
-            static constexpr bool value = false;
-        };
-
-        template<typename GroupTag, typename... Tags>
-        struct IsGroupOf<RepeatingGroup<GroupTag, Tags...>>
-        {
-            static constexpr bool value =
-                std::is_same<GroupTag, Tag>::value;
-        };
-
-        using List = typename meta::typelist::ops::Filter<
-                        typename Message::List,
-                        IsGroupOf
-                     >::Result;
-
-        static constexpr size_t Length = meta::typelist::ops::Length<List>::value;
-        static_assert(Length == 1, "Found more than one matching RepeatingGroup for Message");
-
-        using Type = typename meta::typelist::ops::At<0, List>::Result;
+        using Type = GroupTag;
+        static constexpr bool Required = GroupTag::Required;
     };
 
-    template<typename Message, typename Tag,
-             int Size = FilterGroup<Message, Tag>::Length>
-    struct IsValidGroup : public std::true_type { };
-
-    template<typename Message, typename Tag>
-    struct IsValidGroup<Message, Tag, 0> : public std::false_type { };
-
-    template<typename Message, typename Tag>
-    struct GroupTraits
+    namespace details
     {
-        using Type = typename FilterGroup<Message, Tag>::Type;
-        static constexpr size_t Length = FilterGroup<Message, Tag>::Length;
-    };
 
-    template<typename Tag> struct IsRequired : public std::integral_constant<bool, TagTraits<Tag>::Required> { };
+        template<
+            typename Message,
+            typename Tag,
+            int Index = meta::typelist::ops::IndexOf<typename Message::List, Tag>::value
+        > struct IsValidTag : public std::true_type { };
 
-} // namespace details
+        template<typename Tag, typename Message>
+        struct IsValidTag<Tag, Message, -1> : public std::false_type { };
 
+        template<
+            typename Tag,
+            typename Value,
+            typename CleanV = typename std::decay<Value>::type,
+            bool Valid = std::is_convertible<CleanV, typename Tag::Type>::value>
+        struct IsValidTypeFor;
+
+        template<
+            typename Tag,
+            typename Value,
+            typename CleanV>
+        struct IsValidTypeFor<Tag, Value, CleanV, false> : public std::false_type { };
+
+        template<
+            typename Tag,
+            typename Value,
+            typename CleanV>
+        struct IsValidTypeFor<Tag, Value, CleanV, true> : public std::true_type { };
+
+        template<typename Message, typename Tag>
+        struct FilterGroup
+        {
+            template<typename TagT>
+            struct IsGroupOf
+            {
+                static constexpr bool value = false;
+            };
+
+            template<typename GroupTag, typename... Tags>
+            struct IsGroupOf<RepeatingGroup<GroupTag, Tags...>>
+            {
+                static constexpr bool value =
+                    std::is_same<GroupTag, Tag>::value;
+            };
+
+            using List = typename meta::typelist::ops::Filter<
+                            typename Message::List,
+                            IsGroupOf
+                         >::Result;
+
+            static constexpr size_t Length = meta::typelist::ops::Length<List>::value;
+            static_assert(Length == 1, "Found more than one matching RepeatingGroup for Message");
+
+            using Type = typename meta::typelist::ops::At<0, List>::Result;
+        };
+
+        template<typename Message, typename Tag,
+                 int Size = FilterGroup<Message, Tag>::Length>
+        struct IsValidGroup : public std::true_type { };
+
+        template<typename Message, typename Tag>
+        struct IsValidGroup<Message, Tag, 0> : public std::false_type { };
+
+        template<typename Message, typename Tag>
+        struct GroupTraits
+        {
+            using Type = typename FilterGroup<Message, Tag>::Type;
+            static constexpr size_t Length = FilterGroup<Message, Tag>::Length;
+        };
+
+        template<typename Tag> struct IsRequired : public std::integral_constant<bool, TagTraits<Tag>::Required> { };
+
+        template<typename T> struct LexicalCast;
+
+        template<>
+        struct LexicalCast<Type::Boolean>
+        {
+            static bool cast(const char* offset, size_t)
+            {
+                return *offset == 'Y';
+            }
+        };
+
+        template<>
+        struct LexicalCast<Type::Int>
+        {
+            static int cast(const char* offset, size_t size)
+            {
+                char *end;
+                return strtol(offset, &end, 10);
+            }
+        };
+
+        template<>
+        struct LexicalCast<Type::String>
+        {
+            static std::string cast(const char* offset, size_t size)
+            {
+                return std::string(offset, size);
+            }
+        };
+        
+
+    } // namespace details
 
     template<typename TagT>
     struct Field
@@ -165,6 +195,11 @@ namespace details
         Field(const Field& other) = default;
         Field(Field&& other) = default;
 
+        constexpr unsigned tag() const
+        {
+            return Tag::Id;
+        }
+
         const Type& get() const
         {
             return val_;
@@ -204,7 +239,6 @@ namespace details
         Type val_;
     };
 
-
     template<typename TagT>
     struct FieldRef
     {
@@ -213,9 +247,40 @@ namespace details
 
         FieldRef() = default;
 
+        constexpr unsigned tag() const
+        {
+            return Tag::Id;
+        }
+
+        void set(const std::pair<const char*, size_t>& value)
+        {
+            offset = value.first;
+            size = value.second;
+        }
+
+        Type get() const
+        {
+            return details::LexicalCast<typename TagT::Type>::cast(offset, size);
+        }
+
     private:
         const char* offset;
         size_t size;
+    };
+
+    template<typename GroupTag, typename... Tags>
+    struct FieldRef<RepeatingGroup<GroupTag, Tags...>>
+    {
+        using Tag = GroupTag;
+
+        constexpr unsigned tag() const
+        {
+            return GroupTag::Id;
+        }
+
+        void set(const std::pair<const char*, size_t>&)
+        {
+        }
     };
 
     template<template<typename> class FieldT, typename... Tags> struct MessageBase
@@ -225,6 +290,8 @@ namespace details
 
         using RequiredList = typename meta::typelist::ops::Filter<List, details::IsRequired>::Result;
 
+        using Ref = MessageBase<FieldRef, Tags...>;
+
         static constexpr size_t RequiredTags = meta::typelist::ops::Length<RequiredList>::value;
         static constexpr size_t TotalTags = sizeof...(Tags);
 
@@ -233,17 +300,15 @@ namespace details
         std::bitset<RequiredTags> bits;
     };
 
-    template<char MsgTypeChar, typename... Tags> struct MessageT : public MessageBase<Field, Tags...>
+    template<char MsgTypeChar, typename... Tags> struct MessageRef : public MessageBase<FieldRef, Tags...>
     {
         static constexpr const char MsgType = MsgTypeChar;
     };
 
-    template<typename MessageT> struct MessageRef;
-
-    template<char MsgTypeChar, typename... Tags>
-    struct MessageRef<MessageT<MsgTypeChar, Tags...>> : public MessageBase<FieldRef, Tags...>
+    template<char MsgTypeChar, typename... Tags> struct MessageT : public MessageBase<Field, Tags...>
     {
-        static constexpr const char MsgType = MsgTypeChar; 
+        static constexpr const char MsgType = MsgTypeChar;
+        using Ref = MessageRef<MsgTypeChar, Tags...>;
     };
 
     template<typename RepeatingGroup> struct Group;
@@ -287,7 +352,7 @@ namespace details
     constexpr const char MessageT<MsgTypeChar, Tags...>::MsgType;
 
     template<char MsgTypeChar, typename... Tags>
-    constexpr const char MessageRef<MessageT<MsgTypeChar, Tags...>>::MsgType;
+    constexpr const char MessageRef<MsgTypeChar, Tags...>::MsgType;
 
     template<typename Tag, typename Message, typename Value>
     typename std::enable_if<details::IsValidTag<Message, Tag>::value, void>::type

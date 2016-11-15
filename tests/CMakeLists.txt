@@ -3,8 +3,9 @@ function(fixpp_test test_name)
     set(TEST_SOURCE ${test_name}.cc)
 
     add_executable(${TEST_EXECUTABLE} ${TEST_SOURCE})
-    target_link_libraries(${TEST_EXECUTABLE} gtest gtest_main)
+    target_link_libraries(${TEST_EXECUTABLE} gtest gtest_main fixpp_utils)
     add_test(${test_name} ${TEST_EXECUTABLE})
 endfunction()
 
 fixpp_test(message_test)
+fixpp_test(visitor_test)

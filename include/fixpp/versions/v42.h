@@ -6,39 +6,38 @@
 
 #pragma once
 
+#include <fixpp/versions/base.h>
 #include <fixpp/tag.h>
 #include <fixpp/message.h>
 
 namespace Fix
 {
-namespace v42
-{
+    FIX_BEGIN_VERSION_NAMESPACE(v42, "FIX.4.2")
+    {
+        namespace Message
+        {
+            using Heartbeat = MessageT<'0', Tag::TestReqID>;
+            using Logon = MessageT<
+                             'A',
+                              Tag::EncryptMethod, Tag::HeartBtInt, Tag::RawDataLength, Tag::RawData,
+                              Tag::ResetSeqNumFlag, Tag::MaxMessageSize,
+                              RepeatingGroup<Tag::NoMsgTypes, Tag::RefMsgType, Tag::MsgDirection>
+                           >;
 
-    static constexpr const char* Version = "FIX.4.2";
+        } // namespace Message
 
-namespace Message
-{
-    using Heartbeat = MessageT<'0', Tag::TestReqID>;
-    using Logon = MessageT<
-                     'A',
-                      Tag::EncryptMethod, Tag::HeartBtInt, Tag::RawDataLength, Tag::RawData,
-                      Tag::ResetSeqNumFlag, Tag::MaxMessageSize,
-                      RepeatingGroup<Tag::NoMsgTypes, Tag::RefMsgType, Tag::MsgDirection>
-                   >;
+        using Header = MessageBase<
+                          Field,
+                          Tag::MsgType,
+                          Tag::SenderCompID, Tag::TargetCompID, Tag::OnBehalfOfCompID, Tag::DeliverToCompID,
+                          Tag::SecureDataLen, Tag::SecureData, Tag::MsgSeqNum, Tag::SenderSubID,
+                          Tag::SenderLocationID, Tag::TargetSubID, Tag::TargetLocationID, Tag::OnBehalfOfSubID,
+                          Tag::OnBehalfOfLocationID, Tag::DeliverToSubID, Tag::DeliverToLocationID,
+                          Tag::PossDupFlag, Tag::PossResend, Tag::SendingTime, Tag::OrigSendingTime,
+                          Tag::XmlDataLen, Tag::XmlData, Tag::MessageEncoding,
+                          Tag::LastMsgSeqNumProcessed, Tag::OnBehalfOfSendingTime>;
 
-    using LogonRef = MessageRef<Logon>;
+    }
+    FIX_END_VERSION_NAMESPACE
 
-} // namespace Message
-
-    using Header = MessageBase<
-                      Field,
-                      Tag::MsgType,
-                      Tag::SenderCompID, Tag::TargetCompID, Tag::OnBehalfOfCompID, Tag::DeliverToCompID,
-                      Tag::SecureDataLen, Tag::SecureData, Tag::MsgSeqNum, Tag::SenderSubID,
-                      Tag::SenderLocationID, Tag::TargetSubID, Tag::TargetLocationID, Tag::OnBehalfOfSubID,
-                      Tag::OnBehalfOfLocationID, Tag::DeliverToSubID, Tag::DeliverToLocationID,
-                      Tag::PossDupFlag, Tag::PossResend, Tag::SendingTime, Tag::OrigSendingTime,
-                      Tag::XmlDataLen, Tag::XmlData, Tag::MessageEncoding,
-                      Tag::LastMsgSeqNumProcessed, Tag::OnBehalfOfSendingTime>;
-} // namespace v42
 } // namespace Fix
