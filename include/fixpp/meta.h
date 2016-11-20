@@ -91,6 +91,12 @@ namespace ops
     {
     };
 
+    template<typename List>
+    using First = At<0, List>;
+
+    template<typename List>
+    using Last = At<Length<List>::value - 1, List>;
+
     template<typename, template<typename> class Pred> struct Filter;
 
     template<template<typename> class Pred>

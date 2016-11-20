@@ -73,3 +73,32 @@ TEST(message_test, should_create_repeating_group)
     ASSERT_EQ(std::get<0>(groupValues[1]).get(), "MD");
     ASSERT_EQ(std::get<1>(groupValues[1]).get(), 'S');
 }
+
+TEST(message_test, should_extend_message_properly)
+{
+    using MyTag = Fix::TagT<2154, Fix::Type::Int, Fix::Optional>;
+    using MyMessage = Fix::ExtendedMessage<Fix::v42::Message::Logon, MyTag>;
+
+    static constexpr size_t LogonTags = Fix::v42::Message::Logon::TotalTags;
+    static constexpr size_t MyMessageTags = MyMessage::TotalTags;
+
+    // MyMessage should have one more tag
+    ASSERT_EQ(MyMessageTags, LogonTags + 1);
+
+    // Last tag of MyMessage should by MyTag
+    using LastMyMessageTag =
+        meta::typelist::ops::Last<MyMessage::List>::Result;
+
+    static constexpr size_t LastMyMessageTagId = LastMyMessageTag::Id;
+    ASSERT_EQ(LastMyMessageTagId, 2154);
+
+    // First tag of MymEssage should by first tag of Logon
+    using FirstLogonTag =
+        meta::typelist::ops::First<Fix::v42::Message::Logon::List>::Result;
+    using FirstMyMessageTag =
+        meta::typelist::ops::First<MyMessage::List>::Result;
+
+    static constexpr size_t FirstLogonTagId = FirstLogonTag::Id;
+    static constexpr size_t FirstMyMessageTagId = FirstMyMessageTag::Id;
+    ASSERT_EQ(FirstLogonTagId, FirstMyMessageTagId);
+}

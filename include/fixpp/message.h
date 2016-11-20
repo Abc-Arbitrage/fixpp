@@ -318,6 +318,15 @@ namespace Fix {
         using Version = VersionT;
     };
 
+    template<typename MessageT, typename... ExtensionTags> struct ExtendedMessage;
+
+    template<typename VersionT, char MsgTypeChar, typename... Tags, typename... ExtensionTags>
+    struct ExtendedMessage<
+             VersionnedMessage<VersionT, MsgTypeChar, Tags...>, ExtensionTags...
+           > : public VersionnedMessage<VersionT, MsgTypeChar, Tags..., ExtensionTags...>
+    {
+    };
+
     template<typename RepeatingGroup> struct Group;
 
     template<typename GroupTag, typename... Tags>
