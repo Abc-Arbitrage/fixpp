@@ -308,7 +308,14 @@ namespace Fix {
     template<char MsgTypeChar, typename... Tags> struct MessageT : public MessageBase<Field, Tags...>
     {
         static constexpr const char MsgType = MsgTypeChar;
+
         using Ref = MessageRef<MsgTypeChar, Tags...>;
+    };
+
+    template<typename VersionT, char MsgTypeChar, typename... Tags>
+    struct VersionnedMessage : public MessageT<MsgTypeChar, Tags...>
+    {
+        using Version = VersionT;
     };
 
     template<typename RepeatingGroup> struct Group;

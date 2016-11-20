@@ -14,10 +14,8 @@
 
 namespace Fix
 {
-
     namespace impl
     {
-
         template<typename T> struct id { };
 
         template<typename Visitor>

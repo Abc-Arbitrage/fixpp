@@ -119,7 +119,7 @@ struct Writer
 
         buf.pubseekpos(0);
 
-        writeTag<Tag::BeginString>(os, v42::Version::Str);
+        writeTag<Tag::BeginString>(os, Message::Version::Str);
         writeTag<Tag::BodyLength>(os, size);
 
         buf.restore(context);

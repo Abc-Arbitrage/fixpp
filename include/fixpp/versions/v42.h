@@ -16,8 +16,8 @@ namespace Fix
     {
         namespace Message
         {
-            using Heartbeat = MessageT<'0', Tag::TestReqID>;
-            using Logon = MessageT<
+            using Heartbeat = MessageV<'0', Tag::TestReqID>;
+            using Logon = MessageV<
                              'A',
                               Tag::EncryptMethod, Tag::HeartBtInt, Tag::RawDataLength, Tag::RawData,
                               Tag::ResetSeqNumFlag, Tag::MaxMessageSize,
