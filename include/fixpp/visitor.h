@@ -140,20 +140,159 @@ namespace Fix
             #undef TRY
         }
 
+        template<typename Field> struct FieldParser;
+
+        template<typename TagT>
+        struct FieldParser<FieldRef<TagT>>
+        {
+            using Field = FieldRef<TagT>;
+
+            void parse(Field& field, StreamCursor& cursor)
+            {
+                StreamCursor::Token valueToken(cursor);
+                match_until('|', cursor);
+
+                auto view = valueToken.view();
+                cursor.advance(1);
+
+                field.set(view);
+            }
+        };
+
+        template<typename GroupTag, typename... Tags>
+        struct FieldParser<FieldRef<RepeatingGroup<GroupTag, Tags...>>>
+        {
+            using Field = FieldRef<RepeatingGroup<GroupTag, Tags...>>;
+
+            struct GroupSet
+            {
+                void set(unsigned tag)
+                {
+                    bits.set(tagIndex(tag));
+                }
+
+                bool isset(unsigned tag)
+                {
+                    return bits.test(tagIndex(tag));
+                }
+
+                void reset()
+                {
+                    bits.reset();
+                }
+
+                bool valid(unsigned tag)
+                {
+                    return tagIndex(tag) != -1;
+                }
+
+            private:
+                int64_t tagIndex(unsigned tag) const
+                {
+                    static constexpr std::array<int, sizeof...(Tags)> TagIndexes = {
+                        Tags::Id...
+                    };
+
+                    auto it = std::find(std::begin(TagIndexes), std::end(TagIndexes), tag);
+                    if (it == std::end(TagIndexes))
+                    {
+                        return -1;
+                    }
+
+                    return std::distance(std::begin(TagIndexes), it);
+                }
+
+                std::bitset<sizeof...(Tags)> bits;
+            };
+
+            struct Visitor
+            {
+                Visitor(const std::pair<const char*, size_t>& view)
+                    : view(view)
+                { }
+
+                template<typename Field>
+                void operator()(Field& field)
+                {
+                    field.set(view);
+                }
+
+            private:
+                std::pair<const char*, size_t> view;
+            };
+
+
+            void parse(Field& field, StreamCursor& cursor)
+            {
+                int instances;
+                match_int(&instances, cursor);
+                cursor.advance(1);
+
+                field.reserve(instances);
+
+                GroupSet groupSet;
+                int tag;
+
+                bool inGroup = true;
+
+                do
+                {
+                    typename Field::RefType groupRef;
+
+                    for (;;)
+                    {
+
+                        StreamCursor::Revert revertTag(cursor);
+                        match_int(&tag, cursor);
+
+                        if (!groupSet.valid(tag))
+                        {
+                            inGroup = false;
+                            break;
+                        }
+
+                        if (groupSet.isset(tag))
+                            break;
+
+                        revertTag.ignore();
+                        cursor.advance(1);
+
+                        groupSet.set(tag);
+
+                        StreamCursor::Token valueToken(cursor);
+                        match_until('|', cursor);
+
+                        auto view = valueToken.view();
+                        Visitor visitor(view);
+                        visitField(groupRef, tag, visitor);
+
+                        cursor.advance(1);
+
+                    }
+
+                    field.add(std::move(groupRef));
+                    groupSet.reset();
+
+                } while (inGroup);
+
+            }
+        };
+
         struct FieldVisitor
         {
-            FieldVisitor(std::pair<const char*, size_t> view)
-                : view_(std::move(view))
+            FieldVisitor(StreamCursor& cursor)
+                : cursor(cursor)
             { }
 
             template<typename Field>
             void operator()(Field& field)
             {
-                field.set(view_);
+                FieldParser<Field> parser;
+                parser.parse(field, cursor);
             }
 
         private:
-            std::pair<const char*, size_t> view_;
+            StreamCursor& cursor;
         };
 
         template<typename Visitor>
@@ -175,20 +314,19 @@ namespace Fix
                     match_int(&tag, cursor);
                     cursor.advance(1);
 
-                    StreamCursor::Token valueToken(cursor);
-                    match_until('|', cursor);
-                    
-                    auto view = valueToken.view();
-                    cursor.advance(1);
-
-                    FieldVisitor fieldVisitor(view);
-
+                    FieldVisitor fieldVisitor(cursor);
                     if (visitField(message, tag, fieldVisitor))
                         continue;
                     if (visitField(header, tag, fieldVisitor))
                         continue;
 
                     std::cout << "tag " << tag << " does not belong to message" << std::endl;
+
+                    StreamCursor::Token valueToken(cursor);
+                    match_until('|', cursor);
+
+                    std::cout << "Value = " << valueToken.text() << std::endl;
+                    cursor.advance(1);
 
                 }
 
