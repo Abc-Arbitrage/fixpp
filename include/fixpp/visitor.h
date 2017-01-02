@@ -18,8 +18,11 @@ namespace Fix
     {
         template<typename T> struct id { };
 
-        template<typename Visitor>
-        void visitMessageType(char msgType, const char* version, size_t size, Visitor visitor)
+        template<typename Message, typename Overrides> using OverrideFor
+            = typename meta::map::ops::atOr<Overrides, Message, Message>::type::Ref;
+
+        template<typename Visitor, typename Overrides>
+        void visitMessageType(char msgType, const char* version, size_t size, Visitor visitor, Overrides overrides)
         {
             using Version42 = Fix::v42::Version;
             if (Version42::equals(version))
@@ -29,27 +32,27 @@ namespace Fix
                 switch (msgType)
                 {
                     case '0':
-                        visitor(id<Header> {}, id<Fix::v42::Message::Heartbeat::Ref> {});
+                        visitor(id<Header> {}, id<OverrideFor<Fix::v42::Message::Heartbeat, Overrides>> {});
                     case '1':
-                        visitor(id<Header> {}, id<Fix::v42::Message::TestRequest::Ref> {});
+                        visitor(id<Header> {}, id<OverrideFor<Fix::v42::Message::TestRequest, Overrides>> {});
                         break;
                     case '2':
-                        visitor(id<Header> {}, id<Fix::v42::Message::ResendRequest::Ref> {});
+                        visitor(id<Header> {}, id<OverrideFor<Fix::v42::Message::ResendRequest, Overrides>> {});
                         break;
                     case '3':
-                        visitor(id<Header> {}, id<Fix::v42::Message::Reject::Ref> {});
+                        visitor(id<Header> {}, id<OverrideFor<Fix::v42::Message::Reject, Overrides>> {});
                         break;
                     case '4':
-                        visitor(id<Header> {}, id<Fix::v42::Message::SequenceReset::Ref> {});
+                        visitor(id<Header> {}, id<OverrideFor<Fix::v42::Message::SequenceReset, Overrides>> {});
                         break;
                     case '5':
-                        visitor(id<Header> {}, id<Fix::v42::Message::Logout::Ref> {});
+                        visitor(id<Header> {}, id<OverrideFor<Fix::v42::Message::Logout, Overrides>> {});
                         break;
                     case '6':
-                        visitor(id<Header> {}, id<Fix::v42::Message::IndicationOfInterest::Ref> {});
+                        visitor(id<Header> {}, id<OverrideFor<Fix::v42::Message::IndicationOfInterest, Overrides>> {});
                         break;
                     case 'A':
-                        visitor(id<Header> {}, id<Fix::v42::Message::Logon::Ref> {});
+                        visitor(id<Header> {}, id<OverrideFor<Fix::v42::Message::Logon, Overrides>> {});
                         break;
                 }
             }
@@ -355,16 +358,26 @@ namespace Fix
             StreamCursor& cursor;
         };
 
-        template<typename Visitor>
-        void visitMessage(char msgType, const char* version, size_t size, StreamCursor& cursor, Visitor visitor)
+        template<typename Visitor, typename Overrides>
+        void visitMessage(char msgType, const char* version, size_t size, StreamCursor& cursor, Visitor visitor, Overrides overrides)
         {
             MessageVisitor<Visitor> messageVisitor(cursor);
-            visitMessageType(msgType, version, size, messageVisitor);
+            visitMessageType(msgType, version, size, messageVisitor, overrides);
         }
-    }
 
-    template<typename Visitor>
-    void visit(const char* frame, size_t size, Visitor visitor)
+    } // namespace impl
+
+    struct VisitRules
+    {
+        template<typename... Args>
+        using OverrideSet = meta::map::Map<Args...>;
+
+        template<typename First, typename Second>
+        using Override = meta::map::Pair<First, Second>;
+    };
+
+    template<typename Visitor, typename Overrides>
+    void visit(const char* frame, size_t size, Visitor visitor, Overrides overrides)
     {
         RawStreamBuf<> streambuf(const_cast<char *>(frame), size);
         StreamCursor cursor(&streambuf);
@@ -385,7 +398,14 @@ namespace Fix
         if (!cursor.advance(1))
             return;
 
-        impl::visitMessage(msgType.second, beginString.second.first, beginString.second.second, cursor, visitor);
+        impl::visitMessage(msgType.second, beginString.second.first, beginString.second.second, cursor, visitor, overrides);
+    }
+
+    template<typename Visitor>
+    void visit(const char* frame, size_t size, Visitor visitor)
+    {
+        using EmptyOverrides = VisitRules::OverrideSet<>;
+        visit(frame, size, visitor, EmptyOverrides {});
     }
 
 } // namespace Fix
