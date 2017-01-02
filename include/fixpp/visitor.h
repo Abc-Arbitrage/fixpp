@@ -30,6 +30,23 @@ namespace Fix
                 {
                     case '0':
                         visitor(id<Header> {}, id<Fix::v42::Message::Heartbeat::Ref> {});
+                    case '1':
+                        visitor(id<Header> {}, id<Fix::v42::Message::TestRequest::Ref> {});
+                        break;
+                    case '2':
+                        visitor(id<Header> {}, id<Fix::v42::Message::ResendRequest::Ref> {});
+                        break;
+                    case '3':
+                        visitor(id<Header> {}, id<Fix::v42::Message::Reject::Ref> {});
+                        break;
+                    case '4':
+                        visitor(id<Header> {}, id<Fix::v42::Message::SequenceReset::Ref> {});
+                        break;
+                    case '5':
+                        visitor(id<Header> {}, id<Fix::v42::Message::Logout::Ref> {});
+                        break;
+                    case '6':
+                        visitor(id<Header> {}, id<Fix::v42::Message::IndicationOfInterest::Ref> {});
                         break;
                     case 'A':
                         visitor(id<Header> {}, id<Fix::v42::Message::Logon::Ref> {});

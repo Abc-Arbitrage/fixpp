@@ -17,6 +17,32 @@ namespace Fix
         namespace Message
         {
             using Heartbeat = MessageV<'0', Tag::TestReqID>;
+
+            using TestRequest = MessageV<'1', Tag::TestReqID>;
+
+            using ResendRequest = MessageV<'2', Tag::BeginSeqNo, Tag::EndSeqNo>;
+
+            using Reject = MessageV<'3',
+                            Tag::RefSeqNum, Tag::RefTagID, Tag::RefMsgType, Tag::SessionRejectReason,
+                            Tag::Text, Tag::EncodedTextLen, Tag::EncodedText>;
+
+            using SequenceReset = MessageV<'4', Tag::GapFillFlag, Tag::NewSeqNo>;
+
+            using Logout = MessageV<'5', Tag::Text, Tag::EncodedTextLen, Tag::EncodedText>;
+
+            using IndicationOfInterest = MessageV<'6',
+                  Tag::IOIid, Tag::IOITransType, Tag::IOIRefID, Tag::Symbol, Tag::SymbolSfx,
+                  Tag::SecurityID, Tag::IDSource, Tag::SecurityType, Tag::MaturityMonthYear,
+                  Tag::MaturityDay, Tag::PutOrCall, Tag::StrikePrice, Tag::OptAttribute,
+                  Tag::ContractMultiplier, Tag::CouponRate, Tag::SecurityExchange,
+                  Tag::Issuer, Tag::EncodedIssuerLen, Tag::EncodedIssuer, Tag::SecurityDesc,
+                  Tag::EncodedSecurityDescLen, Tag::EncodedSecurityDesc, Tag::Side,
+                  Tag::IOIShares, Tag::Price, Tag::Currency, Tag::ValidUntilTime,
+                  Tag::IOIQltyInd, Tag::IOINaturalFlag, RepeatingGroup<Tag::NoIOIQualifiers, Tag::IOIQualifier>,
+                  Tag::Text, Tag::EncodedTextLen, Tag::EncodedText, Tag::TransactTime, Tag::URLLink,
+                  RepeatingGroup<Tag::NoRoutingIDs, Tag::RoutingType, Tag::RoutingID>,
+                  Tag::SpreadToBenchmark, Tag::Benchmark>;
+
             using Logon = MessageV<
                              'A',
                               Tag::EncryptMethod, Tag::HeartBtInt, Tag::RawDataLength, Tag::RawData,
