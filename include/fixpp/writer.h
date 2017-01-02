@@ -93,10 +93,10 @@ struct Writer
         StreamBuf buf;
         std::ostream os(&buf);
 
-        if (!message.bits.all())
+        if (!message.requiredBits.all())
         {
             std::ostringstream error;
-            const size_t missingBits = message.bits.size() - message.bits.count();
+            const size_t missingBits = message.requiredBits.size() - message.requiredBits.count();
             error << "Missing " << missingBits << " required value(s) for Message";
             throw std::runtime_error(error.str());
         }
@@ -105,7 +105,7 @@ struct Writer
         set<Tag::SendingTime>(header, std::time(nullptr));
         set<Tag::MsgSeqNum>(header, 1);
 
-        if (!header.bits.all())
+        if (!header.requiredBits.all())
         {
             throw std::runtime_error("Missing values for header");
         }

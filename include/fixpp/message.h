@@ -347,7 +347,8 @@ namespace Fix {
 
         Values values;
 
-        std::bitset<RequiredTags> bits;
+        std::bitset<RequiredTags> requiredBits;
+        std::bitset<TotalTags> allBits;
     };
 
     template<char MsgTypeChar, typename... Tags> struct MessageRef : public MessageBase<FieldRef, Tags...>
@@ -432,8 +433,10 @@ namespace Fix {
 
         std::get<Index>(message.values).set(std::forward<Value>(value));
 
+        message.allBits.set(Index);
+
         if (TagTraits<Tag>::Required)
-            message.bits.set(Bit);
+            message.requiredBits.set(Bit);
     }
 
     template<typename Tag, typename Message>
@@ -457,6 +460,20 @@ namespace Fix {
 
         static constexpr int Index = meta::typelist::ops::IndexOf<typename Message::List, GroupT>::value;
         return std::get<Index>(message.values).get();
+    }
+
+    template<typename Tag, typename Message>
+    typename std::enable_if<
+                details::IsValidTag<Message, Tag>::value, bool
+             >::type
+    tryGet(const Message& message, typename Tag::Type::UnderlyingType& value)
+    {
+        static constexpr size_t Index = meta::typelist::ops::IndexOf<typename Message::List, Tag>::value;
+        if (!message.allBits.test(Index))
+            return false;
+
+        value = std::get<Index>(message.values).get();
+        return true;
     }
 
     template<typename Tag, typename Message>

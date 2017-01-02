@@ -102,3 +102,27 @@ TEST(message_test, should_extend_message_properly)
     static constexpr size_t FirstMyMessageTagId = FirstMyMessageTag::Id;
     ASSERT_EQ(FirstLogonTagId, FirstMyMessageTagId);
 }
+
+TEST(message_test, should_optionally_get)
+{
+    using namespace Fix;
+
+    Fix::v42::Message::IndicationOfInterest ioi;
+
+    Fix::set<Tag::Symbol>(ioi, "MySymbol");
+    Fix::set<Tag::Price>(ioi, 10.5);
+
+    std::string symbol;
+    float price;
+
+    ASSERT_TRUE(Fix::tryGet<Tag::Symbol>(ioi, symbol));
+    ASSERT_EQ(symbol, "MySymbol");
+
+    ASSERT_TRUE(Fix::tryGet<Tag::Price>(ioi, price));
+    ASSERT_EQ(price, 10.5);
+
+    std::string currency;
+
+    ASSERT_FALSE(Fix::tryGet<Tag::Currency>(ioi, currency));
+    ASSERT_EQ(currency, std::string());
+}
