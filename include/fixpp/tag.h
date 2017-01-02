@@ -64,6 +64,10 @@ namespace Fix
             using Base::Base;
         };
 
+        using Amt = Float;
+        using Price = Float;
+        using Qty = Float;
+
         struct Int : public Base<int>
         {
             using Base::Base;
@@ -83,6 +87,8 @@ namespace Fix
 
             String(const char*);
         };
+
+        using MultipleValueString = Type::String;
 
         using DayOfMonth = Int;
         using MonthYear = String;
@@ -165,18 +171,38 @@ namespace Fix
         using BeginString = TagT<8, Type::String, Required>;
         using BodyLength = TagT<9, Type::Int, Required>;
         using CheckSum = TagT<10, Type::String, Required>;
+        using ClOrdID = TagT<11, Type::String>;
+        using Commission = TagT<12, Type::Amt>;
+        using CommType  = TagT<13, Type::Char>;
+        using CumQty = TagT<14, Type::Qty>;
         using Currency = TagT<15, Type::String>;
         using EndSeqNo = TagT<16, Type::Int, Required>;
+        using ExecID  = TagT<17, Type::String>;
+        using ExecInst = TagT<18, Type::MultipleValueString>;
+        using ExecRefID = TagT<19, Type::String>;
+        using ExecTransType = TagT<20, Type::Char>;
+        using HandlInst = TagT<21, Type::Char>;
         using IDSource = TagT<22, Type::String>;
         using IOIid = TagT<23, Type::String, Required>;
+
         using IOIQltyInd = TagT<25, Type::Char>;
         using IOIRefID = TagT<26, Type::String>;
         using IOIShares = TagT<27, Type::String, Required>;
         using IOITransType = TagT<28, Type::Char, Required>;
-
+        using LastCapacity = TagT<29, Type::Char>;
+        using LastMkt = TagT<30, Type::String>;
+        using LastPx = TagT<31, Type::Price>;
+        using LastShares = TagT<32, Type::Qty>;
+        using LinesOfText = TagT<33, Type::Int>;
         using MsgSeqNum = TagT<34, Type::Int, Required>;
         using MsgType = TagT<35, Type::Char, Required>;
         using NewSeqNo = TagT<36, Type::Int, Required>;
+        using OrderID = TagT<37, Type::String>;
+        using OrderQty = TagT<38, Type::Qty>;
+        using OrdStatus = TagT<39, Type::Char>;
+        using OrdType = TagT<40, Type::Char>;
+        using OrigClOrdID = TagT<41, Type::String>;
+        using OrigTime  = TagT<42, Type::UTCTimestamp>;
         using PossDupFlag = TagT<43, Type::Boolean>;
         using Price = TagT<44, Type::Float>;
         using RefSeqNum = TagT<45, Type::Int, Required>;
