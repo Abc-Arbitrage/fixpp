@@ -269,9 +269,13 @@ namespace Fix
         using MDMkt = TagT<275, Type::String>;
         using QuoteCondition = TagT<276, Type::MultipleValueString>;
         using TradeCondition = TagT<277, Type::MultipleValueString>;
+        using MDEntryID = TagT<278, Type::String>;
+        using MDUpdateAction = TagT<279, Type::Char>;
+        using MDEntryRefID = TagT<280, Type::String>;
         using MDEntryOriginator = TagT<282, Type::String>;
         using LocationID = TagT<283, Type::String>;
         using DeskID = TagT<284, Type::String>;
+        using DeleteReason = TagT<285, Type::Char>;
         using OpenCloseSettleFlag = TagT<286, Type::Char>;
         using SellerDays = TagT<287, Type::Int>;
         using MDEntryBuyer = TagT<288, Type::String>;
