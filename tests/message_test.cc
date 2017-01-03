@@ -126,3 +126,37 @@ TEST(message_test, should_optionally_get)
     ASSERT_FALSE(Fix::tryGet<Tag::Currency>(ioi, currency));
     ASSERT_EQ(currency, std::string());
 }
+
+TEST(message_test, should_overwrite_tags_in_message)
+{
+    using namespace Fix;
+    using MyTag = Fix::TagT<2154, Fix::Type::Int>;
+
+    struct LogonOverwrite : public Fix::MessageOverwrite<Fix::v42::Message::Logon>
+    {
+        using OverwriteHeartBtInt = ChangeType<Of<Tag::HeartBtInt>, To<Type::String>>;
+        using HeartBtStr = typename OverwriteHeartBtInt::Type;
+
+        using Overwrite = ChangeSet<
+           OverwriteHeartBtInt,
+           AddTag<MyTag>
+      >;
+    };
+
+    using MyMessage = LogonOverwrite::Overwrite::Apply;
+    using HeartBtStr = LogonOverwrite::HeartBtStr;
+
+    static constexpr size_t LogonTags = Fix::v42::Message::Logon::TotalTags;
+    static constexpr size_t MyMessageTags = MyMessage::TotalTags;
+
+    // MyMessage should have one more tag
+    ASSERT_EQ(MyMessageTags, LogonTags + 1);
+
+    MyMessage message;
+
+    Fix::set<HeartBtStr>(message, "30s");
+    ASSERT_EQ(Fix::get<HeartBtStr>(message), "30s");
+
+    Fix::set<MyTag>(message, 1212);
+    ASSERT_EQ(Fix::get<MyTag>(message), 1212);
+}
