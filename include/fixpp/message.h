@@ -17,6 +17,7 @@ namespace Fix {
 
     template<typename GroupTag, typename...> struct RepeatingGroup;
     template<typename Group> struct GroupRef;
+    template<typename T> struct Required;
 
     namespace details
     {
@@ -24,7 +25,7 @@ namespace Fix {
         template<
             typename Message,
             typename Tag,
-            int Index = meta::typelist::ops::IndexOf<typename Message::List, Tag>::value
+            int Index = meta::typelist::ops::IndexOf<typename Message::TagsList, Tag>::value
         > struct IsValidTag : public std::true_type { };
 
         template<typename Tag, typename Message>
@@ -66,7 +67,7 @@ namespace Fix {
             };
 
             using List = typename meta::typelist::ops::Filter<
-                            typename Message::List,
+                            typename Message::TagsList,
                             IsGroupOf
                          >::Result;
 
@@ -92,7 +93,8 @@ namespace Fix {
             using Ref = GroupRef<Type>;
         };
 
-        template<typename Tag> struct IsRequired : public std::integral_constant<bool, TagTraits<Tag>::Required> { };
+        template<typename Tag> struct IsRequired : std::false_type { };
+        template<typename Tag> struct IsRequired<Required<Tag>> : std::true_type { };
 
         template<typename T> struct LexicalCast;
 
@@ -135,6 +137,16 @@ namespace Fix {
                 return std::string(offset, size);
             }
         };
+
+        template<typename T> struct Unwrap
+        {
+            using Type = T;
+        };
+
+        template<typename T> struct Unwrap<Required<T>>
+        {
+            using Type = T;
+        };
         
 
     } // namespace details
@@ -143,7 +155,6 @@ namespace Fix {
     struct RepeatingGroup
     {
         using Type = GroupTag;
-        static constexpr bool Required = GroupTag::Required;
     };
 
 
@@ -335,9 +346,10 @@ namespace Fix {
 
     template<template<typename> class FieldT, typename... Tags> struct MessageBase
     {
-        using Values = std::tuple<FieldT<Tags>...>;
+        using Values = std::tuple<FieldT<typename details::Unwrap<Tags>::Type>...>;
         using List = typename meta::typelist::make<Tags...>::Result;
 
+        using TagsList = typename meta::typelist::make<typename details::Unwrap<Tags>::Type...>::Result;
         using RequiredList = typename meta::typelist::ops::Filter<List, details::IsRequired>::Result;
 
         using Ref = MessageBase<FieldRef, Tags...>;
@@ -376,6 +388,11 @@ namespace Fix {
              VersionnedMessage<VersionT, MsgTypeChar, Tags...>, ExtensionTags...
            > : public VersionnedMessage<VersionT, MsgTypeChar, Tags..., ExtensionTags...>
     {
+    };
+
+    template<typename TagT> struct Required
+    {
+        using Tag = TagT;
     };
 
     template<typename RepeatingGroup> struct Group;
@@ -428,15 +445,15 @@ namespace Fix {
         static_assert(details::IsValidTypeFor<Tag, Value>::value,
                       "Invalid data type for given Tag");
 
-        static constexpr int Index = meta::typelist::ops::IndexOf<typename Message::List, Tag>::value;
-        static constexpr int Bit = meta::typelist::ops::IndexOf<typename Message::RequiredList, Tag>::value;
+        static constexpr int TagIndex = meta::typelist::ops::IndexOf<typename Message::TagsList, Tag>::value;
+        static constexpr int RequiredBit = meta::typelist::ops::IndexOf<typename Message::RequiredList, Tag>::value;
 
-        std::get<Index>(message.values).set(std::forward<Value>(value));
+        std::get<TagIndex>(message.values).set(std::forward<Value>(value));
 
-        message.allBits.set(Index);
+        message.allBits.set(TagIndex);
 
-        if (TagTraits<Tag>::Required)
-            message.requiredBits.set(Bit);
+        if (RequiredBit != -1)
+            message.requiredBits.set(RequiredBit);
     }
 
     template<typename Tag, typename Message>
@@ -445,7 +462,7 @@ namespace Fix {
              >::type
     get(const Message& message)
     {
-        static constexpr size_t Index = meta::typelist::ops::IndexOf<typename Message::List, Tag>::value;
+        static constexpr size_t Index = meta::typelist::ops::IndexOf<typename Message::TagsList, Tag>::value;
         return std::get<Index>(message.values).get();
     }
 
@@ -458,7 +475,7 @@ namespace Fix {
     {
         using GroupT = typename details::GroupTraits<Message, Tag>::Type;
 
-        static constexpr int Index = meta::typelist::ops::IndexOf<typename Message::List, GroupT>::value;
+        static constexpr int Index = meta::typelist::ops::IndexOf<typename Message::TagsList, GroupT>::value;
         return std::get<Index>(message.values).get();
     }
 
@@ -468,7 +485,7 @@ namespace Fix {
              >::type
     tryGet(const Message& message, typename Tag::Type::UnderlyingType& value)
     {
-        static constexpr size_t Index = meta::typelist::ops::IndexOf<typename Message::List, Tag>::value;
+        static constexpr size_t Index = meta::typelist::ops::IndexOf<typename Message::TagsList, Tag>::value;
         if (!message.allBits.test(Index))
             return false;
 
@@ -485,7 +502,7 @@ namespace Fix {
     {
         using GroupT = typename details::GroupTraits<Message, Tag>::Type;
 
-        static constexpr int Index = meta::typelist::ops::IndexOf<typename Message::List, GroupT>::value;
+        static constexpr int Index = meta::typelist::ops::IndexOf<typename Message::TagsList, GroupT>::value;
         return Group<GroupT> (std::get<Index>(message.values));
     }
 

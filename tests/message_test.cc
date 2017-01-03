@@ -76,7 +76,7 @@ TEST(message_test, should_create_repeating_group)
 
 TEST(message_test, should_extend_message_properly)
 {
-    using MyTag = Fix::TagT<2154, Fix::Type::Int, Fix::Optional>;
+    using MyTag = Fix::TagT<2154, Fix::Type::Int>;
     using MyMessage = Fix::ExtendedMessage<Fix::v42::Message::Logon, MyTag>;
 
     static constexpr size_t LogonTags = Fix::v42::Message::Logon::TotalTags;
@@ -94,9 +94,9 @@ TEST(message_test, should_extend_message_properly)
 
     // First tag of MymEssage should by first tag of Logon
     using FirstLogonTag =
-        meta::typelist::ops::First<Fix::v42::Message::Logon::List>::Result;
+        meta::typelist::ops::First<Fix::v42::Message::Logon::TagsList>::Result;
     using FirstMyMessageTag =
-        meta::typelist::ops::First<MyMessage::List>::Result;
+        meta::typelist::ops::First<MyMessage::TagsList>::Result;
 
     static constexpr size_t FirstLogonTagId = FirstLogonTag::Id;
     static constexpr size_t FirstMyMessageTagId = FirstMyMessageTag::Id;

@@ -138,24 +138,11 @@ namespace Fix
 
     } // namespace Type
 
-    enum Flag
-    {
-        Required,
-        Optional
-    };
-
-    template<unsigned N, typename T, Flag flag = Flag::Optional> struct TagT
+    template<unsigned N, typename T> struct TagT
     {
         static constexpr unsigned Id = N;
 
         using Type = T;
-
-        static constexpr bool Required = flag == Flag::Required;
-
-        constexpr bool isRequired() const
-        {
-            return Required;
-        }
     };
 
 
@@ -168,35 +155,35 @@ namespace Fix
         using AdvTransType = TagT<5, Type::String>;
         using AvgPx = TagT<6, Type::Float>;
         using BeginSeqNo = TagT<7, Type::Int>;
-        using BeginString = TagT<8, Type::String, Required>;
-        using BodyLength = TagT<9, Type::Int, Required>;
-        using CheckSum = TagT<10, Type::String, Required>;
+        using BeginString = TagT<8, Type::String>;
+        using BodyLength = TagT<9, Type::Int>;
+        using CheckSum = TagT<10, Type::String>;
         using ClOrdID = TagT<11, Type::String>;
         using Commission = TagT<12, Type::Amt>;
         using CommType  = TagT<13, Type::Char>;
         using CumQty = TagT<14, Type::Qty>;
         using Currency = TagT<15, Type::String>;
-        using EndSeqNo = TagT<16, Type::Int, Required>;
+        using EndSeqNo = TagT<16, Type::Int>;
         using ExecID  = TagT<17, Type::String>;
         using ExecInst = TagT<18, Type::MultipleValueString>;
         using ExecRefID = TagT<19, Type::String>;
         using ExecTransType = TagT<20, Type::Char>;
         using HandlInst = TagT<21, Type::Char>;
         using IDSource = TagT<22, Type::String>;
-        using IOIid = TagT<23, Type::String, Required>;
+        using IOIid = TagT<23, Type::String>;
 
         using IOIQltyInd = TagT<25, Type::Char>;
         using IOIRefID = TagT<26, Type::String>;
-        using IOIShares = TagT<27, Type::String, Required>;
-        using IOITransType = TagT<28, Type::Char, Required>;
+        using IOIShares = TagT<27, Type::String>;
+        using IOITransType = TagT<28, Type::Char>;
         using LastCapacity = TagT<29, Type::Char>;
         using LastMkt = TagT<30, Type::String>;
         using LastPx = TagT<31, Type::Price>;
         using LastShares = TagT<32, Type::Qty>;
         using LinesOfText = TagT<33, Type::Int>;
-        using MsgSeqNum = TagT<34, Type::Int, Required>;
-        using MsgType = TagT<35, Type::Char, Required>;
-        using NewSeqNo = TagT<36, Type::Int, Required>;
+        using MsgSeqNum = TagT<34, Type::Int>;
+        using MsgType = TagT<35, Type::Char>;
+        using NewSeqNo = TagT<36, Type::Int>;
         using OrderID = TagT<37, Type::String>;
         using OrderQty = TagT<38, Type::Qty>;
         using OrdStatus = TagT<39, Type::Char>;
@@ -205,14 +192,14 @@ namespace Fix
         using OrigTime  = TagT<42, Type::UTCTimestamp>;
         using PossDupFlag = TagT<43, Type::Boolean>;
         using Price = TagT<44, Type::Float>;
-        using RefSeqNum = TagT<45, Type::Int, Required>;
+        using RefSeqNum = TagT<45, Type::Int>;
         using SecurityID = TagT<48, Type::String>;
-        using SenderCompID = TagT<49, Type::String, Required>;
+        using SenderCompID = TagT<49, Type::String>;
         using SenderSubID = TagT<50, Type::String>;
-        using SendingTime = TagT<52, Type::UTCTimestamp, Required>;
-        using Side = TagT<54, Type::Char, Required>;
-        using Symbol = TagT<55, Type::String, Required>;
-        using TargetCompID = TagT<56, Type::String, Required>;
+        using SendingTime = TagT<52, Type::UTCTimestamp>;
+        using Side = TagT<54, Type::Char>;
+        using Symbol = TagT<55, Type::String>;
+        using TargetCompID = TagT<56, Type::String>;
         using TargetSubID = TagT<57, Type::String>;
         using Text = TagT<58, Type::String>;
         using TransactTime = TagT<60, Type::UTCTimestamp>;
@@ -223,11 +210,11 @@ namespace Fix
         using RawDataLength = TagT<95, Type::Int>;
         using RawData = TagT<96, Type::Data>;
         using PossResend = TagT<97, Type::Boolean>;
-        using EncryptMethod = TagT<98, Type::Int, Required>;
+        using EncryptMethod = TagT<98, Type::Int>;
         using IOIQualifier = TagT<104, Type::Char>;
         using Issuer = TagT<106, Type::String>;
         using SecurityDesc = TagT<107, Type::String>;
-        using HeartBtInt = TagT<108, Type::Int, Required>;
+        using HeartBtInt = TagT<108, Type::Int>;
         using TestReqID = TagT<112, Type::String>;
         using OnBehalfOfCompID = TagT<115, Type::String>;
         using OnBehalfOfSubID = TagT<116, Type::String>;

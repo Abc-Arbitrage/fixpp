@@ -50,8 +50,8 @@ namespace should_visit_repeating_group_in_logon_frame
 namespace should_visit_custom_message
 {
 
-    using MyTag = Fix::TagT<2154, Fix::Type::Int, Fix::Optional>;
-    using MyMessage = Fix::ExtendedMessage<Fix::v42::Message::Logon, MyTag>;
+    using MyTag = Fix::TagT<2154, Fix::Type::Int>;
+    using MyMessage = Fix::ExtendedMessage<Fix::v42::Message::Logon, Required<MyTag>>;
 
     struct Visitor
     {
