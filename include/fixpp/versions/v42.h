@@ -50,6 +50,39 @@ namespace Fix
                               RepeatingGroup<Tag::NoMsgTypes, Tag::RefMsgType, Tag::MsgDirection>
                            >;
 
+            using MarketDataRequest = MessageV<'V',
+                  Required<Tag::MDReqID>, Required<Tag::SubscriptionRequestType>,
+                  Required<Tag::MarketDepth>, Tag::MDUpdateType, Tag::AggregatedBook,
+                  RepeatingGroup<Tag::NoMDEntryTypes, Tag::MDEntryType>,
+                  RepeatingGroup<Tag::NoRelatedSym,
+                     Tag::Symbol, Tag::SymbolSfx, Tag::SecurityID, Tag::IDSource,
+                     Tag::SecurityType, Tag::MaturityMonthYear, Tag::MaturityDay,
+                     Tag::PutOrCall, Tag::StrikePrice, Tag::OptAttribute, Tag::ContractMultiplier,
+                     Tag::CouponRate, Tag::SecurityExchange, Tag::Issuer, Tag::EncodedIssuerLen,
+                     Tag::EncodedIssuer, Tag::SecurityDesc, Tag::EncodedSecurityDescLen,
+                     Tag::EncodedSecurityDesc, Tag::TradingSessionID
+                 >
+             >;
+
+            using MarketDataSnapshot = MessageV<'W',
+                  Tag::MDReqID, Required<Tag::Symbol>, Tag::SymbolSfx, Tag::SecurityID,
+                  Tag::IDSource, Tag::SecurityType, Tag::MaturityMonthYear, Tag::MaturityDay,
+                  Tag::PutOrCall, Tag::StrikePrice, Tag::OptAttribute, Tag::ContractMultiplier,
+                  Tag::CouponRate, Tag::SecurityExchange, Tag::Issuer, Tag::EncodedIssuerLen,
+                  Tag::EncodedIssuer, Tag::SecurityDesc, Tag::EncodedSecurityDescLen,
+                  Tag::EncodedSecurityDesc, Tag::FinancialStatus, Tag::CorporateAction, Tag::TotalVolumeTraded,
+                  RepeatingGroup<Tag::NoMDEntries,
+                       Tag::MDEntryType, Tag::MDEntryPx, Tag::Currency, Tag::MDEntrySize,
+                       Tag::MDEntryDate, Tag::MDEntryTime, Tag::TickDirection, Tag::MDMkt,
+                       Tag::TradingSessionID, Tag::QuoteCondition, Tag::TradeCondition,
+                       Tag::MDEntryOriginator, Tag::LocationID, Tag::DeskID, Tag::OpenCloseSettleFlag,
+                       Tag::TimeInForce, Tag::ExpireDate, Tag::ExpireTime, Tag::MinQty,
+                       Tag::ExecInst, Tag::SellerDays, Tag::OrderID, Tag::QuoteEntryID,
+                       Tag::MDEntryBuyer, Tag::MDEntrySeller, Tag::NumberOfOrders, Tag::MDEntryPositionNo,
+                       Tag::Text, Tag::EncodedTextLen, Tag::EncodedText
+                   >
+               >;
+
         } // namespace Message
 
         using Header = MessageBase<

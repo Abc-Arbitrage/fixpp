@@ -136,6 +136,9 @@ namespace Fix
             return os;
         }
 
+        using UTCDate = String;
+        using UTCTimeOnly = String;
+
     } // namespace Type
 
     template<unsigned N, typename T> struct TagT
@@ -202,6 +205,7 @@ namespace Fix
         using TargetCompID = TagT<56, Type::String>;
         using TargetSubID = TagT<57, Type::String>;
         using Text = TagT<58, Type::String>;
+        using TimeInForce = TagT<59, Type::Char>;
         using TransactTime = TagT<60, Type::UTCTimestamp>;
         using ValidUntilTime = TagT<62, Type::UTCTimestamp>;
         using SymbolSfx = TagT<65, Type::String>;
@@ -215,11 +219,13 @@ namespace Fix
         using Issuer = TagT<106, Type::String>;
         using SecurityDesc = TagT<107, Type::String>;
         using HeartBtInt = TagT<108, Type::Int>;
+        using MinQty = TagT<110, Type::Qty>;
         using TestReqID = TagT<112, Type::String>;
         using OnBehalfOfCompID = TagT<115, Type::String>;
         using OnBehalfOfSubID = TagT<116, Type::String>;
         using OrigSendingTime = TagT<122, Type::UTCTimestamp>;
         using GapFillFlag = TagT<123, Type::Boolean>;
+        using ExpireTime = TagT<126, Type::UTCTimestamp>;
         using DeliverToCompID = TagT<128, Type::String>;
         using DeliverToSubID = TagT<129, Type::String>;
         using IOINaturalFlag = TagT<130, Type::Boolean>;
@@ -228,6 +234,7 @@ namespace Fix
         using TargetLocationID = TagT<143, Type::String>;
         using OnBehalfOfLocationID = TagT<144, Type::String>;
         using DeliverToLocationID = TagT<145, Type::String>;
+        using NoRelatedSym = TagT<146, Type::Int>;
         using URLLink = TagT<149, Type::String>;
         using SecurityType = TagT<167, Type::String>;
         using NoIOIQualifiers = TagT<199, Type::Int>;
@@ -246,11 +253,40 @@ namespace Fix
         using Benchmark = TagT<219, Type::Char>;
         using CouponRate = TagT<223, Type::Float>;
         using ContractMultiplier = TagT<231, Type::Float>;
+        using MDReqID = TagT<262, Type::String>;
+        using SubscriptionRequestType = TagT<263, Type::Char>;
+        using MarketDepth = TagT<264, Type::Int>;
+        using MDUpdateType = TagT<265, Type::Int>;
+        using AggregatedBook = TagT<266, Type::Boolean>;
+        using NoMDEntryTypes = TagT<267, Type::Int>;
+        using NoMDEntries = TagT<268, Type::Int>;
+        using MDEntryType = TagT<269, Type::Char>;
+        using MDEntryPx = TagT<270, Type::Price>;
+        using MDEntrySize = TagT<271, Type::Qty>;
+        using MDEntryDate = TagT<272, Type::UTCDate>;
+        using MDEntryTime = TagT<273, Type::UTCTimeOnly>;
+        using TickDirection = TagT<274, Type::Char>;
+        using MDMkt = TagT<275, Type::String>;
+        using QuoteCondition = TagT<276, Type::MultipleValueString>;
+        using TradeCondition = TagT<277, Type::MultipleValueString>;
+        using MDEntryOriginator = TagT<282, Type::String>;
+        using LocationID = TagT<283, Type::String>;
+        using DeskID = TagT<284, Type::String>;
+        using OpenCloseSettleFlag = TagT<286, Type::Char>;
+        using SellerDays = TagT<287, Type::Int>;
+        using MDEntryBuyer = TagT<288, Type::String>;
+        using MDEntrySeller = TagT<289, Type::String>;
+        using MDEntryPositionNo = TagT<290, Type::Int>;
+        using FinancialStatus = TagT<291, Type::Char>;
+        using CorporateAction = TagT<292, Type::Char>;
+        using QuoteEntryID = TagT<299, Type::String>;
+        using TradingSessionID = TagT<336, Type::String>;
         using MessageEncoding = TagT<347, Type::String>;
         using EncodedSecurityDescLen = TagT<350, Type::Int>;
         using EncodedSecurityDesc = TagT<351, Type::Data>;
         using EncodedTextLen = TagT<354, Type::Int>;
         using EncodedText = TagT<355, Type::Data>;
+        using NumberOfOrders = TagT<346, Type::Int>;
         using EncodedIssuerLen = TagT<348, Type::Int>;
         using EncodedIssuer = TagT<349, Type::Data>;
         using LastMsgSeqNumProcessed = TagT<369, Type::Int>;
@@ -262,6 +298,8 @@ namespace Fix
         using MaxMessageSize = TagT<383, Type::Int>;
         using NoMsgTypes = TagT<384, Type::Int>;
         using MsgDirection = TagT<385, Type::Char>;
+        using TotalVolumeTraded = TagT<387, Type::Qty>;
+        using ExpireDate = TagT<432, Type::String>;
 
     } // namespace Tag
 
