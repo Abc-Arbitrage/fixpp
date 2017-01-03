@@ -45,6 +45,20 @@ namespace Fix
                   > : std::true_type
             { };
 
+            template<typename Overrides>
+            struct OverridesValidator;
+
+            template<typename First, typename Second, typename... Rest>
+            struct OverridesValidator<meta::map::Map<meta::map::Pair<First, Second>, Rest...>> : public OverridesValidator<meta::map::Map<Rest...>>
+            {
+                static_assert(First::MsgType == Second::MsgType, "Invalid Override: Message types must be the same");
+            };
+
+            template<>
+            struct OverridesValidator<meta::map::Map<>>
+            {
+            };
+
         } // namespace rules
 
 
@@ -424,9 +438,12 @@ namespace Fix
     void visit(const char* frame, size_t size, Visitor visitor, Rules rules)
     {
         static_assert(std::is_base_of<VisitRules, Rules>::value, "Visit rules must inherit from VisitRules");
+
         static_assert(impl::rules::HasOverrides<Rules>::value, "Visit rules must provide an Overrides typedef");
         static_assert(impl::rules::HasValidateChecksum<Rules>::value, "Visit rules must provide a static ValidateChecksum boolean");
         static_assert(impl::rules::HasValidateLength<Rules>::value, "Visit rules must provide a static ValidateLength boolean");
+
+        impl::rules::OverridesValidator<typename Rules::Overrides> validator {};
 
         RawStreamBuf<> streambuf(const_cast<char *>(frame), size);
         StreamCursor cursor(&streambuf);
