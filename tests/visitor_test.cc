@@ -51,7 +51,17 @@ namespace should_visit_custom_message
 {
 
     using MyTag = Fix::TagT<2154, Fix::Type::Int>;
-    using MyMessage = Fix::ExtendedMessage<Fix::v42::Message::Logon, Required<MyTag>>;
+    using MyMessage = Fix::ExtendedMessage<Fix::v42::Message::Logon, Fix::Required<MyTag>>;
+
+    struct MyVisitRules : public Fix::VisitRules
+    {
+        using Overrides = OverrideSet<
+            Override<Fix::v42::Message::Logon, As<MyMessage>>
+        >;
+
+        static constexpr bool ValidateChecksum = false;
+        static constexpr bool ValidateLength = false;
+    };
 
     struct Visitor
     {
@@ -90,10 +100,6 @@ TEST(visitor_test, should_visit_repeating_group_in_logon_frame)
 
 TEST(visitor_test, should_visit_custom_message)
 {
-    using Overrides = Fix::VisitRules::OverrideSet<
-        Fix::VisitRules::Override<Fix::v42::Message::Logon, should_visit_custom_message::MyMessage>
-    >;
-
     const char* frame = "8=FIX.4.2|9=84|35=A|34=1|49=ABC|52=20120309-16:54:02|2154=1212|56=TT_ORDER|96=12345678|98=0|108=60|141=Y|10=248";
-    Fix::visit(frame, std::strlen(frame), should_visit_custom_message::Visitor(), Overrides());
+    Fix::visit(frame, std::strlen(frame), should_visit_custom_message::Visitor(), should_visit_custom_message::MyVisitRules());
 }

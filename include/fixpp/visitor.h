@@ -7,6 +7,7 @@
 #pragma once
 
 #include <cstring>
+#include <type_traits>
 
 #include <fixpp/tag.h>
 #include <fixpp/utils/cursor.h>
@@ -16,14 +17,47 @@ namespace Fix
 {
     namespace impl
     {
+        namespace rules
+        {
+            template<typename... > using void_t = void;
+
+            template<typename T, typename = void> struct HasOverrides : std::false_type { };
+            template<typename T>
+            struct HasOverrides<
+                    T,
+                    void_t<typename T::Overrides>
+                  > : std::true_type
+            { };
+
+            template<typename T, typename = void> struct HasValidateChecksum : std::false_type { };
+            template<typename T>
+            struct HasValidateChecksum<
+                    T,
+                    void_t<decltype(&T::ValidateChecksum)>
+                  > : std::true_type
+            { };
+
+            template<typename T, typename = void> struct HasValidateLength : std::false_type { };
+            template<typename T>
+            struct HasValidateLength<
+                    T,
+                    void_t<decltype(&T::ValidateLength)>
+                  > : std::true_type
+            { };
+
+        } // namespace rules
+
+
         template<typename T> struct id { };
 
         template<typename Message, typename Overrides> using OverrideFor
             = typename meta::map::ops::atOr<Overrides, Message, Message>::type::Ref;
 
-        template<typename Visitor, typename Overrides>
-        void visitMessageType(char msgType, const char* version, size_t size, Visitor visitor, Overrides overrides)
+        template<typename Visitor, typename Rules>
+        void visitMessageType(char msgType, const char* version, size_t size, Visitor visitor, Rules)
         {
+            using Overrides = typename Rules::Overrides;
+
             using Version42 = Fix::v42::Version;
             if (Version42::equals(version))
             {
@@ -374,11 +408,26 @@ namespace Fix
 
         template<typename First, typename Second>
         using Override = meta::map::Pair<First, Second>;
+
+        template<typename T> using As = T;
     };
 
-    template<typename Visitor, typename Overrides>
-    void visit(const char* frame, size_t size, Visitor visitor, Overrides overrides)
+    struct DefaultRules : public VisitRules
     {
+        using Overrides = OverrideSet<>;
+
+        static constexpr bool ValidateChecksum = true;
+        static constexpr bool ValidateLength = true;
+    };
+
+    template<typename Visitor, typename Rules>
+    void visit(const char* frame, size_t size, Visitor visitor, Rules rules)
+    {
+        static_assert(std::is_base_of<VisitRules, Rules>::value, "Visit rules must inherit from VisitRules");
+        static_assert(impl::rules::HasOverrides<Rules>::value, "Visit rules must provide an Overrides typedef");
+        static_assert(impl::rules::HasValidateChecksum<Rules>::value, "Visit rules must provide a static ValidateChecksum boolean");
+        static_assert(impl::rules::HasValidateLength<Rules>::value, "Visit rules must provide a static ValidateLength boolean");
+
         RawStreamBuf<> streambuf(const_cast<char *>(frame), size);
         StreamCursor cursor(&streambuf);
 
@@ -398,14 +447,13 @@ namespace Fix
         if (!cursor.advance(1))
             return;
 
-        impl::visitMessage(msgType.second, beginString.second.first, beginString.second.second, cursor, visitor, overrides);
+        impl::visitMessage(msgType.second, beginString.second.first, beginString.second.second, cursor, visitor, rules);
     }
 
     template<typename Visitor>
     void visit(const char* frame, size_t size, Visitor visitor)
     {
-        using EmptyOverrides = VisitRules::OverrideSet<>;
-        visit(frame, size, visitor, EmptyOverrides {});
+        visit(frame, size, visitor, DefaultRules {});
     }
 
 } // namespace Fix
