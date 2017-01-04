@@ -1,6 +1,5 @@
 #include "gtest/gtest.h"
 
-#include <fixpp/message.h>
 #include <fixpp/versions/v42.h>
 #include <fixpp/visitor.h>
 

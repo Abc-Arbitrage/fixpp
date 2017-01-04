@@ -8,7 +8,7 @@
 
 #include <fixpp/versions/base.h>
 #include <fixpp/tag.h>
-#include <fixpp/message.h>
+#include <fixpp/dsl.h>
 
 namespace Fix
 {
