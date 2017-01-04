@@ -12,6 +12,7 @@
 #include <fixpp/tag.h>
 #include <fixpp/utils/cursor.h>
 #include <fixpp/meta.h>
+#include <fixpp/dsl/details/unwrap.h>
 
 namespace Fix
 {
@@ -102,6 +103,14 @@ namespace Fix
                     case 'A':
                         visitor(id<Header> {}, id<OverrideFor<Fix::v42::Message::Logon, Overrides>> {});
                         break;
+                    case 'V':
+                        visitor(id<Header> {}, id<OverrideFor<Fix::v42::Message::MarketDataRequest, Overrides>> {});
+                        break;
+                    case 'W':
+                        visitor(id<Header> {}, id<OverrideFor<Fix::v42::Message::MarketDataSnapshot, Overrides>> {});
+                        break;
+                    case 'X':
+                        visitor(id<Header> {}, id<OverrideFor<Fix::v42::Message::MarketDataIncrementalRefresh, Overrides>> {});
                 }
             }
         }
@@ -258,7 +267,7 @@ namespace Fix
                 int64_t tagIndex(unsigned tag) const
                 {
                     static constexpr std::array<int, sizeof...(Tags)> TagIndexes = {
-                        Tags::Id...
+                        details::Unwrap<Tags>::Result::Id...
                     };
 
                     auto it = std::find(std::begin(TagIndexes), std::end(TagIndexes), tag);

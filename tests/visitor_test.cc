@@ -93,24 +93,24 @@ namespace should_visit_incremental_refresh_frame
             ASSERT_EQ(mdEntries.size(), 4);
 
             auto entry0 = mdEntries[0];
-            ASSERT_EQ(Fix::get<Tag::MDUpdateAction>(entry0), 2);
+            ASSERT_EQ(Fix::get<Tag::MDUpdateAction>(entry0), '2');
             ASSERT_EQ(Fix::get<Tag::Symbol>(entry0), "CHF/JPY");
-            ASSERT_EQ(Fix::get<Tag::MDEntryType>(entry0), 0);
+            ASSERT_EQ(Fix::get<Tag::MDEntryType>(entry0), '0');
 
             auto entry1 = mdEntries[1];
-            ASSERT_EQ(Fix::get<Tag::MDUpdateAction>(entry1), 0);
+            ASSERT_EQ(Fix::get<Tag::MDUpdateAction>(entry1), '0');
             ASSERT_EQ(Fix::get<Tag::Symbol>(entry1), "CHF/JPY");
-            ASSERT_EQ(Fix::get<Tag::MDEntryType>(entry1), 0);
+            ASSERT_EQ(Fix::get<Tag::MDEntryType>(entry1), '0');
 
             auto entry2 = mdEntries[2];
-            ASSERT_EQ(Fix::get<Tag::MDUpdateAction>(entry2), 2);
+            ASSERT_EQ(Fix::get<Tag::MDUpdateAction>(entry2), '2');
             ASSERT_EQ(Fix::get<Tag::Symbol>(entry2), "CHF/JPY");
-            ASSERT_EQ(Fix::get<Tag::MDEntryType>(entry2), 1);
+            ASSERT_EQ(Fix::get<Tag::MDEntryType>(entry2), '1');
 
             auto entry3 = mdEntries[3];
-            ASSERT_EQ(Fix::get<Tag::MDUpdateAction>(entry2), 0);
-            ASSERT_EQ(Fix::get<Tag::Symbol>(entry2), "CHF/JPY");
-            ASSERT_EQ(Fix::get<Tag::MDEntryType>(entry2), 1);
+            ASSERT_EQ(Fix::get<Tag::MDUpdateAction>(entry3), '0');
+            ASSERT_EQ(Fix::get<Tag::Symbol>(entry3), "CHF/JPY");
+            ASSERT_EQ(Fix::get<Tag::MDEntryType>(entry3), '1');
         }
 
         template<typename HeaderT, typename MessageT> void operator()(HeaderT, MessageT)

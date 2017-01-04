@@ -16,6 +16,7 @@ namespace Fix
         {
             using Result = T;
         };
+
     } // namespace details
 
 } // namespace Fix
