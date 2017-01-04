@@ -116,6 +116,23 @@ namespace meta
                       >::type;
             };
 
+            template<typename, template<typename> class Op> struct Map;
+
+            template<template<typename> class Op>
+            struct Map<NullType, Op>
+            {
+                using Result = NullType;
+            };
+
+            template<typename Head, typename Tail, template<typename> class Op>
+            struct Map<TypeList<Head, Tail>, Op>
+            {
+                using Result = TypeList<
+                                  typename Op<Head>::Result,
+                                  typename Map<Tail, Op>::Result
+                               >;
+            };
+
         } // namespace ops
 
     } // namespace typelist

@@ -140,12 +140,12 @@ namespace Fix {
 
         template<typename T> struct Unwrap
         {
-            using Type = T;
+            using Result = T;
         };
 
         template<typename T> struct Unwrap<Required<T>>
         {
-            using Type = T;
+            using Result = T;
         };
         
 
@@ -217,7 +217,7 @@ namespace Fix {
     struct Field<RepeatingGroup<GroupTag, Tags...>>
     {
         using Tag = GroupTag;
-        using GroupValues = std::tuple<Field<Tags>...>;
+        using GroupValues = std::tuple<Field<typename details::Unwrap<Tags>::Result>...>;
         using Type = std::vector<GroupValues>;
 
         Field() = default;
@@ -346,11 +346,24 @@ namespace Fix {
 
     template<template<typename> class FieldT, typename... Tags> struct MessageBase
     {
-        using Values = std::tuple<FieldT<typename details::Unwrap<Tags>::Type>...>;
+        using Values = std::tuple<FieldT<typename details::Unwrap<Tags>::Result>...>;
         using List = typename meta::typelist::make<Tags...>::Result;
 
-        using TagsList = typename meta::typelist::make<typename details::Unwrap<Tags>::Type...>::Result;
-        using RequiredList = typename meta::typelist::ops::Filter<List, details::IsRequired>::Result;
+        using TagsList = typename meta::typelist::ops::Map<List, details::Unwrap>::Result;
+        /*
+         * Bear with me here.
+         * We first need to filter-out all the Required tags. However, the result of the
+         * filter operation will give-us a typelist of Required<Tag> tags.
+         * We then need to 'unwrap' the Tag to get a final typelist of Tag. Thus, we
+         * call Map and unwrap the tag.
+         *
+         * Summary: RequiredList will be a TypeList<Tag1, Tag2, Tag3>, not TypeList<Required<Tag1>, ...>
+         */
+        using RequiredList =
+            typename meta::typelist::ops::Map<
+                typename meta::typelist::ops::Filter<List, details::IsRequired>::Result,
+                details::Unwrap
+            >::Result;
 
         using Ref = MessageBase<FieldRef, Tags...>;
 
@@ -500,11 +513,13 @@ namespace Fix {
 
         void add(const Instance& instance)
         {
+            checkRequiredFields(instance);
             field.push_back(instance.values);
         }
 
         void add(Instance&& instance)
         {
+            checkRequiredFields(instance);
             field.push_back(std::move(instance.values));
         }
 
@@ -514,6 +529,17 @@ namespace Fix {
         }
 
     private:
+        template<typename InstanceT> void checkRequiredFields(InstanceT&& instance) const
+        {
+            if (!instance.requiredBits.all())
+            {
+                std::ostringstream error;
+                const size_t missingBits = instance.requiredBits.size() - instance.requiredBits.count();
+                error << "Missing " << missingBits << " required value(s) for Instance";
+                throw std::runtime_error(error.str());
+            }
+        }
+
         FieldType& field;
     };
 
@@ -588,6 +614,11 @@ namespace Fix {
         using GroupT = typename details::GroupTraits<Message, Tag>::Type;
 
         static constexpr int Index = meta::typelist::ops::IndexOf<typename Message::TagsList, GroupT>::value;
+        static constexpr int RequiredBit = meta::typelist::ops::IndexOf<typename Message::RequiredList, GroupT>::value;
+
+        if (RequiredBit != -1)
+            message.requiredBits.set(RequiredBit);
+
         return Group<GroupT> (std::get<Index>(message.values));
     }
 

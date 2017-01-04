@@ -74,6 +74,22 @@ TEST(message_test, should_create_repeating_group)
     ASSERT_EQ(std::get<1>(groupValues[1]).get(), 'S');
 }
 
+TEST(message_test, should_throw_when_missing_fields_in_repeating_group)
+{
+    using namespace Fix;
+
+    Fix::v42::Message::MarketDataIncrementalRefresh refresh;
+    auto group = Fix::createGroup<Tag::NoMDEntries>(refresh, 1);
+    auto instance = group.instance();
+
+    Fix::set<Tag::MDEntryID>(instance, "TEST");
+    ASSERT_THROW(group.add(instance), std::runtime_error);
+
+    auto instance2 = group.instance();
+    Fix::set<Tag::MDUpdateAction>(instance2, '0');
+    ASSERT_NO_THROW(group.add(instance2));
+}
+
 TEST(message_test, should_extend_message_properly)
 {
     using MyTag = Fix::TagT<2154, Fix::Type::Int>;

@@ -85,8 +85,8 @@ namespace Fix
 
             using MarketDataIncrementalRefresh = MessageV<'X',
                   Tag::MDReqID,
-                  RepeatingGroup<Tag::NoMDEntries,
-                      Tag::MDUpdateAction, Tag::DeleteReason, Tag::MDEntryType, Tag::MDEntryID,
+                  Required<RepeatingGroup<Tag::NoMDEntries,
+                      Required<Tag::MDUpdateAction>, Tag::DeleteReason, Tag::MDEntryType, Tag::MDEntryID,
                       Tag::MDEntryRefID, Tag::Symbol, Tag::SymbolSfx, Tag::SecurityID, Tag::IDSource,
                       Tag::SecurityType, Tag::MaturityMonthYear, Tag::MaturityDay, Tag::PutOrCall,
                       Tag::StrikePrice, Tag::OptAttribute, Tag::ContractMultiplier, Tag::CouponRate,
@@ -100,7 +100,7 @@ namespace Fix
                       Tag::SellerDays, Tag::OrderID, Tag::QuoteEntryID, Tag::MDEntryBuyer, Tag::MDEntrySeller,
                       Tag::NumberOfOrders, Tag::MDEntryPositionNo, Tag::TotalVolumeTraded, Tag::Text,
                       Tag::EncodedTextLen, Tag::EncodedText
-                >
+                >>
             >;
 
         } // namespace Message
