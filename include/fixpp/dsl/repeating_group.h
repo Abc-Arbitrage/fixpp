@@ -10,7 +10,9 @@
 #include <vector>
 
 #include <fixpp/dsl/field.h>
+#include <fixpp/dsl/component_block.h>
 #include <fixpp/dsl/details/unwrap.h>
+#include <fixpp/dsl/details/flatten.h>
 
 namespace Fix
 {
@@ -27,8 +29,10 @@ namespace Fix
     struct Field<RepeatingGroup<GroupTag, Tags...>>
     {
         using Tag = GroupTag;
-        using GroupValues = std::tuple<Field<typename details::Unwrap<Tags>::Result>...>;
-        using Type = std::vector<GroupValues>;
+        //using GroupValues = std::tuple<Field<typename details::Unwrap<Tags>::Result>...>;
+        using Fields = typename details::flatten::tuple::Flatten<Field, Tags...>::Result;
+
+        using Type = std::vector<Fields>;
 
         Field() = default;
         Field(const Field& other) = default;
@@ -59,12 +63,12 @@ namespace Fix
             val_.reserve(size);
         }
 
-        void push_back(const GroupValues& values)
+        void push_back(const Fields& values)
         {
             val_.push_back(values);
         }
 
-        void push_back(GroupValues&& values)
+        void push_back(Fields&& values)
         {
             val_.push_back(std::move(values));
         }

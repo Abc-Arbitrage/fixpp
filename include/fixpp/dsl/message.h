@@ -12,13 +12,15 @@
 #include <fixpp/meta.h>
 #include <fixpp/dsl/details/unwrap.h>
 #include <fixpp/dsl/details/traits.h>
+#include <fixpp/dsl/details/flatten.h>
 
 namespace Fix
 {
+
     template<template<typename> class FieldT, typename... Tags> struct MessageBase
     {
-        using Values = std::tuple<FieldT<typename details::Unwrap<Tags>::Result>...>;
-        using List = typename meta::typelist::make<Tags...>::Result;
+        using Fields = typename details::Flattened<FieldT, Tags...>::Fields;
+        using List = typename details::Flattened<FieldT, Tags...>::List;
 
         using TagsList = typename meta::typelist::ops::Map<List, details::Unwrap>::Result;
         /*
@@ -41,7 +43,7 @@ namespace Fix
         static constexpr size_t RequiredTags = meta::typelist::ops::Length<RequiredList>::value;
         static constexpr size_t TotalTags = sizeof...(Tags);
 
-        Values values;
+        Fields values;
 
         std::bitset<RequiredTags> requiredBits;
         std::bitset<TotalTags> allBits;

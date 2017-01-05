@@ -133,6 +133,21 @@ namespace meta
                                >;
             };
 
+            template<typename List1, typename List2>
+            struct Append;
+
+            template<typename Head1, typename Tail1, typename List2>
+            struct Append<TypeList<Head1, Tail1>, List2>
+            {
+                using Result = TypeList<Head1, typename Append<Tail1, List2>::Result>;
+            };
+
+            template<typename List2>
+            struct Append<NullType, List2>
+            {
+                using Result = List2;
+            };
+
         } // namespace ops
 
     } // namespace typelist

@@ -113,6 +113,19 @@ namespace Fix
                         visitor(id<Header> {}, id<OverrideFor<Fix::v42::Message::MarketDataIncrementalRefresh, Overrides>> {});
                 }
             }
+
+            using Version44 = Fix::v44::Version;
+            if (Version44::equals(version))
+            {
+                using Header = Fix::v44::Header::Ref;
+
+                switch (msgType)
+                {
+                    case 'W':
+                        visitor(id<Header> {}, id<OverrideFor<Fix::v44::Message::MarketDataSnapshot, Overrides>> {});
+                        break;
+                }
+            }
         }
 
         template<typename Field, typename Visitor>
@@ -236,6 +249,124 @@ namespace Fix
             }
         };
 
+        template<typename... > struct Pack
+        {
+        };
+
+        template<typename Pack, typename Value>
+        struct Append;
+
+        template<typename... Vals, typename Value>
+        struct Append<Pack<Vals...>, Value>
+        {
+            using Result = Pack<Vals..., Value>;
+        };
+
+        template<typename... Vals, typename... Others>
+        struct Append<Pack<Vals...>, Pack<Others...>>
+        {
+            using Result = Pack<Vals..., Others...>;
+        };
+
+        namespace details
+        {
+            namespace pack
+            {
+                
+                template<typename... Args>
+                struct Flatten;
+
+                template<typename T>
+                struct FlattenSingle
+                {
+                    using Result = Pack<T>;
+                };
+
+                template<typename Head, typename... Tail>
+                struct FlattenSingle<ComponentBlock<Head, Tail...>>
+                {
+                    using Result = typename Append<
+                                        typename FlattenSingle<Head>::Result,
+                                        typename Flatten<Tail...>::Result
+                                   >::Result;
+                };
+
+                template<typename Head, typename... Tail>
+                struct Flatten<Head, Tail...>
+                {
+                    using Result = typename Append<
+                                        typename FlattenSingle<Head>::Result,
+                                        typename Flatten<Tail...>::Result
+                                   >::Result;
+                };
+
+                template<>
+                struct Flatten<>
+                {
+                    using Result = Pack<>;
+                };
+
+            }
+        }
+
+        template<typename Field>
+        struct FieldGroupVisitor
+        {
+            void operator()(Field& field, const std::pair<const char*, size_t>& view)
+            {
+                field.set(view);
+            }
+        };
+
+        template<typename GroupTag, typename... Tags>
+        struct FieldGroupVisitor<FieldRef<RepeatingGroup<GroupTag, Tags...>>>
+        {
+            void operator()(FieldRef<RepeatingGroup<GroupTag, Tags...>>& field, const std::pair<const char*, size_t>& view)
+            {
+            }
+        };
+
+        namespace details
+        {
+            template<typename Tag>
+            struct UnwrapTag
+            {
+                static constexpr int Id = Tag::Id;
+            };
+
+            template<typename Tag>
+            struct UnwrapTag<Required<Tag>>
+            {
+                static constexpr int Id = Tag::Id;
+            };
+
+            template<typename GroupTag, typename... Tags>
+            struct UnwrapTag<RepeatingGroup<GroupTag, Tags...>>
+            {
+                static constexpr int Id = GroupTag::Id;
+            };
+
+            template<typename Pack> struct IndexesImpl;
+
+            template<typename... Tags>
+            struct IndexesImpl<Pack<Tags...>>
+            {
+                static constexpr std::array<int, sizeof...(Tags)> Value = {
+                    UnwrapTag<Tags>::Id...
+                };
+            };
+
+            template<typename... Tags>
+            constexpr std::array<int, sizeof...(Tags)>
+            IndexesImpl<Pack<Tags...>>::Value;
+
+            template<typename... Tags>
+            struct Indexes : public IndexesImpl<typename pack::Flatten<Tags...>::Result>
+            {
+            };
+        };
+
+
         template<typename GroupTag, typename... Tags>
         struct FieldParser<FieldRef<RepeatingGroup<GroupTag, Tags...>>>
         {
@@ -266,17 +397,16 @@ namespace Fix
             private:
                 int64_t tagIndex(unsigned tag) const
                 {
-                    static constexpr std::array<int, sizeof...(Tags)> TagIndexes = {
-                        details::Unwrap<Tags>::Result::Id...
-                    };
+                    using Indexes = details::Indexes<Tags...>;
 
-                    auto it = std::find(std::begin(TagIndexes), std::end(TagIndexes), tag);
-                    if (it == std::end(TagIndexes))
+                    auto it = std::find(std::begin(Indexes::Value), std::end(Indexes::Value), tag);
+                    if (it == std::end(Indexes::Value))
                     {
                         return -1;
                     }
 
-                    return std::distance(std::begin(TagIndexes), it);
+                    return std::distance(std::begin(Indexes::Value), it);
+                    //return 0;
                 }
 
                 std::bitset<sizeof...(Tags)> bits;
@@ -291,7 +421,8 @@ namespace Fix
                 template<typename Field>
                 void operator()(Field& field)
                 {
-                    field.set(view);
+                    FieldGroupVisitor<Field> visitor;
+                    visitor(field, view);
                 }
 
             private:

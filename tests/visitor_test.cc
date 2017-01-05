@@ -1,6 +1,7 @@
 #include "gtest/gtest.h"
 
 #include <fixpp/versions/v42.h>
+#include <fixpp/versions/v44.h>
 #include <fixpp/visitor.h>
 
 namespace should_visit_logon_frame
@@ -120,6 +121,21 @@ namespace should_visit_incremental_refresh_frame
     };
 };
 
+namespace should_visit_snapshot_frame
+{
+    struct Visitor
+    {
+        void operator()(const Fix::v44::Header::Ref& header, const Fix::v44::Message::MarketDataSnapshot::Ref& message)
+        {
+        }
+
+        template<typename HeaderT, typename MessageT> void operator()(HeaderT, MessageT)
+        {
+            ASSERT_TRUE(false);
+        }
+    };
+}
+
 template<typename Visitor>
 void doVisit(const char* frame, Visitor visitor)
 {
@@ -154,4 +170,11 @@ TEST(visitor_test, should_visit_incremental_refresh_frame)
                         "10=213";
 
     doVisit(frame, should_visit_incremental_refresh_frame::Visitor());
+}
+
+TEST(visitor_test, should_visit_snapshot_frame)
+{
+    const char* frame = "8=FIX.4.4|9=0230|35=W|49=Prov|56=MDABC|34=2289004|52=20161229-16:18:09.098|55=AUD/CAD|262=1709|268=2|269=0|270=0.97285|271=500000|272=20170103|299=02z00000hdi:A|9063=SP|269=1|270=0.97309|271=500000|272=20170103|299=02z00000hdi:A|9063=SP|10=233|";
+
+    doVisit(frame, should_visit_snapshot_frame::Visitor());
 }
