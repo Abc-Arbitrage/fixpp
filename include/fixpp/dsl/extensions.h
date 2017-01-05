@@ -32,6 +32,9 @@ namespace Fix
         template<typename Tag>
         struct AddTag { };
 
+        template<typename GroupTag, typename... Tags>
+        struct ExtendGroup { };
+
         template<typename T, typename Change>
         struct ApplyOne;
 
@@ -68,6 +71,33 @@ namespace Fix
             using Result = VersionnedMessage<VersionT, MsgTypeChar, Tags..., Tag>;
         };
 
+        template<typename VersionT, char MsgTypeChar, typename... Tags, typename GroupTag, typename... NewTags>
+        struct ApplyOne<
+            VersionnedMessage<VersionT, MsgTypeChar, Tags...>,
+            ExtendGroup<GroupTag, NewTags...>
+        >
+        {
+            template<typename Tag>
+            struct Impl
+            {
+                using Result = Tag;
+            };
+
+            template<typename... GroupTags>
+            struct Impl<RepeatingGroup<GroupTag, GroupTags...>>
+            {
+                using Result = RepeatingGroup<GroupTag, GroupTags..., NewTags...>;
+            };
+
+            template<typename... GroupTags>
+            struct Impl<Required<RepeatingGroup<GroupTag, GroupTags...>>>
+            {
+                using Result = Required<RepeatingGroup<GroupTag, GroupTags..., NewTags...>>;
+            };
+
+            using Result = VersionnedMessage<VersionT, MsgTypeChar, typename Impl<Tags>::Result...>;
+        };
+
         template<typename MessageT, typename... Changes>
         struct ApplyAll;
 
@@ -96,10 +126,13 @@ namespace Fix
     {
         template<typename... Args> using ChangeSet = impl::ChangeSet<MessageT, Args...>;
         template<typename Tag, typename Type> using ChangeType = impl::ChangeType<Tag, Type>;
+
         template<typename Tag> using AddTag = impl::AddTag<Tag>;
 
         template<typename Tag> using Of = Tag;
         template<typename Type> using To = Type;
+
+        template<typename GroupTag, typename... Tags> using ExtendGroup = impl::ExtendGroup<GroupTag, Tags...>;
 
     };
 

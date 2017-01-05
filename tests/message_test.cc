@@ -3,6 +3,7 @@
 #include <cstring>
 
 #include <fixpp/versions/v42.h>
+#include <fixpp/versions/v44.h>
 
 TEST(message_test, should_bring_correct_version_with_message_type)
 {
@@ -153,13 +154,13 @@ TEST(message_test, should_overwrite_tags_in_message)
         using OverwriteHeartBtInt = ChangeType<Of<Tag::HeartBtInt>, To<Type::String>>;
         using HeartBtStr = typename OverwriteHeartBtInt::Type;
 
-        using Overwrite = ChangeSet<
+        using Changes = ChangeSet<
            OverwriteHeartBtInt,
            AddTag<MyTag>
       >;
     };
 
-    using MyMessage = LogonOverwrite::Overwrite::Apply;
+    using MyMessage = LogonOverwrite::Changes::Apply;
     using HeartBtStr = LogonOverwrite::HeartBtStr;
 
     static constexpr size_t LogonTags = Fix::v42::Message::Logon::TotalTags;
@@ -175,4 +176,20 @@ TEST(message_test, should_overwrite_tags_in_message)
 
     Fix::set<MyTag>(message, 1212);
     ASSERT_EQ(Fix::get<MyTag>(message), 1212);
+}
+
+TEST(message_test, should_extend_group)
+{
+    using namespace Fix;
+
+    using MyTag = Fix::TagT<9063, Type::String>;
+
+    struct SnapshotMessageOverwrite : public Fix::MessageOverwrite<Fix::v44::Message::MarketDataSnapshot>
+    {
+        using Changes = ChangeSet<
+            ExtendGroup<Tag::NoMDEntries, MyTag>
+        >;
+    };
+
+    using MyMessage = SnapshotMessageOverwrite::Changes::Apply;
 }
