@@ -98,6 +98,44 @@ namespace Fix
 
             } // namespace typelist
 
+            namespace pack
+            {
+
+                template<typename... Args>
+                struct Flatten;
+
+                template<typename T>
+                struct FlattenSingle
+                {
+                    using Result = meta::pack::Pack<T>;
+                };
+
+                template<typename Head, typename... Tail>
+                struct FlattenSingle<ComponentBlock<Head, Tail...>>
+                {
+                    using Result = typename meta::pack::ops::Append<
+                                        typename FlattenSingle<Head>::Result,
+                                        typename Flatten<Tail...>::Result
+                                   >::Result;
+                };
+
+                template<typename Head, typename... Tail>
+                struct Flatten<Head, Tail...>
+                {
+                    using Result = typename meta::pack::ops::Append<
+                                        typename FlattenSingle<Head>::Result,
+                                        typename Flatten<Tail...>::Result
+                                   >::Result;
+                };
+
+                template<>
+                struct Flatten<>
+                {
+                    using Result = meta::pack::Pack<>;
+                };
+
+            } // namespace pack
+
         } // namespace flatten
 
         template<template<typename> class FieldT, typename... Tags>

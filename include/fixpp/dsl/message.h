@@ -41,7 +41,9 @@ namespace Fix
         using Ref = MessageBase<FieldRef, Tags...>;
 
         static constexpr size_t RequiredTags = meta::typelist::ops::Length<RequiredList>::value;
-        static constexpr size_t TotalTags = sizeof...(Tags);
+        // Note that TotalTags is *NOT* sizeof...(Tags) as we might have ComponentBlocks that
+        // we flattened here
+        static constexpr size_t TotalTags = meta::typelist::ops::Length<TagsList>::value;
 
         Fields values;
 

@@ -13,6 +13,7 @@
 #include <fixpp/utils/cursor.h>
 #include <fixpp/meta.h>
 #include <fixpp/dsl/details/unwrap.h>
+#include <fixpp/dsl/details/flatten.h>
 
 namespace Fix
 {
@@ -249,66 +250,6 @@ namespace Fix
             }
         };
 
-        template<typename... > struct Pack
-        {
-        };
-
-        template<typename Pack, typename Value>
-        struct Append;
-
-        template<typename... Vals, typename Value>
-        struct Append<Pack<Vals...>, Value>
-        {
-            using Result = Pack<Vals..., Value>;
-        };
-
-        template<typename... Vals, typename... Others>
-        struct Append<Pack<Vals...>, Pack<Others...>>
-        {
-            using Result = Pack<Vals..., Others...>;
-        };
-
-        namespace details
-        {
-            namespace pack
-            {
-                
-                template<typename... Args>
-                struct Flatten;
-
-                template<typename T>
-                struct FlattenSingle
-                {
-                    using Result = Pack<T>;
-                };
-
-                template<typename Head, typename... Tail>
-                struct FlattenSingle<ComponentBlock<Head, Tail...>>
-                {
-                    using Result = typename Append<
-                                        typename FlattenSingle<Head>::Result,
-                                        typename Flatten<Tail...>::Result
-                                   >::Result;
-                };
-
-                template<typename Head, typename... Tail>
-                struct Flatten<Head, Tail...>
-                {
-                    using Result = typename Append<
-                                        typename FlattenSingle<Head>::Result,
-                                        typename Flatten<Tail...>::Result
-                                   >::Result;
-                };
-
-                template<>
-                struct Flatten<>
-                {
-                    using Result = Pack<>;
-                };
-
-            }
-        }
-
         template<typename Field>
         struct FieldGroupVisitor
         {
@@ -323,45 +264,48 @@ namespace Fix
         {
             void operator()(FieldRef<RepeatingGroup<GroupTag, Tags...>>& field, const std::pair<const char*, size_t>& view)
             {
+                assert(false && "Recursive group, implement me");
             }
         };
 
         namespace details
         {
             template<typename Tag>
-            struct UnwrapTag
+            struct IndexOf
             {
-                static constexpr int Id = Tag::Id;
+                static constexpr int Value = Tag::Id;
             };
 
             template<typename Tag>
-            struct UnwrapTag<Required<Tag>>
+            struct IndexOf<Required<Tag>>
             {
-                static constexpr int Id = Tag::Id;
+                static constexpr int Value = Tag::Id;
             };
 
             template<typename GroupTag, typename... Tags>
-            struct UnwrapTag<RepeatingGroup<GroupTag, Tags...>>
+            struct IndexOf<RepeatingGroup<GroupTag, Tags...>>
             {
-                static constexpr int Id = GroupTag::Id;
+                static constexpr int Value = GroupTag::Id;
             };
 
             template<typename Pack> struct IndexesImpl;
 
             template<typename... Tags>
-            struct IndexesImpl<Pack<Tags...>>
+            struct IndexesImpl<meta::pack::Pack<Tags...>>
             {
                 static constexpr std::array<int, sizeof...(Tags)> Value = {
-                    UnwrapTag<Tags>::Id...
+                    IndexOf<Tags>::Value...
                 };
+
+                static constexpr size_t Size = sizeof...(Tags);
             };
 
             template<typename... Tags>
             constexpr std::array<int, sizeof...(Tags)>
-            IndexesImpl<Pack<Tags...>>::Value;
+            IndexesImpl<meta::pack::Pack<Tags...>>::Value;
 
             template<typename... Tags>
-            struct Indexes : public IndexesImpl<typename pack::Flatten<Tags...>::Result>
+            struct MakeIndexes : public IndexesImpl<typename Fix::details::flatten::pack::Flatten<Tags...>::Result>
             {
             };
         };
@@ -395,9 +339,10 @@ namespace Fix
                 }
 
             private:
+                using Indexes = details::MakeIndexes<Tags...>;
+
                 int64_t tagIndex(unsigned tag) const
                 {
-                    using Indexes = details::Indexes<Tags...>;
 
                     auto it = std::find(std::begin(Indexes::Value), std::end(Indexes::Value), tag);
                     if (it == std::end(Indexes::Value))
@@ -406,10 +351,9 @@ namespace Fix
                     }
 
                     return std::distance(std::begin(Indexes::Value), it);
-                    //return 0;
                 }
 
-                std::bitset<sizeof...(Tags)> bits;
+                std::bitset<Indexes::Size> bits;
             };
 
             struct Visitor
@@ -503,6 +447,7 @@ namespace Fix
             StreamCursor& cursor;
         };
 
+
         template<typename Visitor>
         struct MessageVisitor
         {
@@ -534,6 +479,7 @@ namespace Fix
                     match_until('|', cursor);
 
                     std::cout << "Value = " << valueToken.text() << std::endl;
+
                     cursor.advance(1);
 
                 }

@@ -20,6 +20,7 @@ namespace Fix
             
             using MarketDataSnapshot = MessageV<'W',
                   Tag::MDReqID,
+                  Component::Instrument,
                   RepeatingGroup<
                       Tag::NoUnderlyings,
                       Component::UnderlyingInstrument

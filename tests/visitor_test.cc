@@ -127,6 +127,23 @@ namespace should_visit_snapshot_frame
     {
         void operator()(const Fix::v44::Header::Ref& header, const Fix::v44::Message::MarketDataSnapshot::Ref& message)
         {
+            using namespace Fix;
+
+            ASSERT_EQ(Fix::get<Tag::Symbol>(message), "AUD/CAD");
+            ASSERT_EQ(Fix::get<Tag::MDReqID>(message), "1709");
+
+            auto mdEntries = Fix::get<Tag::NoMDEntries>(message);
+            ASSERT_EQ(mdEntries.size(), 2);
+
+            auto entry0 = mdEntries[0];
+            ASSERT_EQ(Fix::get<Tag::MDEntryType>(entry0), '0');
+            //ASSERT_EQ(Fix::get<Tag::MDEntrySize>(entry0), 500000);
+            ASSERT_EQ(Fix::get<Tag::QuoteEntryID>(entry0), "02z00000hdi:A");
+
+            auto entry1 = mdEntries[1];
+            ASSERT_EQ(Fix::get<Tag::MDEntryType>(entry1), '1');
+            //ASSERT_EQ(Fix::get<Tag::MDEntrySize>(entry1), 500000);
+            ASSERT_EQ(Fix::get<Tag::QuoteEntryID>(entry1), "02z00000hdi:A");
         }
 
         template<typename HeaderT, typename MessageT> void operator()(HeaderT, MessageT)
@@ -174,7 +191,10 @@ TEST(visitor_test, should_visit_incremental_refresh_frame)
 
 TEST(visitor_test, should_visit_snapshot_frame)
 {
-    const char* frame = "8=FIX.4.4|9=0230|35=W|49=Prov|56=MDABC|34=2289004|52=20161229-16:18:09.098|55=AUD/CAD|262=1709|268=2|269=0|270=0.97285|271=500000|272=20170103|299=02z00000hdi:A|9063=SP|269=1|270=0.97309|271=500000|272=20170103|299=02z00000hdi:A|9063=SP|10=233|";
+    const char* frame = "8=FIX.4.4|9=0230|35=W|49=Prov|56=MDABC|34=2289004|52=20161229-16:18:09.098|55=AUD/CAD|262=1709|268=2|"
+                        "269=0|270=0.97285|271=500000|272=20170103|299=02z00000hdi:A|"
+                        "269=1|270=0.97309|271=500000|272=20170103|299=02z00000hdi:A|"
+                        "10=233|";
 
     doVisit(frame, should_visit_snapshot_frame::Visitor());
 }

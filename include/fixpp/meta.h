@@ -209,7 +209,37 @@ namespace meta
             };
 
         } // namespace ops
+
     } // namespace map
+
+    namespace pack
+    {
+
+        template<typename... Args>
+        struct Pack
+        { };
+
+        namespace ops
+        {
+
+            template<typename Pack, typename Value>
+            struct Append;
+
+            template<typename... Vals, typename Value>
+            struct Append<Pack<Vals...>, Value>
+            {
+                using Result = Pack<Vals..., Value>;
+            };
+
+            template<typename... Vals, typename... Others>
+            struct Append<Pack<Vals...>, Pack<Others...>>
+            {
+                using Result = Pack<Vals..., Others...>;
+            };
+
+        } // namespace ops
+
+    } // namespace pack
 
     template <size_t... Ints>
     struct index_sequence
@@ -239,5 +269,6 @@ namespace meta
 
     template<> struct make_index_sequence<0> : index_sequence<> { };
     template<> struct make_index_sequence<1> : index_sequence<0> { };
+
 
 } // namespace meta
