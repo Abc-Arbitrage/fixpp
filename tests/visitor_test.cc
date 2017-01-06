@@ -182,6 +182,24 @@ namespace should_visit_nested_repeating_groups
         void operator()(const Fix::v44::Header::Ref& header, const Fix::v44::Message::MarketDataSnapshot::Ref& message)
         {
             using namespace Fix;
+
+            auto underlyings = Fix::get<Tag::NoUnderlyings>(message);
+            ASSERT_EQ(underlyings.size(), 1);
+
+            auto underlying0 = underlyings[0];
+            auto underlyingSecurityAltIDs = Fix::get<Tag::NoUnderlyingSecurityAltID>(underlying0);
+            ASSERT_EQ(underlyingSecurityAltIDs.size(), 1);
+
+            ASSERT_EQ(Fix::get<Tag::UnderlyingSecurityAltID>(underlyingSecurityAltIDs[0]), "TESTID");
+            ASSERT_EQ(Fix::get<Tag::UnderlyingSecurityAltIDSource>(underlyingSecurityAltIDs[0]), "TESTSOURCE");
+
+            ASSERT_EQ(Fix::get<Tag::UnderlyingProduct>(underlying0), 1);
+
+            auto mdEntries = Fix::get<Tag::NoMDEntries>(message);
+            ASSERT_EQ(mdEntries.size(), 2);
+
+            ASSERT_EQ(Fix::get<Tag::MDEntryType>(mdEntries[0]), '0');
+            ASSERT_EQ(Fix::get<Tag::MDEntryType>(mdEntries[1]), '1');
         }
 
         template<typename HeaderT, typename MessageT> void operator()(HeaderT, MessageT)
@@ -246,9 +264,11 @@ TEST(visitor_test, should_visit_nested_repeating_groups)
                         "711=1|"
                             "311=AUD/CAD|"
                             "457=1|"
-                                "458=TEST|459=TEST|"
+                                "458=TESTID|459=TESTSOURCE|"
                             "462=1|"
-                        "292=D|"
+                        "292=D|268=2|"
+                            "269=0|271=500000|272=20170103|299=02z00000hdi:A|"
+                            "269=1|271=500000|272=20170103|299=02z00000hdi:A|"
                         "10=213";
     doVisit(frame, should_visit_nested_repeating_groups::Visitor());
 }
