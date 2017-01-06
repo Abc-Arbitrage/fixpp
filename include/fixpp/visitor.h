@@ -130,7 +130,7 @@ namespace Fix
         }
 
         template<typename Field, typename Visitor>
-        bool doVisitSingleField(unsigned tag, Field& field, Visitor visitor)
+        bool doVisitSingleField(unsigned tag, Field& field, Visitor& visitor)
         {
             if (tag == field.tag())
             {
@@ -141,7 +141,7 @@ namespace Fix
         }
 
         template<typename Message, typename Visitor, size_t... Index>
-        bool doVisitField(Message& message, unsigned tag, Visitor visitor,
+        bool doVisitField(Message& message, unsigned tag, Visitor& visitor,
                           meta::index_sequence<Index...>)
         {
             bool matches[] = {false, (doVisitSingleField(tag, std::get<Index>(message.values), visitor))...};
@@ -149,7 +149,7 @@ namespace Fix
         }
 
         template<typename Message, typename Visitor>
-        bool visitField(Message& message, unsigned tag, Visitor visitor)
+        bool visitField(Message& message, unsigned tag, Visitor& visitor)
         {
             static constexpr size_t Size = Message::TotalTags;
             return doVisitField(message, tag, visitor, meta::make_index_sequence<Size>());
@@ -253,7 +253,9 @@ namespace Fix
         template<typename Field>
         struct FieldGroupVisitor
         {
-            void operator()(Field& field, const std::pair<const char*, size_t>& view)
+            static constexpr bool Recursive = false;
+
+            void operator()(Field& field, const std::pair<const char*, size_t>& view, StreamCursor&)
             {
                 field.set(view);
             }
@@ -262,9 +264,13 @@ namespace Fix
         template<typename GroupTag, typename... Tags>
         struct FieldGroupVisitor<FieldRef<RepeatingGroup<GroupTag, Tags...>>>
         {
-            void operator()(FieldRef<RepeatingGroup<GroupTag, Tags...>>& field, const std::pair<const char*, size_t>& view)
+            static constexpr bool Recursive = true;
+
+            template<typename Field>
+            void operator()(Field& field, const std::pair<const char*, size_t>& view, StreamCursor& cursor)
             {
-                assert(false && "Recursive group, implement me");
+                FieldParser<Field> parser;
+                parser.parse(field, cursor);
             }
         };
 
@@ -358,19 +364,29 @@ namespace Fix
 
             struct Visitor
             {
-                Visitor(const std::pair<const char*, size_t>& view)
+                Visitor(const std::pair<const char*, size_t>& view, StreamCursor& cursor)
                     : view(view)
+                    , cursor(cursor)
+                    , recursive(0)
                 { }
 
                 template<typename Field>
                 void operator()(Field& field)
                 {
-                    FieldGroupVisitor<Field> visitor;
-                    visitor(field, view);
+                    using GroupVisitor = FieldGroupVisitor<Field>;
+
+                    GroupVisitor visitor;
+                    visitor(field, view, cursor);
+
+                    recursive = GroupVisitor::Recursive;
                 }
+
+                // Indicates whether we are in a recursive RepeatingGroup or not
+                int recursive: 1;
 
             private:
                 std::pair<const char*, size_t> view;
+                StreamCursor& cursor;
             };
 
 
@@ -415,11 +431,12 @@ namespace Fix
                         match_until('|', cursor);
 
                         auto view = valueToken.view();
-                        Visitor visitor(view);
+                        Visitor visitor(view, cursor);
                         visitField(groupRef, tag, visitor);
 
-                        cursor.advance(1);
-
+                        // If we are in a recursive RepeatingGroup parsing, we must *NOT* advance the cursor
+                        if (!visitor.recursive)
+                            cursor.advance(1);
                     }
 
                     field.add(std::move(groupRef));

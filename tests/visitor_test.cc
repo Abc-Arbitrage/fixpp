@@ -175,6 +175,22 @@ namespace should_visit_custom_snapshot_frame
     };
 }
 
+namespace should_visit_nested_repeating_groups
+{
+    struct Visitor
+    {
+        void operator()(const Fix::v44::Header::Ref& header, const Fix::v44::Message::MarketDataSnapshot::Ref& message)
+        {
+            using namespace Fix;
+        }
+
+        template<typename HeaderT, typename MessageT> void operator()(HeaderT, MessageT)
+        {
+            ASSERT_TRUE(false);
+        }
+    };
+}
+
 template<typename Visitor>
 void doVisit(const char* frame, Visitor visitor)
 {
@@ -222,4 +238,17 @@ TEST(visitor_test, should_visit_snapshot_frame)
     using VisitRules = should_visit_custom_snapshot_frame::VisitRules;
 
     Fix::visit(frame, std::strlen(frame), Visitor(), VisitRules());
+}
+
+TEST(visitor_test, should_visit_nested_repeating_groups)
+{
+    const char* frame = "8=FIX.4.4|9=0000|35=W|49=Prov|56=MDABC|55=AUD/CAD|262=1709|"
+                        "711=1|"
+                            "311=AUD/CAD|"
+                            "457=1|"
+                                "458=TEST|459=TEST|"
+                            "462=1|"
+                        "292=D|"
+                        "10=213";
+    doVisit(frame, should_visit_nested_repeating_groups::Visitor());
 }
