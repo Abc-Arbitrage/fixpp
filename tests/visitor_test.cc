@@ -6,7 +6,6 @@
 
 namespace should_visit_logon_frame
 {
-
     struct Visitor
     {
         void operator()(const Fix::v42::Header::Ref& header, const Fix::v42::Message::Logon::Ref& logon)
@@ -121,11 +120,32 @@ namespace should_visit_incremental_refresh_frame
     };
 };
 
-namespace should_visit_snapshot_frame
+namespace should_visit_custom_snapshot_frame
 {
+    using MyTag = Fix::TagT<9063, Fix::Type::String>;
+
+    struct SnapshotMessageOverwrite : public Fix::MessageOverwrite<Fix::v44::Message::MarketDataSnapshot>
+    {
+        using Changes = ChangeSet<
+            ExtendGroup<Fix::Tag::NoMDEntries, MyTag>
+        >;
+    };
+
+    using Snapshot = SnapshotMessageOverwrite::Changes::Apply;
+
+    struct VisitRules : public Fix::VisitRules
+    {
+        using Overrides = OverrideSet<
+            Override<Fix::v44::Message::MarketDataSnapshot, As<Snapshot>>
+        >;
+
+        static constexpr bool ValidateChecksum = false;
+        static constexpr bool ValidateLength = false;
+    };
+
     struct Visitor
     {
-        void operator()(const Fix::v44::Header::Ref& header, const Fix::v44::Message::MarketDataSnapshot::Ref& message)
+        void operator()(const Fix::v44::Header::Ref& header, const Snapshot::Ref& message)
         {
             using namespace Fix;
 
@@ -139,11 +159,13 @@ namespace should_visit_snapshot_frame
             ASSERT_EQ(Fix::get<Tag::MDEntryType>(entry0), '0');
             //ASSERT_EQ(Fix::get<Tag::MDEntrySize>(entry0), 500000);
             ASSERT_EQ(Fix::get<Tag::QuoteEntryID>(entry0), "02z00000hdi:A");
+            ASSERT_EQ(Fix::get<MyTag>(entry0), "MP");
 
             auto entry1 = mdEntries[1];
             ASSERT_EQ(Fix::get<Tag::MDEntryType>(entry1), '1');
             //ASSERT_EQ(Fix::get<Tag::MDEntrySize>(entry1), 500000);
             ASSERT_EQ(Fix::get<Tag::QuoteEntryID>(entry1), "02z00000hdi:A");
+            ASSERT_EQ(Fix::get<MyTag>(entry1), "TP");
         }
 
         template<typename HeaderT, typename MessageT> void operator()(HeaderT, MessageT)
@@ -192,9 +214,12 @@ TEST(visitor_test, should_visit_incremental_refresh_frame)
 TEST(visitor_test, should_visit_snapshot_frame)
 {
     const char* frame = "8=FIX.4.4|9=0230|35=W|49=Prov|56=MDABC|34=2289004|52=20161229-16:18:09.098|55=AUD/CAD|262=1709|268=2|"
-                        "269=0|270=0.97285|271=500000|272=20170103|299=02z00000hdi:A|"
-                        "269=1|270=0.97309|271=500000|272=20170103|299=02z00000hdi:A|"
+                        "269=0|270=0.97285|271=500000|272=20170103|299=02z00000hdi:A|9063=MP|"
+                        "269=1|270=0.97309|271=500000|272=20170103|299=02z00000hdi:A|9063=TP|"
                         "10=233|";
 
-    doVisit(frame, should_visit_snapshot_frame::Visitor());
+    using Visitor = should_visit_custom_snapshot_frame::Visitor;
+    using VisitRules = should_visit_custom_snapshot_frame::VisitRules;
+
+    Fix::visit(frame, std::strlen(frame), Visitor(), VisitRules());
 }

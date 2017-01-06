@@ -177,19 +177,3 @@ TEST(message_test, should_overwrite_tags_in_message)
     Fix::set<MyTag>(message, 1212);
     ASSERT_EQ(Fix::get<MyTag>(message), 1212);
 }
-
-TEST(message_test, should_extend_group)
-{
-    using namespace Fix;
-
-    using MyTag = Fix::TagT<9063, Type::String>;
-
-    struct SnapshotMessageOverwrite : public Fix::MessageOverwrite<Fix::v44::Message::MarketDataSnapshot>
-    {
-        using Changes = ChangeSet<
-            ExtendGroup<Tag::NoMDEntries, MyTag>
-        >;
-    };
-
-    using MyMessage = SnapshotMessageOverwrite::Changes::Apply;
-}
