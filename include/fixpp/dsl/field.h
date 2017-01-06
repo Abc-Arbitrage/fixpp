@@ -14,6 +14,12 @@
 
 namespace Fix
 {
+ 
+    // ------------------------------------------------
+    // Field
+    // ------------------------------------------------
+
+    // A Field that stores its value
 
     template<typename TagT>
     struct Field
@@ -69,6 +75,13 @@ namespace Fix
         Type val_;
         bool empty_;
     };
+
+    // ------------------------------------------------
+    // FieldRef
+    // ------------------------------------------------
+
+    // A FieldRef stores a "view" of a field inside a frame.
+    // The real value will be parsed lazily
 
     template<typename TagT>
     struct FieldRef

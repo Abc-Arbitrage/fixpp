@@ -19,19 +19,32 @@ namespace Fix
 
     template<template<typename> class FieldT, typename... Tags> struct MessageBase;
 
+    // ------------------------------------------------
+    // RepeatingGroup
+    // ------------------------------------------------
+
+    // A FIX repeating group
+
     template<typename GroupTag, typename... Tags>
     struct RepeatingGroup
     {
         using Type = GroupTag;
     };
 
+
+    // ------------------------------------------------
+    // Field
+    // ------------------------------------------------
+
+    // Specialization of a Field for a repeating group.
+    // Stores values inside a std::vector
+
     template<typename GroupTag, typename... Tags>
     struct Field<RepeatingGroup<GroupTag, Tags...>>
     {
         using Tag = GroupTag;
-        //using GroupValues = std::tuple<Field<typename details::Unwrap<Tags>::Result>...>;
-        using Fields = typename details::flatten::tuple::Flatten<Field, Tags...>::Result;
 
+        using Fields = typename details::flatten::tuple::Flatten<Field, Tags...>::Result;
         using Type = std::vector<Fields>;
 
         Field() = default;
@@ -82,12 +95,23 @@ namespace Fix
         Type val_;
     };
 
+    // ------------------------------------------------
+    // GroupRef
+    // ------------------------------------------------
+
     template<typename Group> struct GroupRef;
 
     template<typename GroupTag, typename... Tags>
     struct GroupRef<RepeatingGroup<GroupTag, Tags...>> : public MessageBase<FieldRef, Tags...>
     {
     };
+
+    // ------------------------------------------------
+    // FieldRef
+    // ------------------------------------------------
+
+    // Specialization of a FieldRef for a repeating group.
+    // Represents a "view" on a repeating group
 
     template<typename GroupTag, typename... Tags>
     struct FieldRef<RepeatingGroup<GroupTag, Tags...>>
@@ -121,6 +145,10 @@ namespace Fix
     private:
         Values values;
     };
+
+    // ------------------------------------------------
+    // Group
+    // ------------------------------------------------
 
     template<typename RepeatingGroup> struct Group;
 

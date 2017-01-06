@@ -1,7 +1,7 @@
 /* v44.h
    Mathieu Stefani, 04 january 2017
    
-   Messages for FIX 4.4
+   Messages definition for FIX 4.4
 */
 
 #pragma once

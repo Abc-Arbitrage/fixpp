@@ -1,7 +1,7 @@
 /* v44.h
    Mathieu Stefani, 04 january 2017
    
-  Component Blocks for FIX 4.4
+  Component Blocks definition for FIX 4.4
 */
 
 #pragma once

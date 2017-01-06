@@ -17,21 +17,28 @@
 namespace Fix
 {
 
+    // ------------------------------------------------
+    // MessageBase
+    // ------------------------------------------------
+
+    // Stores the list of all fields inside a std::tuple
+
     template<template<typename> class FieldT, typename... Tags> struct MessageBase
     {
         using Fields = typename details::Flattened<FieldT, Tags...>::Fields;
         using List = typename details::Flattened<FieldT, Tags...>::List;
 
         using TagsList = typename meta::typelist::ops::Map<List, details::Unwrap>::Result;
-        /*
-         * Bear with me here.
-         * We first need to filter-out all the Required tags. However, the result of the
-         * filter operation will give us a typelist of Required<Tag> tags.
-         * We then need to 'unwrap' the Tag to get a final typelist of Tag. Thus, we
-         * call Map and unwrap the tag.
-         *
-         * Summary: RequiredList will be a TypeList<Tag1, Tag2, Tag3>, not TypeList<Required<Tag1>, ...>
-         */
+
+        //
+        // Bear with me here.
+        // We first need to filter-out all the Required tags. However, the result of the
+        // filter operation will give us a typelist of Required<Tag> tags.
+        // We then need to 'unwrap' the Tag to get a final typelist of Tag. Thus, we
+        // call Map and unwrap the tag.
+        //
+        // Summary: RequiredList will be a TypeList<Tag1, Tag2, Tag3>, not TypeList<Required<Tag1>, ...>
+        //
         using RequiredList =
             typename meta::typelist::ops::Map<
                 typename meta::typelist::ops::Filter<List, details::IsRequired>::Result,
@@ -51,10 +58,22 @@ namespace Fix
         std::bitset<TotalTags> allBits;
     };
 
+    // ------------------------------------------------
+    // MessageRef
+    // ------------------------------------------------
+
+    // A "view" on a Message
+
     template<char MsgTypeChar, typename... Tags> struct MessageRef : public MessageBase<FieldRef, Tags...>
     {
         static constexpr const char MsgType = MsgTypeChar;
     };
+
+    // ------------------------------------------------
+    // MessageT
+    // ------------------------------------------------
+
+    // A real Message with its MsgType
 
     template<char MsgTypeChar, typename... Tags> struct MessageT : public MessageBase<Field, Tags...>
     {
@@ -69,11 +88,23 @@ namespace Fix
     template<char MsgTypeChar, typename... Tags>
     constexpr const char MessageRef<MsgTypeChar, Tags...>::MsgType;
 
+    // ------------------------------------------------
+    // VersionnedMessage
+    // ------------------------------------------------
+
+    // A Message that knows its FIX version
+
     template<typename VersionT, char MsgTypeChar, typename... Tags>
     struct VersionnedMessage : public MessageT<MsgTypeChar, Tags...>
     {
         using Version = VersionT;
     };
+
+    // ------------------------------------------------
+    // operations
+    // ------------------------------------------------
+ 
+    // get / set operations on a FIX Message
 
     template<typename Tag, typename Message, typename Value>
     typename std::enable_if<details::IsValidTag<Message, Tag>::value, void>::type
