@@ -70,7 +70,7 @@ namespace Fix
             = typename meta::map::ops::atOr<Overrides, Message, Message>::type::Ref;
 
         template<typename Visitor, typename Rules>
-        void visitMessageType(char msgType, const char* version, size_t size, Visitor visitor, Rules)
+        void visitMessageType(const char* msgType, const char* version, size_t size, Visitor visitor, Rules)
         {
             using Overrides = typename Rules::Overrides;
 
@@ -79,7 +79,7 @@ namespace Fix
             {
                 using Header = Fix::v42::Header::Ref;
 
-                switch (msgType)
+                switch (msgType[0])
                 {
                     case '0':
                         visitor(id<Header> {}, id<OverrideFor<Fix::v42::Message::Heartbeat, Overrides>> {});
@@ -120,7 +120,7 @@ namespace Fix
             {
                 using Header = Fix::v44::Header::Ref;
 
-                switch (msgType)
+                switch (msgType[0])
                 {
                     case 'W':
                         visitor(id<Header> {}, id<OverrideFor<Fix::v44::Message::MarketDataSnapshot, Overrides>> {});
@@ -553,7 +553,7 @@ namespace Fix
         };
 
         template<typename Visitor, typename Overrides>
-        void visitMessage(char msgType, const char* version, size_t size, StreamCursor& cursor, Visitor visitor, Overrides overrides)
+        void visitMessage(const char* msgType, const char* version, size_t size, StreamCursor& cursor, Visitor visitor, Overrides overrides)
         {
             MessageVisitor<Visitor> messageVisitor(cursor);
             visitMessageType(msgType, version, size, messageVisitor, overrides);
@@ -610,7 +610,7 @@ namespace Fix
         if (!cursor.advance(1))
             return;
 
-        impl::visitMessage(msgType.second, beginString.second.first, beginString.second.second, cursor, visitor, rules);
+        impl::visitMessage(msgType.second.first, beginString.second.first, beginString.second.second, cursor, visitor, rules);
     }
 
     template<typename Visitor>

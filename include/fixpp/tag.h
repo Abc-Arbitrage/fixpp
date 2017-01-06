@@ -187,7 +187,7 @@ namespace Fix
         using LastShares = TagT<32, Type::Qty>;
         using LinesOfText = TagT<33, Type::Int>;
         using MsgSeqNum = TagT<34, Type::Int>;
-        using MsgType = TagT<35, Type::Char>;
+        using MsgType = TagT<35, Type::String>;
         using NewSeqNo = TagT<36, Type::Int>;
         using OrderID = TagT<37, Type::String>;
         using OrderQty = TagT<38, Type::Qty>;
