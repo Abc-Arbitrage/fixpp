@@ -231,7 +231,15 @@ namespace Fix
             #undef TRY
         }
 
+        // ------------------------------------------------
+        // FieldParser
+        // ------------------------------------------------
+
         template<typename Field> struct FieldParser;
+
+        //
+        // Specialization of our parser for a simple FieldRef
+        // 
 
         template<typename TagT>
         struct FieldParser<FieldRef<TagT>>
@@ -250,6 +258,14 @@ namespace Fix
             }
         };
 
+        // ------------------------------------------------
+        // FieldGroupVisitor
+        // ------------------------------------------------
+
+        //
+        // Field parsing inside a RepeatingGroup
+        //
+
         template<typename Field>
         struct FieldGroupVisitor
         {
@@ -260,6 +276,10 @@ namespace Fix
                 field.set(view);
             }
         };
+
+        //
+        // Recursive RepeatingGroup parsing
+        //
 
         template<typename GroupTag, typename... Tags>
         struct FieldGroupVisitor<FieldRef<RepeatingGroup<GroupTag, Tags...>>>
@@ -316,11 +336,23 @@ namespace Fix
             };
         };
 
+        //
+        // Specialization of our parser for a RepeatingGroup
+        // 
 
         template<typename GroupTag, typename... Tags>
         struct FieldParser<FieldRef<RepeatingGroup<GroupTag, Tags...>>>
         {
             using Field = FieldRef<RepeatingGroup<GroupTag, Tags...>>;
+
+            //
+            // A GroupSet is a bitset of valid tags inside a RepeatingGroup
+            // This allows us to know when:
+            //   - We finished parsing an instance of a RepeatingGroup, as a
+            //     bit for a given tag must already be set
+            //   - We finished parsing the RepeatingGroup itself as a
+            //     tag is not in the bitset
+            //
 
             struct GroupSet
             {
@@ -413,12 +445,16 @@ namespace Fix
                         StreamCursor::Revert revertTag(cursor);
                         match_int(&tag, cursor);
 
+                        // The tag we just encountered is invalid for the RepeatingGroup,
+                        // we are done
                         if (!groupSet.valid(tag))
                         {
                             inGroup = false;
                             break;
                         }
 
+                        // The tag is already set in our GroupSet, we finished parsing
+                        // the current instance
                         if (groupSet.isset(tag))
                             break;
 
@@ -447,6 +483,10 @@ namespace Fix
             }
         };
 
+        // ------------------------------------------------
+        // FieldVisitor
+        // ------------------------------------------------
+
         struct FieldVisitor
         {
             FieldVisitor(StreamCursor& cursor)
@@ -464,6 +504,9 @@ namespace Fix
             StreamCursor& cursor;
         };
 
+        // ------------------------------------------------
+        // MessageVisitor
+        // ------------------------------------------------
 
         template<typename Visitor>
         struct MessageVisitor

@@ -26,7 +26,7 @@ namespace Fix
         /*
          * Bear with me here.
          * We first need to filter-out all the Required tags. However, the result of the
-         * filter operation will give-us a typelist of Required<Tag> tags.
+         * filter operation will give us a typelist of Required<Tag> tags.
          * We then need to 'unwrap' the Tag to get a final typelist of Tag. Thus, we
          * call Map and unwrap the tag.
          *
@@ -42,7 +42,7 @@ namespace Fix
 
         static constexpr size_t RequiredTags = meta::typelist::ops::Length<RequiredList>::value;
         // Note that TotalTags is *NOT* sizeof...(Tags) as we might have ComponentBlocks that
-        // we flattened here
+        // we flattened here. See flatten.h for more details
         static constexpr size_t TotalTags = meta::typelist::ops::Length<TagsList>::value;
 
         Fields values;

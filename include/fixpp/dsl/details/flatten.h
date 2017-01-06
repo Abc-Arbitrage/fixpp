@@ -1,6 +1,33 @@
 /* message.h
    Mathieu Stefani, 05 january 2017
-   
+
+   A collection of utilities to "flatten" a variadic list of template arguments.
+
+   Since the DSL exposes types like ComponentBlock<Args...> to define FIX Component
+   Blocks, let's suppose we have the following component:
+
+   using Component = ComponentBlock<C, D, E>;
+
+   And then we have the following Message:
+
+   using Message = MessageT<'0', A, B, Component>;
+
+   The final type of Message will then be:
+
+   MessageT<
+      '0',
+      A, B,
+      ComponentBlock<C, D, E>
+  >
+
+  Since fields are stored inside a std::tuple, we will then have
+  std::tuple<Field<A>, Field<B>, Field<ComponentBlock<C, D, E>>> which we do not really
+  want. Instead, we want std::tuple<Field<A>, Field<B>, Field<C>, Field<D>, Field<E>>, that
+  is to say everything inside a ComponentBlock must be "flatten" inside the final tuple.
+
+  That's why we have special logic to flatten everything out.
+  Also note that we need to handle special cases where we have nested Component Blocks
+  and Component Blocks inside a RepeatingGroup.
 */
 
 #pragma once
