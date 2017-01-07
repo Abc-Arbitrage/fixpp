@@ -324,6 +324,18 @@ namespace Fix
                 };
 
                 static constexpr size_t Size = sizeof...(Tags);
+
+                static constexpr int64_t of(int tag)
+                {
+                    return of_rec(tag, 0);
+                }
+
+            private:
+                static constexpr int64_t of_rec(int tag, int64_t index)
+                {
+                    return (index == Size ? -1 :
+                                (Value[index] == tag ? index : of_rec(tag, index + 1)));
+                }
             };
 
             template<typename... Tags>
@@ -356,14 +368,17 @@ namespace Fix
 
             struct GroupSet
             {
+                // Indexes of tags in the Bitset
+                using Indexes = details::MakeIndexes<Tags...>;
+
                 void set(unsigned tag)
                 {
-                    bits.set(tagIndex(tag));
+                    bits.set(Indexes::of(tag));
                 }
 
                 bool isset(unsigned tag)
                 {
-                    return bits.test(tagIndex(tag));
+                    return bits.test(Indexes::of(tag));
                 }
 
                 void reset()
@@ -373,24 +388,10 @@ namespace Fix
 
                 bool valid(unsigned tag)
                 {
-                    return tagIndex(tag) != -1;
+                    return Indexes::of(tag) != -1;
                 }
 
             private:
-                using Indexes = details::MakeIndexes<Tags...>;
-
-                int64_t tagIndex(unsigned tag) const
-                {
-
-                    auto it = std::find(std::begin(Indexes::Value), std::end(Indexes::Value), tag);
-                    if (it == std::end(Indexes::Value))
-                    {
-                        return -1;
-                    }
-
-                    return std::distance(std::begin(Indexes::Value), it);
-                }
-
                 std::bitset<Indexes::Size> bits;
             };
 
