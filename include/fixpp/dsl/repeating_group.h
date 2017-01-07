@@ -165,7 +165,7 @@ namespace Fix
 
         Instance instance() const
         {
-            return Instance { };
+            return { };
         }
 
         void add(const Instance& instance)

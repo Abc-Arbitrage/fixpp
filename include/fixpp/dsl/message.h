@@ -31,7 +31,6 @@ namespace Fix
         using TagsList = typename meta::typelist::ops::Map<List, details::Unwrap>::Result;
 
         //
-        // Bear with me here.
         // We first need to filter-out all the Required tags. However, the result of the
         // filter operation will give us a typelist of Required<Tag> tags.
         // We then need to 'unwrap' the Tag to get a final typelist of Tag. Thus, we
