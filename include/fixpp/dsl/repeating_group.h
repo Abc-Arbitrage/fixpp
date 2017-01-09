@@ -8,6 +8,7 @@
 
 #include <tuple>
 #include <vector>
+#include <sstream>
 
 #include <fixpp/dsl/field.h>
 #include <fixpp/dsl/component_block.h>

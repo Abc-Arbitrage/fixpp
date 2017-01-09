@@ -8,12 +8,17 @@
 
 #include <cstring>
 #include <type_traits>
+#include <algorithm>
+
+#include <fixpp/versions/v42.h>
+#include <fixpp/versions/v44.h>
 
 #include <fixpp/tag.h>
 #include <fixpp/utils/cursor.h>
 #include <fixpp/meta.h>
 #include <fixpp/dsl/details/unwrap.h>
 #include <fixpp/dsl/details/flatten.h>
+
 
 namespace Fix
 {
@@ -104,6 +109,9 @@ namespace Fix
                     case 'A':
                         visitor(id<Header> {}, id<OverrideFor<Fix::v42::Message::Logon, Overrides>> {});
                         break;
+                    case 'S':
+                        visitor(id<Header> {}, id<OverrideFor<Fix::v42::Message::Quote, Overrides>> {});
+                        break;
                     case 'V':
                         visitor(id<Header> {}, id<OverrideFor<Fix::v42::Message::MarketDataRequest, Overrides>> {});
                         break;
@@ -129,30 +137,38 @@ namespace Fix
             }
         }
 
-        template<typename Field, typename Visitor>
-        bool doVisitSingleField(unsigned tag, Field& field, Visitor& visitor)
+        template<size_t N, size_t Size>
+        struct visit_field
         {
-            if (tag == field.tag())
+            template<typename Message, typename Visitor>
+            static bool visit(Message& message, unsigned tag, Visitor& visitor)
             {
-                visitor(field);
-                return true;
-            }
-            return false;
-        }
+                auto& field = std::get<N>(message.values);
+                if (tag == field.tag())
+                {
+                    visitor(field);
+                    return true;
+                }
 
-        template<typename Message, typename Visitor, size_t... Index>
-        bool doVisitField(Message& message, unsigned tag, Visitor& visitor,
-                          meta::index_sequence<Index...>)
+                return visit_field<N + 1, Size>::visit(message, tag, visitor);
+            }
+        };
+
+        template<size_t N>
+        struct visit_field<N, N>
         {
-            bool matches[] = {false, (doVisitSingleField(tag, std::get<Index>(message.values), visitor))...};
-            return std::any_of(std::begin(matches), std::end(matches), [](bool b) { return b; });
-        }
+            template<typename Message, typename Visitor>
+            static bool visit(Message&, unsigned, Visitor&)
+            {
+                return false;
+            }
+        };
 
         template<typename Message, typename Visitor>
         bool visitField(Message& message, unsigned tag, Visitor& visitor)
         {
             static constexpr size_t Size = Message::TotalTags;
-            return doVisitField(message, tag, visitor, meta::make_index_sequence<Size>());
+            return visit_field<0, Size>::visit(message, tag, visitor);
         }
 
         template<typename T>
@@ -534,12 +550,12 @@ namespace Fix
                     if (visitField(header, tag, fieldVisitor))
                         continue;
 
-                    std::cout << "tag " << tag << " does not belong to message" << std::endl;
+                    //std::cout << "tag " << tag << " does not belong to message" << std::endl;
 
                     StreamCursor::Token valueToken(cursor);
                     match_until('|', cursor);
 
-                    std::cout << "Value = " << valueToken.text() << std::endl;
+                    //std::cout << "Value = " << valueToken.text() << std::endl;
 
                     cursor.advance(1);
 
