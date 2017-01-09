@@ -80,6 +80,8 @@ namespace Fix
             using Overrides = typename Rules::Overrides;
 
             using Version42 = Fix::v42::Version;
+            using Version44 = Fix::v44::Version;
+
             if (Version42::equals(version))
             {
                 using Header = Fix::v42::Header::Ref;
@@ -122,9 +124,7 @@ namespace Fix
                         visitor(id<Header> {}, id<OverrideFor<Fix::v42::Message::MarketDataIncrementalRefresh, Overrides>> {});
                 }
             }
-
-            using Version44 = Fix::v44::Version;
-            if (Version44::equals(version))
+            else if (Version44::equals(version))
             {
                 using Header = Fix::v44::Header::Ref;
 
