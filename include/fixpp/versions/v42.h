@@ -43,12 +43,22 @@ namespace Fix
                   RepeatingGroup<Tag::NoRoutingIDs, Tag::RoutingType, Tag::RoutingID>,
                   Tag::SpreadToBenchmark, Tag::Benchmark>;
 
-            using Logon = MessageV<
-                             'A',
-                              Required<Tag::EncryptMethod>, Required<Tag::HeartBtInt>, Tag::RawDataLength, Tag::RawData,
-                              Tag::ResetSeqNumFlag, Tag::MaxMessageSize,
-                              RepeatingGroup<Tag::NoMsgTypes, Tag::RefMsgType, Tag::MsgDirection>
-                           >;
+            using Logon = MessageV<'A',
+                  Required<Tag::EncryptMethod>, Required<Tag::HeartBtInt>, Tag::RawDataLength, Tag::RawData,
+                  Tag::ResetSeqNumFlag, Tag::MaxMessageSize,
+                  RepeatingGroup<Tag::NoMsgTypes, Tag::RefMsgType, Tag::MsgDirection>
+             >;
+
+            using Quote = MessageV<'S',
+                Tag::QuoteReqID, Required<Tag::QuoteID>, Tag::QuoteResponseLevel, Tag::TradingSessionID,
+                Required<Tag::Symbol>, Tag::SymbolSfx, Tag::SecurityID, Tag::IDSource, Tag::SecurityType,
+                Tag::MaturityMonthYear, Tag::MaturityDay, Tag::PutOrCall, Tag::StrikePrice, Tag::OptAttribute,
+                Tag::ContractMultiplier, Tag::CouponRate, Tag::SecurityExchange, Tag::Issuer, Tag::EncodedIssuerLen,
+                Tag::EncodedIssuer, Tag::SecurityDesc, Tag::EncodedSecurityDescLen, Tag::EncodedSecurityDesc,
+                Tag::BidPx, Tag::OfferPx, Tag::BidSize, Tag::OfferSize, Tag::ValidUntilTime, Tag::BidSpotRate,
+                Tag::OfferSpotRate, Tag::BidForwardPoints, Tag::OfferForwardPoints, Tag::TransactTime,
+                Tag::FutSettDate, Tag::OrdType, Tag::FutSettDate2, Tag::OrderQty2, Tag::Currency
+            >;
 
             using MarketDataRequest = MessageV<'V',
                   Required<Tag::MDReqID>, Required<Tag::SubscriptionRequestType>,
