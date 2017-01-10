@@ -626,19 +626,38 @@ namespace Fix
                 Header header;
                 Message message;
 
+                enum class State {
+                    InHeader,
+                    InMessage
+                };
+
+                State state = State::InHeader;
+
                 while (!cursor.eof())
                 {
                     int tag;
                     match_int(&tag, cursor);
                     cursor.advance(1);
 
-                    FieldVisitor<Header> headerVisitor(cursor, Rules::StrictMode);
-                    if (visitField(header, tag, headerVisitor))
-                        continue;
+                    if (state == State::InHeader)
+                    {
+                        FieldVisitor<Header> headerVisitor(cursor, Rules::StrictMode);
+                        if (visitField(header, tag, headerVisitor))
+                            continue;
 
-                    FieldVisitor<Message> messageVisitor(cursor, Rules::StrictMode);
-                    if (visitField(message, tag, messageVisitor))
-                        continue;
+                        FieldVisitor<Message> messageVisitor(cursor, Rules::StrictMode);
+                        if (visitField(message, tag, messageVisitor))
+                        {
+                            state = State::InMessage;
+                            continue;
+                        }
+                    }
+                    else if (state == State::InMessage)
+                    {
+                        FieldVisitor<Message> messageVisitor(cursor, Rules::StrictMode);
+                        if (visitField(message, tag, messageVisitor))
+                            continue;
+                    }
 
                     //std::cout << "tag " << tag << " does not belong to message" << std::endl;
 
