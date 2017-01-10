@@ -257,6 +257,45 @@ namespace Fix
 
         namespace details
         {
+
+             template<typename T, size_t Size>
+             struct const_array
+             {
+                 T arr[Size];
+
+                 constexpr const T& operator[](size_t index) const
+                 {
+                     return arr[index];
+                 }
+
+                 constexpr const T* begin() const { return arr; }
+                 constexpr const T* end() const { return arr + Size; }
+             };
+
+             // return the index of the smallest element
+             template<typename T, size_t Size>
+             constexpr int const_min_index(const const_array<T, Size>& arr, size_t offset, size_t cur)
+             {
+                 return Size == offset ? cur :
+                                        const_min_index(arr, offset + 1, arr[cur] < arr[offset] ? cur : offset);
+             }
+
+             // copy the array but with the elements at `index0` and `index1` swapped
+             template<typename T, size_t Size, size_t... Is>
+             constexpr const_array<T, Size> const_swap(const const_array<T, Size>& arr, size_t index0, size_t index1, meta::index_sequence<Is...>)
+             {
+                  return {{arr[Is == index0 ? index1 : Is == index1 ? index0 : Is]...}};
+             }
+
+            // the selection sort algorithm
+            template<typename T, size_t Size>
+            constexpr const_array<T, Size> const_selection_sort(const const_array<T, Size>& arr, size_t cur = 0)
+            {
+                return cur == Size ? arr :
+                                     const_selection_sort(
+                                           const_swap(arr, cur, const_min_index(arr, cur, cur), meta::make_index_sequence<Size>{}), cur+1 );
+            }
+
             template<typename Tag>
             struct IndexOf
             {
@@ -287,34 +326,33 @@ namespace Fix
             struct IndexesImpl<meta::pack::Pack<Tags...>>
             {
 
-                // Performance improvement: our array of indexes is not sorted, which
-                // means that we need to do a linear scan at run-time to find the
-                // relevant index.
-                //
-                // We could try sorting it at compile-time to amortize the cost of
-                // linear scanning with a binary search
-                static constexpr std::array<int, sizeof...(Tags)> Value = {
+                static constexpr const_array<int, sizeof...(Tags)> Value = {
                     IndexOf<Tags>::Value...
                 };
 
+                static constexpr const_array<int, sizeof...(Tags)> Sorted = const_selection_sort(Value);
+
                 static constexpr size_t Size = sizeof...(Tags);
 
-                static constexpr int64_t of(int tag)
+                static int64_t of(int tag)
                 {
                     return of_rec(tag, 0);
                 }
 
             private:
+                // TODO: binary search
                 static constexpr int64_t of_rec(int tag, int64_t index)
                 {
                     return (index == Size ? -1 :
-                                (Value[index] == tag ? index : of_rec(tag, index + 1)));
+                                (Sorted[index] == tag ? index : of_rec(tag, index + 1)));
                 }
             };
 
             template<typename... Tags>
-            constexpr std::array<int, sizeof...(Tags)>
-            IndexesImpl<meta::pack::Pack<Tags...>>::Value;
+            constexpr const_array<int, sizeof...(Tags)> IndexesImpl<meta::pack::Pack<Tags...>>::Value;
+
+            template<typename... Tags>
+            constexpr const_array<int, sizeof...(Tags)> IndexesImpl<meta::pack::Pack<Tags...>>::Sorted;
 
             template<typename... Tags>
             struct MakeIndexes : public IndexesImpl<typename Fix::details::flatten::pack::Flatten<Tags...>::Result>
@@ -538,7 +576,7 @@ namespace Fix
                                     StreamCursor::Token valueToken(cursor);
                                     match_until('|', cursor);
 
-                                    std::cout << "Could not parse Tag(" << tag << ") = " << valueToken.text() << std::endl;
+                                    groupRef.unparsed.insert(std::make_pair(tag, valueToken.view()));
 
                                     cursor.advance(1);
                                     continue;
@@ -633,6 +671,8 @@ namespace Fix
 
                 State state = State::InHeader;
 
+                int checksum = 0;
+
                 while (!cursor.eof())
                 {
                     int tag;
@@ -659,12 +699,20 @@ namespace Fix
                             continue;
                     }
 
-                    //std::cout << "tag " << tag << " does not belong to message" << std::endl;
+                    if (tag == 10)
+                    {
+                        match_int(&checksum, cursor);
+                    }
+                    else
+                    {
+                        StreamCursor::Token valueToken(cursor);
+                        match_until('|', cursor);
 
-                    StreamCursor::Token valueToken(cursor);
-                    match_until('|', cursor);
-
-                    //std::cout << "Value = " << valueToken.text() << std::endl;
+                        if (state == State::InHeader)
+                            header.unparsed.insert(std::make_pair(tag, valueToken.view()));
+                        else
+                            message.unparsed.insert(std::make_pair(tag, valueToken.view()));
+                    }
 
                     cursor.advance(1);
 

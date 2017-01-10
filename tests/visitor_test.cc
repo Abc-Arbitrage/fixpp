@@ -211,6 +211,63 @@ namespace should_visit_nested_repeating_groups
     };
 }
 
+namespace should_visit_unknown_tags_in_non_strict_mode
+{
+    struct VisitRules : public Fix::VisitRules
+    {
+        using Overrides = OverrideSet<>;
+
+        static constexpr bool ValidateChecksum = false;
+        static constexpr bool ValidateLength = false;
+        static constexpr bool StrictMode = false;
+    };
+
+    struct Visitor
+    {
+        void operator()(const Fix::v44::Header::Ref& header, const Fix::v44::Message::MarketDataSnapshot::Ref& message)
+        {
+            using namespace Fix;
+            ASSERT_EQ(message.unparsed.size(), 1);
+            checkUnparsed(message, 10721, "CUSTOM1");
+
+            auto underlyings = Fix::get<Tag::NoUnderlyings>(message);
+            auto underlying0 = underlyings[0];
+
+            ASSERT_EQ(underlying0.unparsed.size(), 1);
+            checkUnparsed(underlying0, 10541, "CUSTOM2");
+
+            auto underlyingSecurityAltIDs = Fix::get<Tag::NoUnderlyingSecurityAltID>(underlying0);
+            auto underlyingSecurityAltID0 = underlyingSecurityAltIDs[0];
+            ASSERT_EQ(underlyingSecurityAltID0.unparsed.size(), 2);
+            checkUnparsed(underlyingSecurityAltID0, 10872, "CUSTOM3");
+            checkUnparsed(underlyingSecurityAltID0, 10873, "CUSTOM4");
+
+            auto mdEntries = Fix::get<Tag::NoMDEntries>(message);
+            ASSERT_EQ(mdEntries[0].unparsed.size(), 1);
+            checkUnparsed(mdEntries[0], 10331, "CUSTOM5");
+
+            ASSERT_EQ(mdEntries[1].unparsed.size(), 1);
+            checkUnparsed(mdEntries[1], 10331, "CUSTOM6");
+        }
+
+        template<typename HeaderT, typename MessageT> void operator()(HeaderT, MessageT)
+        {
+            ASSERT_TRUE(false);
+        }
+
+        template<typename Message>
+        void checkUnparsed(const Message& message, int tag, const char* value)
+        {
+            auto it = message.unparsed.find(tag);
+            ASSERT_NE(it, message.unparsed.end());
+
+            auto val = it->second;
+            std::string str(val.first, val.second);
+            ASSERT_EQ(str, value);
+        }
+    };
+};
+
 template<typename Visitor>
 void doVisit(const char* frame, Visitor visitor)
 {
@@ -231,7 +288,7 @@ TEST(visitor_test, should_visit_repeating_group_in_logon_frame)
 
 TEST(visitor_test, should_visit_custom_message)
 {
-    const char* frame = "8=FIX.4.2|9=84|35=A|34=1|49=ABC|52=20120309-16:54:02|2154=1212|56=TT_ORDER|96=12345678|98=0|108=60|141=Y|10=248";
+    const char* frame = "8=FIX.4.2|9=84|35=A|34=1|49=ABC|52=20120309-16:54:02|56=TT_ORDER|96=12345678|2154=1212|98=0|108=60|141=Y|10=248";
     Fix::visit(frame, std::strlen(frame), should_visit_custom_message::Visitor(), should_visit_custom_message::MyVisitRules());
 }
 
@@ -273,4 +330,24 @@ TEST(visitor_test, should_visit_nested_repeating_groups)
                             "269=1|271=500000|272=20170103|299=02z00000hdi:A|"
                         "10=213";
     doVisit(frame, should_visit_nested_repeating_groups::Visitor());
+}
+
+TEST(visitor_test, should_visit_unknown_tags_in_non_strict_mode)
+{
+    const char* frame = "8=FIX.4.4|9=0000|35=W|49=Prov|56=MDABC|55=AUD/CAD|262=1709|"
+                        "10721=CUSTOM1|"
+                        "711=1|"
+                            "311=AUD/CAD|"
+                            "10541=CUSTOM2|"
+                            "457=1|"
+                                "458=TESTID|459=TESTSOURCE|10872=CUSTOM3|10873=CUSTOM4|"
+                            "462=1|"
+                        "292=D|268=2|"
+                            "269=0|271=500000|272=20170103|299=02z00000hdi:A|10331=CUSTOM5|"
+                            "269=1|271=500000|272=20170103|299=02z00000hdi:A|10331=CUSTOM6|"
+                        "10=213";
+    using Visitor = should_visit_unknown_tags_in_non_strict_mode::Visitor;
+    using VisitRules = should_visit_unknown_tags_in_non_strict_mode::VisitRules;
+
+    Fix::visit(frame, std::strlen(frame), Visitor(), VisitRules());
 }

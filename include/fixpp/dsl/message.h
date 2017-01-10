@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <unordered_map>
 #include <tuple>
 #include <bitset>
 
@@ -55,6 +56,9 @@ namespace Fix
 
         std::bitset<RequiredTags> requiredBits;
         std::bitset<TotalTags> allBits;
+
+        using View = std::pair<const char*, size_t>;
+        std::unordered_map<int, View> unparsed;
     };
 
     // ------------------------------------------------
