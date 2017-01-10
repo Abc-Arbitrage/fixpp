@@ -68,6 +68,6 @@ int main()
     auto totalUs = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
     std::cout << "Parsed " << total << "/" << frames.size() << " frames in " << totalUs.count() << "us\n";
 
-    auto frameLatencyUs = std::chrono::duration_cast<std::chrono::microseconds>(totalUs) / frames.size();
+    auto frameLatencyUs = std::chrono::duration_cast<std::chrono::microseconds>(totalUs) / static_cast<double>(frames.size());
     std::cout << "-> " << frameLatencyUs.count() << "us / frame\n";
 }
