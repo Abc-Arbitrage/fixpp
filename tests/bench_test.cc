@@ -18,6 +18,7 @@ struct VisitRules : public Fix::VisitRules
 
     static constexpr bool ValidateChecksum = false;
     static constexpr bool ValidateLength = false;
+    static constexpr bool StrictMode = false;
 };
 
 struct Visitor

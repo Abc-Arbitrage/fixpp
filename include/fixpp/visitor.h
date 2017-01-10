@@ -52,6 +52,14 @@ namespace Fix
                   > : std::true_type
             { };
 
+            template<typename T, typename = void> struct HasStrictMode : std::false_type { };
+            template<typename T>
+            struct HasStrictMode<
+                    T,
+                    void_t<decltype(&T::StrictMode)>
+                  > : std::true_type
+            { };
+
             template<typename Overrides>
             struct OverridesValidator;
 
@@ -247,69 +255,6 @@ namespace Fix
             #undef TRY
         }
 
-        // ------------------------------------------------
-        // FieldParser
-        // ------------------------------------------------
-
-        template<typename Field> struct FieldParser;
-
-        //
-        // Specialization of our parser for a simple FieldRef
-        // 
-
-        template<typename TagT>
-        struct FieldParser<FieldRef<TagT>>
-        {
-            using Field = FieldRef<TagT>;
-
-            void parse(Field& field, StreamCursor& cursor)
-            {
-                StreamCursor::Token valueToken(cursor);
-                match_until('|', cursor);
-
-                auto view = valueToken.view();
-                cursor.advance(1);
-
-                field.set(view);
-            }
-        };
-
-        // ------------------------------------------------
-        // FieldGroupVisitor
-        // ------------------------------------------------
-
-        //
-        // Field parsing inside a RepeatingGroup
-        //
-
-        template<typename Field>
-        struct FieldGroupVisitor
-        {
-            static constexpr bool Recursive = false;
-
-            void operator()(Field& field, const std::pair<const char*, size_t>& view, StreamCursor&)
-            {
-                field.set(view);
-            }
-        };
-
-        //
-        // Recursive RepeatingGroup parsing
-        //
-
-        template<typename GroupTag, typename... Tags>
-        struct FieldGroupVisitor<FieldRef<RepeatingGroup<GroupTag, Tags...>>>
-        {
-            static constexpr bool Recursive = true;
-
-            template<typename Field>
-            void operator()(Field& field, const std::pair<const char*, size_t>& view, StreamCursor& cursor)
-            {
-                FieldParser<Field> parser;
-                parser.parse(field, cursor);
-            }
-        };
-
         namespace details
         {
             template<typename Tag>
@@ -330,11 +275,24 @@ namespace Fix
                 static constexpr int Value = GroupTag::Id;
             };
 
+            template<typename GroupTag, typename... Tags>
+            struct IndexOf<Required<RepeatingGroup<GroupTag, Tags...>>>
+            {
+                static constexpr int Value = GroupTag::Id;
+            };
+
             template<typename Pack> struct IndexesImpl;
 
             template<typename... Tags>
             struct IndexesImpl<meta::pack::Pack<Tags...>>
             {
+
+                // Performance improvement: our array of indexes is not sorted, which
+                // means that we need to do a linear scan at run-time to find the
+                // relevant index.
+                //
+                // We could try sorting it at compile-time to amortize the cost of
+                // linear scanning with a binary search
                 static constexpr std::array<int, sizeof...(Tags)> Value = {
                     IndexOf<Tags>::Value...
                 };
@@ -364,6 +322,131 @@ namespace Fix
             };
         };
 
+        // ------------------------------------------------
+        // TagSet
+        // ------------------------------------------------
+
+        // A bitset of valid tags inside a Message or RepeatingGroup
+
+        template<typename... Tags>
+        struct TagSet
+        {
+            // Indexes of tags in the Bitset
+            using Indexes = details::MakeIndexes<Tags...>;
+
+            void set(unsigned tag)
+            {
+                bits.set(Indexes::of(tag));
+            }
+
+            bool isset(unsigned tag)
+            {
+                return bits.test(Indexes::of(tag));
+            }
+
+            void reset()
+            {
+                bits.reset();
+            }
+
+            bool valid(unsigned tag)
+            {
+                return Indexes::of(tag) != -1;
+            }
+
+        private:
+            std::bitset<Indexes::Size> bits;
+        };
+
+        template<typename VersionT, char MsgTypeChar, typename... Tags>
+        struct TagSet<VersionnedMessage<VersionT, MsgTypeChar, Tags...>> : public TagSet<Tags...>
+        {
+        };
+
+        template<typename GroupTag, typename... Tags>
+        struct TagSet<RepeatingGroup<GroupTag, Tags...>> : public TagSet<Tags...>
+        {
+        };
+
+        template<char MsgTypeChar, typename... Tags>
+        struct TagSet<MessageRef<MsgTypeChar, Tags...>> : public TagSet<Tags...>
+        {
+        };
+
+        template<template<typename> class FieldT, typename... Tags>
+        struct TagSet<MessageBase<FieldT, Tags...>> : public TagSet<Tags...>
+        {
+        };
+
+
+        // ------------------------------------------------
+        // FieldParser
+        // ------------------------------------------------
+
+        template<typename Field> struct FieldParser;
+
+        //
+        // Specialization of our parser for a simple FieldRef
+        // 
+
+        template<typename TagT>
+        struct FieldParser<FieldRef<TagT>>
+        {
+            using Field = FieldRef<TagT>;
+
+            template<typename TagSet>
+            void parse(Field& field, StreamCursor& cursor, TagSet& tagSet, bool /* strict */)
+            {
+                StreamCursor::Token valueToken(cursor);
+                match_until('|', cursor);
+
+                auto view = valueToken.view();
+                cursor.advance(1);
+
+                field.set(view);
+                tagSet.set(field.tag());
+            }
+        };
+
+        // ------------------------------------------------
+        // FieldGroupVisitor
+        // ------------------------------------------------
+
+        //
+        // Field parsing inside a RepeatingGroup
+        //
+
+        template<typename Field>
+        struct FieldGroupVisitor
+        {
+            static constexpr bool Recursive = false;
+
+            template<typename TagSet>
+            void operator()(Field& field, const std::pair<const char*, size_t>& view,
+                            StreamCursor&, TagSet&, bool strict)
+            {
+                field.set(view);
+            }
+        };
+
+        //
+        // Recursive RepeatingGroup parsing
+        //
+
+        template<typename GroupTag, typename... Tags>
+        struct FieldGroupVisitor<FieldRef<RepeatingGroup<GroupTag, Tags...>>>
+        {
+            static constexpr bool Recursive = true;
+
+            template<typename Field, typename TagSet>
+            void operator()(Field& field, const std::pair<const char*, size_t>& view,
+                            StreamCursor& cursor, TagSet& outerSet, bool strict)
+            {
+                FieldParser<Field> parser;
+                parser.parse(field, cursor, outerSet, strict);
+            }
+        };
+
         //
         // Specialization of our parser for a RepeatingGroup
         // 
@@ -381,41 +464,16 @@ namespace Fix
             //   - We finished parsing the RepeatingGroup itself as a
             //     tag is not in the bitset
             //
-
-            struct GroupSet
-            {
-                // Indexes of tags in the Bitset
-                using Indexes = details::MakeIndexes<Tags...>;
-
-                void set(unsigned tag)
-                {
-                    bits.set(Indexes::of(tag));
-                }
-
-                bool isset(unsigned tag)
-                {
-                    return bits.test(Indexes::of(tag));
-                }
-
-                void reset()
-                {
-                    bits.reset();
-                }
-
-                bool valid(unsigned tag)
-                {
-                    return Indexes::of(tag) != -1;
-                }
-
-            private:
-                std::bitset<Indexes::Size> bits;
-            };
+            //
+            using GroupSet = TagSet<Tags...>;
 
             struct Visitor
             {
-                Visitor(const std::pair<const char*, size_t>& view, StreamCursor& cursor)
+                Visitor(const std::pair<const char*, size_t>& view, StreamCursor& cursor, GroupSet& groupSet, bool strict)
                     : view(view)
                     , cursor(cursor)
+                    , groupSet(groupSet)
+                    , strict(strict)
                     , recursive(0)
                 { }
 
@@ -425,7 +483,7 @@ namespace Fix
                     using GroupVisitor = FieldGroupVisitor<Field>;
 
                     GroupVisitor visitor;
-                    visitor(field, view, cursor);
+                    visitor(field, view, cursor, groupSet, strict);
 
                     recursive = GroupVisitor::Recursive;
                 }
@@ -436,10 +494,12 @@ namespace Fix
             private:
                 std::pair<const char*, size_t> view;
                 StreamCursor& cursor;
+                GroupSet& groupSet;
+                bool strict;
             };
 
-
-            void parse(Field& field, StreamCursor& cursor)
+            template<typename TagSet>
+            void parse(Field& field, StreamCursor& cursor, TagSet& tagSet, bool strict)
             {
                 int instances;
                 match_int(&instances, cursor);
@@ -448,8 +508,8 @@ namespace Fix
                 field.reserve(instances);
 
                 GroupSet groupSet;
-                int tag;
 
+                int tag;
                 bool inGroup = true;
 
                 do
@@ -462,16 +522,34 @@ namespace Fix
                         StreamCursor::Revert revertTag(cursor);
                         match_int(&tag, cursor);
 
-                        // The tag we just encountered is invalid for the RepeatingGroup,
-                        // we are done
+                        // The tag we just encountered is invalid for the RepeatingGroup
                         if (!groupSet.valid(tag))
                         {
+                            // If it's not valid for the Message either, we consider it to be
+                            // a custom tag
+                            if (!tagSet.valid(tag) && tag != 10)
+                            {
+                                // TODO: what should we do if we are in strict parsing ?
+                                if (!strict)
+                                {
+                                    revertTag.ignore();
+                                    cursor.advance(1);
+
+                                    StreamCursor::Token valueToken(cursor);
+                                    match_until('|', cursor);
+
+                                    std::cout << "Could not parse Tag(" << tag << ") = " << valueToken.text() << std::endl;
+
+                                    cursor.advance(1);
+                                    continue;
+                                }
+                            }
+
                             inGroup = false;
                             break;
                         }
 
-                        // The tag is already set in our GroupSet, we finished parsing
-                        // the current instance
+                        // The tag is already set in our GroupSet, we finished parsing the current instance
                         if (groupSet.isset(tag))
                             break;
 
@@ -484,7 +562,12 @@ namespace Fix
                         match_until('|', cursor);
 
                         auto view = valueToken.view();
-                        Visitor visitor(view, cursor);
+                        Visitor visitor(view, cursor, groupSet, strict);
+
+                        // Invariant: here visitField should ALWAYS return true are we are checking if the tag
+                        // is valid prior to the call
+                        //
+                        // TODO: enfore the invariant ?
                         visitField(groupRef, tag, visitor);
 
                         // If we are in a recursive RepeatingGroup parsing, we must *NOT* advance the cursor
@@ -504,28 +587,33 @@ namespace Fix
         // FieldVisitor
         // ------------------------------------------------
 
+        template<typename Message>
         struct FieldVisitor
         {
-            FieldVisitor(StreamCursor& cursor)
+            FieldVisitor(StreamCursor& cursor, bool strict)
                 : cursor(cursor)
+                , strict(strict)
             { }
 
             template<typename Field>
             void operator()(Field& field)
             {
+                TagSet<Message> tags;
+
                 FieldParser<Field> parser;
-                parser.parse(field, cursor);
+                parser.parse(field, cursor, tags, strict);
             }
 
         private:
             StreamCursor& cursor;
+            bool strict;
         };
 
         // ------------------------------------------------
         // MessageVisitor
         // ------------------------------------------------
 
-        template<typename Visitor>
+        template<typename Visitor, typename Rules>
         struct MessageVisitor
         {
             MessageVisitor(StreamCursor& cursor)
@@ -544,10 +632,12 @@ namespace Fix
                     match_int(&tag, cursor);
                     cursor.advance(1);
 
-                    FieldVisitor fieldVisitor(cursor);
-                    if (visitField(message, tag, fieldVisitor))
+                    FieldVisitor<Header> headerVisitor(cursor, Rules::StrictMode);
+                    if (visitField(header, tag, headerVisitor))
                         continue;
-                    if (visitField(header, tag, fieldVisitor))
+
+                    FieldVisitor<Message> messageVisitor(cursor, Rules::StrictMode);
+                    if (visitField(message, tag, messageVisitor))
                         continue;
 
                     //std::cout << "tag " << tag << " does not belong to message" << std::endl;
@@ -569,11 +659,11 @@ namespace Fix
             StreamCursor& cursor;
         };
 
-        template<typename Visitor, typename Overrides>
-        void visitMessage(const char* msgType, const char* version, size_t size, StreamCursor& cursor, Visitor visitor, Overrides overrides)
+        template<typename Visitor, typename Rules>
+        void visitMessage(const char* msgType, const char* version, size_t size, StreamCursor& cursor, Visitor visitor, Rules rules)
         {
-            MessageVisitor<Visitor> messageVisitor(cursor);
-            visitMessageType(msgType, version, size, messageVisitor, overrides);
+            MessageVisitor<Visitor, Rules> messageVisitor(cursor);
+            visitMessageType(msgType, version, size, messageVisitor, rules);
         }
 
     } // namespace impl
@@ -595,6 +685,8 @@ namespace Fix
 
         static constexpr bool ValidateChecksum = true;
         static constexpr bool ValidateLength = true;
+
+        static constexpr bool StrictMode = false;
     };
 
     template<typename Visitor, typename Rules>
@@ -605,6 +697,7 @@ namespace Fix
         static_assert(impl::rules::HasOverrides<Rules>::value, "Visit rules must provide an Overrides typedef");
         static_assert(impl::rules::HasValidateChecksum<Rules>::value, "Visit rules must provide a static ValidateChecksum boolean");
         static_assert(impl::rules::HasValidateLength<Rules>::value, "Visit rules must provide a static ValidateLength boolean");
+        static_assert(impl::rules::HasStrictMode<Rules>::value, "Visit rules must provide a static StrictMode boolean");
 
         impl::rules::OverridesValidator<typename Rules::Overrides> validator {};
 

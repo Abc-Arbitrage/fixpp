@@ -60,6 +60,7 @@ namespace should_visit_custom_message
 
         static constexpr bool ValidateChecksum = false;
         static constexpr bool ValidateLength = false;
+        static constexpr bool StrictMode = false;
     };
 
     struct Visitor
@@ -141,6 +142,7 @@ namespace should_visit_custom_snapshot_frame
 
         static constexpr bool ValidateChecksum = false;
         static constexpr bool ValidateLength = false;
+        static constexpr bool StrictMode = false;
     };
 
     struct Visitor
