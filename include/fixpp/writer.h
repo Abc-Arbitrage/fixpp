@@ -90,7 +90,7 @@ struct Writer
     template<typename Header, typename Message>
     std::string write(Header header, const Message& message)
     {
-        StreamBuf buf;
+        StreamBuf<Message> buf;
         std::ostream os(&buf);
 
         if (!message.requiredBits.all())

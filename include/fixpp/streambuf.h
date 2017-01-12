@@ -86,7 +86,7 @@ private:
 namespace Fix
 {
 
-    template<size_t N>
+    template<typename Message, size_t N>
     struct StreamBufBase : public SmallStreamBuf<N>
     {
         using Base = SmallStreamBuf<N>;
@@ -98,7 +98,7 @@ namespace Fix
             character, we don't need to substract it as we have to insert an SOH after every-tag.
             Thus, it's as if SOH was a NUL
         */
-        static constexpr size_t BeginStringSize = sizeof("8=FIX.4.2");
+        static constexpr size_t BeginStringSize = sizeof("8=") + Message::Version::Size;
         static constexpr size_t BodyLengthSize = sizeof("9=00000");
 
         static constexpr size_t HeaderStartLength = BeginStringSize + BodyLengthSize;
