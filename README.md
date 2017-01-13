@@ -43,7 +43,9 @@ For example, attempting to set an invalid value for a tag will trigger a **compi
 ```cpp
 Fix::v42::Message::Logon logon;
 Fix::set<Fix::Tag::HeartBtInt>(logon, "60s");
+```
 
+```sh
 fixpp/include/fixpp/dsl/message.h:116:9: error: static assertion failed: Invalid data type for given Tag
 ```
 
