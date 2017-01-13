@@ -9,6 +9,7 @@ endfunction()
 
 fixpp_test(message_test)
 fixpp_test(visitor_test)
+fixpp_test(writer_test)
 
 add_executable(run_bench_test bench_test.cc)
 target_link_libraries(run_bench_test fixpp_utils)

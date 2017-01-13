@@ -172,12 +172,17 @@ namespace Fix
             return pos;
         }
 
-        
     private:
         size_t sum_;
         size_t count_;
     };
 
-    using StreamBuf = StreamBufBase<1024>;
+    namespace internal
+    {
+        static constexpr size_t SmallBufferSize = 1024;
+    } // namespace internal
+
+    template<typename Message>
+    using StreamBuf = StreamBufBase<Message, internal::SmallBufferSize>;
 
 } // namespace Fix

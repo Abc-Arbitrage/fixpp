@@ -11,7 +11,7 @@
 #include <stdexcept>
 
 #include <fixpp/tag.h>
-#include <fixpp/message.h>
+#include <fixpp/dsl/message.h>
 #include <fixpp/streambuf.h>
 
 namespace Fix {
@@ -39,7 +39,7 @@ namespace details
         {
             os << GroupTag::Id << "=" << field.size() << SOH;
 
-            static constexpr size_t GroupSize = sizeof...(Tags);
+            static constexpr size_t GroupSize = FieldT::TotalTags;
 
             auto group = field.get();
             for (const auto& instance: group)
@@ -101,7 +101,9 @@ struct Writer
             throw std::runtime_error(error.str());
         }
 
-        set<Tag::MsgType>(header, Message::MsgType);
+        const char msgType[] = { Message::MsgType, 0 };
+
+        set<Tag::MsgType>(header, msgType);
         set<Tag::SendingTime>(header, std::time(nullptr));
         set<Tag::MsgSeqNum>(header, 1);
 
@@ -120,7 +122,7 @@ struct Writer
         buf.pubseekpos(0);
 
         writeTag<Tag::BeginString>(os, Message::Version::Str);
-        writeTag<Tag::BodyLength>(os, size);
+        os << Tag::BodyLength::Id << "=" << std::setfill('0') << std::setw(5) << size << SOH;
 
         buf.restore(context);
 

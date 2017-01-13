@@ -20,6 +20,7 @@
                 return !strncmp(Str, version, Size);                       \
             }                                                              \
         };                                                                 \
+        constexpr const char* Version::Str;                                \
         template<char MsgTypeChar, typename... Tags>                       \
         using MessageV = VersionnedMessage<Version, MsgTypeChar, Tags...>; \
     }                                                                      \

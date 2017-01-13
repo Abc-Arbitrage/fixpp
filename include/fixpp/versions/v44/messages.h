@@ -17,7 +17,10 @@ namespace Fix
 
         namespace Message
         {
-            
+            using Heartbeat = MessageV<'0', Tag::TestReqID>;
+
+            using TestRequest = MessageV<'1', Required<Tag::TestReqID>>;
+
             using MarketDataSnapshot = MessageV<'W',
                   Tag::MDReqID,
                   Component::Instrument,

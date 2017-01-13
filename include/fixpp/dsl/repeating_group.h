@@ -48,6 +48,8 @@ namespace Fix
         using Fields = typename details::flatten::tuple::Flatten<Field, Tags...>::Result;
         using Type = std::vector<Fields>;
 
+        static constexpr size_t TotalTags = std::tuple_size<Fields>::value;
+
         Field() = default;
         Field(const Field& other) = default;
         Field(Field&& other) = default;
