@@ -51,6 +51,43 @@ fixpp/include/fixpp/dsl/message.h:116:9: error: static assertion failed: Invalid
 
 Attempting to retrieve an invalid tag from a Message will also trigger a compile-time error.
 
+## Extending messages
+
+While message types provided by fixpp do not provide any custom tags, you can provide your own custom tags by **extending** existing messages.
+
+```cpp
+using MyTag = Fix::TagT<10876, Fix::Type::Int>;
+using MyLogon = Fix::ExtendedMessage<Fix::v42::Message::Logon, MyTag>;
+```
+Will define and create a new `MyLogon` message with a custom `MyTag` tag. `MyTag` can then be manipulated through the `MyLogon` type:
+
+```cpp
+MyLogon logon;
+Fix::set<MyTag>(logon, 12);
+assert(Fix::get<MyTag>(logon) == 12);
+```
+
+For more complicated customizations of an existing message, `Fix::MessageOverwrite<T>` can be used. `Fix::MessageOverwrite<T>` provides a bunch of operations that can be applied to a Message:
+* `ChangeType<Tag, NewType>` to change the type of an existing tag
+* `AddTag<Tag>`  to add a tag like `ExtendedMessage<T>`
+* `ExtendGroup<GroupTag, Tags...>` to extend a specific repeating group
+
+```cpp
+using MyTag = Fix::TagT<10876, Fix::Type::Int>;
+using MyGroupTag = Fix::TagT<10676, Fix::Type::String>;
+
+struct MyOverwrite : public Fix::MessageOverwrite<Fix::v42::Message::Logon>
+{
+    using Changes = ChangeSet<
+         ChangeType<Of<Fix::Tag::HeartBtInt>, To<Fix::Type::String>>,
+         AddTag<MyTag>,
+         ExtendGroup<Fix::Tag::NoMsgTypes, MyGroupTag>
+    >;
+};
+
+using MyLogon = MyOverwrite::Changes::Apply;
+```
+
 ## Frame parsing
 
 Fixpp uses the [Visitor pattern](https://en.wikipedia.org/wiki/Visitor_pattern). If you are familiar with `boost::variant` or `std::variant`, fixpp features the exact same pattern. To visit a FIX frame, first define a `Callable` object that accepts every possible message that you want to handle:
