@@ -457,13 +457,5 @@ namespace Fix
 
     } // namespace Tag
 
-    template<typename Tag> struct TagTraits
-    {
-        static constexpr unsigned Id = Tag::Id;
-        static constexpr bool Required = Tag::Required;
-
-        using Type = typename Tag::Type;
-    };
-
 } // namespace Fix
 
