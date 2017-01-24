@@ -30,7 +30,7 @@
 
 # Visual Studio
 .vs/
-bin/**
-obj/**
+**/bin/**
+**/obj/**
 *.VC.*
 *.user
