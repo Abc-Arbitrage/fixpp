@@ -1,0 +1,82 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClInclude Include="..\include\fixpp\dsl.h" />
+    <ClInclude Include="..\include\fixpp\meta.h" />
+    <ClInclude Include="..\include\fixpp\streambuf.h" />
+    <ClInclude Include="..\include\fixpp\tag.h" />
+    <ClInclude Include="..\include\fixpp\visitor.h" />
+    <ClInclude Include="..\include\fixpp\writer.h" />
+    <ClInclude Include="..\include\fixpp\dsl\details\unwrap.h">
+      <Filter>dsl\details</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\fixpp\dsl\details\flatten.h">
+      <Filter>dsl\details</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\fixpp\dsl\details\lexical_cast.h">
+      <Filter>dsl\details</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\fixpp\dsl\details\traits.h">
+      <Filter>dsl\details</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\fixpp\dsl\component_block.h">
+      <Filter>dsl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\fixpp\dsl\extensions.h">
+      <Filter>dsl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\fixpp\dsl\field.h">
+      <Filter>dsl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\fixpp\dsl\message.h">
+      <Filter>dsl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\fixpp\dsl\repeating_group.h">
+      <Filter>dsl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\fixpp\dsl\required.h">
+      <Filter>dsl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\fixpp\utils\cursor.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\fixpp\versions\base.h">
+      <Filter>versions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\fixpp\versions\v42.h">
+      <Filter>versions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\fixpp\versions\v44.h">
+      <Filter>versions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\fixpp\versions\v44\component_blocks.h">
+      <Filter>versions\v44</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\fixpp\versions\v44\messages.h">
+      <Filter>versions\v44</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="dsl">
+      <UniqueIdentifier>{3bb45418-09f1-4fd9-a9f4-a5115782db9c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="dsl\details">
+      <UniqueIdentifier>{e9a99c88-6c8b-4ddd-89e2-9ff925ec5c72}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="utils">
+      <UniqueIdentifier>{85dd9f5b-8fb8-487a-a111-da1e439e3c5f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="versions">
+      <UniqueIdentifier>{37058f85-2f9d-4848-b3ba-cff60a0a9457}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="versions\v44">
+      <UniqueIdentifier>{e33be17c-4803-47f3-b424-84689373822e}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\src\cursor.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="..\src\CMakeLists.txt" />
+  </ItemGroup>
+</Project>
