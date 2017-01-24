@@ -40,12 +40,15 @@ namespace Fix
     // Specialization of a Field for a repeating group.
     // Stores values inside a std::vector
 
+    template <class TTag>
+    using DelayedFieldInstantiation = Field<TTag>;
+
     template<typename GroupTag, typename... Tags>
     struct Field<RepeatingGroup<GroupTag, Tags...>>
     {
         using Tag = GroupTag;
 
-        using Fields = typename details::flatten::tuple::Flatten<Field, Tags...>::Result;
+        using Fields = typename details::flatten::tuple::Flatten<DelayedFieldInstantiation, Tags...>::Result;
         using Type = std::vector<Fields>;
 
         static constexpr size_t TotalTags = std::tuple_size<Fields>::value;
