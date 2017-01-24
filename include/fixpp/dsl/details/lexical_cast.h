@@ -32,7 +32,7 @@ namespace Fix
         template<>
         struct LexicalCast<Type::Int>
         {
-            static int cast(const char* offset, size_t size)
+            static int cast(const char* offset, size_t /*size*/)
             {
                 char *end;
                 return strtol(offset, &end, 10);

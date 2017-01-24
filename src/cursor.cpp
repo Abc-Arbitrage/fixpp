@@ -1,10 +1,11 @@
 #include <fixpp/utils/cursor.h>
 
-#include <cstring>
+#include <cctype>
+
 
 bool
 StreamCursor::advance(size_t count) {
-    if (count > buf->in_avail())
+    if (count > static_cast< size_t >(buf->in_avail()))
         return false;
 
     for (size_t i = 0; i < count; ++i) {
@@ -29,7 +30,7 @@ StreamCursor::next() const {
 
 char
 StreamCursor::current() const {
-    return buf->sgetc();
+    return static_cast< char >(buf->sgetc());
 }
 
 const char*
@@ -88,8 +89,8 @@ match_string(const char* str, size_t len, StreamCursor& cursor, CaseSensitivity 
     } else {
         const char *off = cursor.offset();
         for (size_t i = 0; i < len; ++i) {
-            const char lhs = std::tolower(str[i]);
-            const char rhs = std::tolower(off[i]);
+            const auto lhs = std::tolower(str[i]);
+            const auto rhs = std::tolower(off[i]);
             if (lhs != rhs) return false;
         }
 
@@ -105,8 +106,8 @@ match_literal(char c, StreamCursor& cursor, CaseSensitivity cs) {
     if (cursor.eof())
         return false;
 
-    char lhs = (cs == CaseSensitivity::Sensitive ? c : std::tolower(c));
-    char rhs = (cs == CaseSensitivity::Sensitive ? cursor.current() : std::tolower(cursor.current()));
+    char lhs = (cs == CaseSensitivity::Sensitive ? c : static_cast< char >(std::tolower(c)));
+    char rhs = (cs == CaseSensitivity::Sensitive ? cursor.current() : static_cast< char >(std::tolower(cursor.current())));
 
     if (lhs == rhs) {
         cursor.advance(1);
@@ -128,8 +129,8 @@ match_until(std::initializer_list<char> chars, StreamCursor& cursor, CaseSensiti
 
     auto find = [&](char val) {
         for (auto c: chars) {
-            char lhs = cs == CaseSensitivity::Sensitive ? c : std::tolower(c);
-            char rhs = cs == CaseSensitivity::Insensitive ? val : std::tolower(val);
+            char lhs = cs == CaseSensitivity::Sensitive ? c : static_cast< char >(std::tolower(c));
+            char rhs = cs == CaseSensitivity::Insensitive ? val : static_cast< char >(std::tolower(val));
 
             if (lhs == rhs) return true;
         }
