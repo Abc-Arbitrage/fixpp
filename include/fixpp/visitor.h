@@ -85,6 +85,7 @@ namespace Fix
         template<typename Visitor, typename Rules>
         void visitMessageType(const char* msgType, const char* version, size_t size, Visitor visitor, Rules)
         {
+
             using Overrides = typename Rules::Overrides;
 
             using Version42 = Fix::v42::Version;
@@ -145,38 +146,31 @@ namespace Fix
             }
         }
 
-        template<size_t N, size_t Size>
-        struct visit_field
+        template<typename Field, typename Visitor>
+        void doVisitSingleField(unsigned tag, Field& field, Visitor& visitor, bool* found)
         {
-            template<typename Message, typename Visitor>
-            static bool visit(Message& message, unsigned tag, Visitor& visitor)
+            if (tag == field.tag())
             {
-                auto& field = std::get<N>(message.values);
-                if (tag == field.tag())
-                {
-                    visitor(field);
-                    return true;
-                }
-
-                return visit_field<N + 1, Size>::visit(message, tag, visitor);
+                visitor(field);
+                *found = true;
             }
-        };
+        }
 
-        template<size_t N>
-        struct visit_field<N, N>
+        template<typename Message, typename Visitor, size_t... Indexes>
+        bool doVisitField(Message& message, unsigned tag, Visitor& visitor,
+                          meta::index_sequence<Indexes...>)
         {
-            template<typename Message, typename Visitor>
-            static bool visit(Message&, unsigned, Visitor&)
-            {
-                return false;
-            }
-        };
+            bool found = false;
+            int dummy[] = {0, (doVisitSingleField(tag, std::get<Indexes>(message.values), visitor, &found), 0)...};
+
+            return found;
+        }
 
         template<typename Message, typename Visitor>
         bool visitField(Message& message, unsigned tag, Visitor& visitor)
         {
             static constexpr size_t Size = Message::TotalTags;
-            return visit_field<0, Size>::visit(message, tag, visitor);
+            return doVisitField(message, tag, visitor, meta::make_index_sequence<Size>{});
         }
 
         template<typename T>
