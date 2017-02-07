@@ -1,7 +1,7 @@
 #include <fixpp/utils/cursor.h>
 
 #include <cctype>
-
+#include <cstring>
 
 bool
 StreamCursor::advance(size_t count) {

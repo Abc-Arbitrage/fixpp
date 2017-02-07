@@ -5,7 +5,7 @@
 
 #include <streambuf>
 #include <vector>
-#include <memory>
+#include <array>
 
 #pragma once
 
@@ -23,8 +23,8 @@ public:
     SmallStreamBuf()
         : short_buffer { }
     {
-        Base::setp(std::begin(short_buffer), std::end(short_buffer));
-        buffer_ptr = std::begin(short_buffer);
+        Base::setp(short_buffer.data(), short_buffer.data() + short_buffer.size());
+        buffer_ptr = short_buffer.data();
     }
 
     const CharT* buffer() const
