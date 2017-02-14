@@ -121,7 +121,7 @@ namespace Fix
             UTCTimestamp(const std::time_t&);
         };
 
-        std::ostream& operator<<(std::ostream& os, const UTCTimestamp::Time& value)
+        inline std::ostream& operator<<(std::ostream& os, const UTCTimestamp::Time& value)
         {
             auto time = value.time();
             char buffer[32];
@@ -130,7 +130,7 @@ namespace Fix
             return os;
         }
 
-        std::ostream& operator<<(std::ostream& os, const Boolean::Boxed& value)
+        inline std::ostream& operator<<(std::ostream& os, const Boolean::Boxed& value)
         {
             os << (value ? 'Y' : 'N');
             return os;
@@ -176,7 +176,6 @@ namespace Fix
         using IDSource = TagT<22, Type::String>;
         using SecurityIDSource = IDSource;
         using IOIid = TagT<23, Type::String>;
-
         using IOIQltyInd = TagT<25, Type::Char>;
         using IOIRefID = TagT<26, Type::String>;
         using IOIShares = TagT<27, Type::String>;
@@ -198,6 +197,7 @@ namespace Fix
         using PossDupFlag = TagT<43, Type::Boolean>;
         using Price = TagT<44, Type::Float>;
         using RefSeqNum = TagT<45, Type::Int>;
+        using Rule80A = TagT<47, Type::Char>;
         using SecurityID = TagT<48, Type::String>;
         using SenderCompID = TagT<49, Type::String>;
         using SenderSubID = TagT<50, Type::String>;
@@ -213,21 +213,34 @@ namespace Fix
         using SettlmntTyp = TagT<63, Type::Char>;
         using FutSettDate = TagT<64, Type::LocalMktDate>;
         using SymbolSfx = TagT<65, Type::String>;
+        using ExecBroker = TagT<76, Type::String>;
+        using OpenClose = TagT<77, Type::Char>;
+        using NoAllocs = TagT<78, Type::Int>;
+        using AllocAccount = TagT<79, Type::String>;
+        using AllocShares = TagT<80, Type::Qty>;
+        using ProcessCode = TagT<81, Type::Char>;
         using SecureDataLen = TagT<90, Type::Int>;
         using SecureData = TagT<91, Type::Data>;
         using RawDataLength = TagT<95, Type::Int>;
         using RawData = TagT<96, Type::Data>;
         using PossResend = TagT<97, Type::Boolean>;
         using EncryptMethod = TagT<98, Type::Int>;
+        using StopPx = TagT<99, Type::Price>;
+        using ExDestination = TagT<100, Type::String>;
         using IOIQualifier = TagT<104, Type::Char>;
         using Issuer = TagT<106, Type::String>;
         using SecurityDesc = TagT<107, Type::String>;
         using HeartBtInt = TagT<108, Type::Int>;
+        using ClientID = TagT<109, Type::String>;
         using MinQty = TagT<110, Type::Qty>;
+        using MaxFloor = TagT<111, Type::Qty>;
         using TestReqID = TagT<112, Type::String>;
+        using LocateReqd = TagT<114, Type::Boolean>;
         using OnBehalfOfCompID = TagT<115, Type::String>;
         using OnBehalfOfSubID = TagT<116, Type::String>;
         using QuoteID = TagT<117, Type::String>;
+        using SettlCurrency = TagT<120, Type::String>;
+        using ForexReq = TagT<121, Type::Boolean>;
         using OrigSendingTime = TagT<122, Type::UTCTimestamp>;
         using GapFillFlag = TagT<123, Type::Boolean>;
         using ExpireTime = TagT<126, Type::UTCTimestamp>;
@@ -239,6 +252,7 @@ namespace Fix
         using OfferPx = TagT<133, Type::Price>;
         using BidSize = TagT<134, Type::Qty>;
         using OfferSize = TagT<135, Type::Qty>;
+        using PrevClosePx = TagT<140, Type::Price>;
         using ResetSeqNumFlag = TagT<141, Type::Boolean>;
         using SenderLocationID = TagT<142, Type::String>;
         using TargetLocationID = TagT<143, Type::String>;
@@ -246,7 +260,9 @@ namespace Fix
         using DeliverToLocationID = TagT<145, Type::String>;
         using NoRelatedSym = TagT<146, Type::Int>;
         using URLLink = TagT<149, Type::String>;
+        using CashOrderQty = TagT<152, Type::Qty>;
         using SecurityType = TagT<167, Type::String>;
+        using EffectiveTime = TagT<168, Type::UTCTimestamp>;
         using BidSpotRate = TagT<188, Type::Price>;
         using BidForwardPoints = TagT<189, Type::Price>;
         using OfferSpotRate = TagT<190, Type::Price>;
@@ -257,9 +273,13 @@ namespace Fix
         using MaturityMonthYear = TagT<200, Type::MonthYear>;
         using PutOrCall = TagT<201, Type::Int>;
         using StrikePrice = TagT<202, Type::Float>;
+        using CoveredOrUncovered = TagT<203, Type::Int>;
+        using CustomerOrFirm = TagT<204, Type::Int>;
         using MaturityDay = TagT<205, Type::DayOfMonth>;
         using OptAttribute = TagT<206, Type::Char>;
         using SecurityExchange = TagT<207, Type::String>;
+        using MaxShow = TagT<210, Type::Qty>;
+        using PegDifference = TagT<211, Type::Price>;
         using XmlDataLen = TagT<212, Type::Int>;
         using XmlData = TagT<213, Type::Data>;
         using NoRoutingIDs = TagT<215, Type::Int>;
@@ -356,13 +376,21 @@ namespace Fix
         using RefTagID = TagT<371, Type::Int>;
         using RefMsgType = TagT<372, Type::String>;
         using SessionRejectReason = TagT<373, Type::Int>;
+        using ComplianceID = TagT<376, Type::String>;
+        using SolicitedFlag = TagT<377, Type::Boolean>;
         using MaxMessageSize = TagT<383, Type::Int>;
         using NoMsgTypes = TagT<384, Type::Int>;
         using MsgDirection = TagT<385, Type::Char>;
+        using NoTradingSessions = TagT<386, Type::Int>;
         using TotalVolumeTraded = TagT<387, Type::Qty>;
+        using DiscretionInst = TagT<388, Type::Char>;
+        using DiscretionOffset = TagT<389, Type::Price>;
+        using GTBookingInst = TagT<427, Type::Int>;
+        using ExpireDate = TagT<432, Type::String>;
         using UnderlyingCouponRate = TagT<435, Type::Float>;
         using UnderlyingContractMultiplier = TagT<436, Type::Float>;
-        using ExpireDate = TagT<432, Type::String>;
+        using ClearingFirm = TagT<439, Type::String>;
+        using ClearingAccount = TagT<440, Type::String>;
         using NetChgPrevDay = TagT<451, Type::Float>;
         using NoSecurityAltID = TagT<454, Type::Int>;
         using SecurityAltID = TagT<455, Type::String>;

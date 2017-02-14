@@ -3,6 +3,8 @@
 #include <vector>
 #include <unordered_map>
 
+#pragma warning(disable:4503)
+
 #include <fixpp/versions/v42.h>
 #include <fixpp/versions/v44.h>
 #include <fixpp/writer.h>
@@ -125,14 +127,14 @@ TEST(writer_test, should_write_nested_repeating_groups)
     auto mdEntries = Fix::createGroup<Fix::Tag::NoMDEntries>(snapshot, 2);
     auto mdEntry0 = mdEntries.instance();
     Fix::set<Fix::Tag::MDEntryType>(mdEntry0, '0');
-    Fix::set<Fix::Tag::MDEntrySize>(mdEntry0, 500000);
+    Fix::set<Fix::Tag::MDEntrySize>(mdEntry0, 500000.0);
     Fix::set<Fix::Tag::MDEntryDate>(mdEntry0, "20170103");
     Fix::set<Fix::Tag::QuoteEntryID>(mdEntry0, "02z00000hdi:A");
     mdEntries.add(mdEntry0);
 
     auto mdEntry1 = mdEntries.instance();
     Fix::set<Fix::Tag::MDEntryType>(mdEntry1, '1');
-    Fix::set<Fix::Tag::MDEntrySize>(mdEntry1, 500000);
+    Fix::set<Fix::Tag::MDEntrySize>(mdEntry1, 500000.0);
     Fix::set<Fix::Tag::MDEntryDate>(mdEntry1, "20170103");
     Fix::set<Fix::Tag::QuoteEntryID>(mdEntry1, "02z00000hdi:A");
     mdEntries.add(mdEntry1);

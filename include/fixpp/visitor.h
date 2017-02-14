@@ -83,7 +83,7 @@ namespace Fix
             = typename meta::map::ops::atOr<Overrides, Message, Message>::type::Ref;
 
         template<typename Visitor, typename Rules>
-        void visitMessageType(const char* msgType, const char* version, size_t size, Visitor visitor, Rules)
+        void visitMessageType(const char* msgType, const char* version, size_t, Visitor visitor, Rules)
         {
 
             using Overrides = typename Rules::Overrides;
@@ -268,7 +268,7 @@ namespace Fix
 
              // return the index of the smallest element
              template<typename T, size_t Size>
-             constexpr int const_min_index(const const_array<T, Size>& arr, size_t offset, size_t cur)
+             constexpr size_t const_min_index(const const_array<T, Size>& arr, size_t offset, size_t cur)
              {
                  return Size == offset ? cur :
                                         const_min_index(arr, offset + 1, arr[cur] < arr[offset] ? cur : offset);
@@ -455,7 +455,7 @@ namespace Fix
 
             template<typename TagSet>
             void operator()(Field& field, const std::pair<const char*, size_t>& view,
-                            StreamCursor&, TagSet&, bool strict)
+                            StreamCursor&, TagSet&, bool)
             {
                 field.set(view);
             }
@@ -471,7 +471,7 @@ namespace Fix
             static constexpr bool Recursive = true;
 
             template<typename Field, typename TagSet>
-            void operator()(Field& field, const std::pair<const char*, size_t>& view,
+            void operator()(Field& field, const std::pair<const char*, size_t>&,
                             StreamCursor& cursor, TagSet& outerSet, bool strict)
             {
                 FieldParser<Field> parser;
@@ -521,7 +521,7 @@ namespace Fix
                 }
 
                 // Indicates whether we are in a recursive RepeatingGroup or not
-                int recursive: 1;
+                int recursive;
 
             private:
                 std::pair<const char*, size_t> view;
@@ -721,7 +721,7 @@ namespace Fix
         };
 
         template<typename Visitor, typename Rules>
-        void visitMessage(const char* msgType, const char* version, size_t size, StreamCursor& cursor, Visitor visitor, Rules rules)
+        void visitMessage(const char* msgType, const char* version, size_t size, StreamCursor& cursor, Visitor, Rules rules)
         {
             MessageVisitor<Visitor, Rules> messageVisitor(cursor);
             visitMessageType(msgType, version, size, messageVisitor, rules);

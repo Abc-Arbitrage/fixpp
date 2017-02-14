@@ -1,6 +1,8 @@
 #include <chrono>
 #include <fstream>
 
+#pragma warning(disable:4503)
+
 #include <fixpp/visitor.h>
 #include <fixpp/dsl.h>
 
@@ -23,7 +25,7 @@ struct VisitRules : public Fix::VisitRules
 
 struct Visitor
 {
-    void operator()(const Fix::v42::Header::Ref& header, const MyQuote::Ref& quote)
+    void operator()(const Fix::v42::Header::Ref&, const MyQuote::Ref&)
     {
         ++total;
     }

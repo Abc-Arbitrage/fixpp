@@ -49,6 +49,28 @@ namespace Fix
                   RepeatingGroup<Tag::NoMsgTypes, Tag::RefMsgType, Tag::MsgDirection>
              >;
 
+            using NewOrderSingle = MessageV<'D',
+                  Required<Tag::ClOrdID>, Tag::ClientID, Tag::ExecBroker, Tag::Account,
+                  RepeatingGroup<Tag::NoAllocs,
+                      Tag::AllocAccount, Tag::AllocShares
+                  >, Tag::SettlmntTyp, Tag::FutSettDate, Required<Tag::HandlInst>, Tag::ExecInst, Tag::MinQty,
+                  Tag::MaxFloor, Tag::ExDestination,
+                  RepeatingGroup<Tag::NoTradingSessions, Tag::TradingSessionID>,
+                  Tag::ProcessCode, Required<Tag::Symbol>, Tag::SymbolSfx, Tag::SecurityID,
+                  Tag::IDSource, Tag::SecurityType, Tag::MaturityMonthYear, Tag::MaturityDay,
+                  Tag::PutOrCall, Tag::StrikePrice, Tag::OptAttribute, Tag::ContractMultiplier,
+                  Tag::CouponRate, Tag::SecurityExchange, Tag::Issuer, Tag::EncodedIssuerLen,
+                  Tag::EncodedIssuer, Tag::SecurityDesc, Tag::EncodedSecurityDescLen, Tag::EncodedSecurityDesc,
+                  Tag::PrevClosePx, Required<Tag::Side>, Tag::LocateReqd, Required<Tag::TransactTime>,
+                  Tag::OrderQty, Tag::CashOrderQty, Required<Tag::OrdType>, Tag::Price, Tag::StopPx,
+                  Tag::Currency, Tag::ComplianceID, Tag::SolicitedFlag, Tag::IOIid, Tag::QuoteID,
+                  Tag::TimeInForce, Tag::EffectiveTime, Tag::ExpireDate, Tag::ExpireTime, Tag::GTBookingInst,
+                  Tag::Commission, Tag::CommType, Tag::Rule80A, Tag::ForexReq, Tag::SettlCurrency,
+                  Tag::Text, Tag::EncodedTextLen, Tag::EncodedText, Tag::FutSettDate2, Tag::OrderQty2,
+                  Tag::OpenClose, Tag::CoveredOrUncovered, Tag::CustomerOrFirm, Tag::MaxShow, Tag::PegDifference,
+                  Tag::DiscretionInst, Tag::DiscretionOffset, Tag::ClearingFirm, Tag::ClearingAccount
+            >;
+
             using Quote = MessageV<'S',
                 Tag::QuoteReqID, Required<Tag::QuoteID>, Tag::QuoteResponseLevel, Tag::TradingSessionID,
                 Required<Tag::Symbol>, Tag::SymbolSfx, Tag::SecurityID, Tag::IDSource, Tag::SecurityType,

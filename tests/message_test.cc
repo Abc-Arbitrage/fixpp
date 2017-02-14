@@ -2,6 +2,8 @@
 
 #include <cstring>
 
+#pragma warning(disable:4503)
+
 #include <fixpp/versions/v42.h>
 #include <fixpp/versions/v44.h>
 
@@ -10,8 +12,8 @@ TEST(message_test, should_bring_correct_version_with_message_type)
     constexpr const char* v1 = Fix::v42::Message::Heartbeat::Version::Str;
     constexpr const char* v2 = Fix::v42::Message::Logon::Version::Str;
 
-    ASSERT_EQ(v1, "FIX.4.2");
-    ASSERT_EQ(v2, "FIX.4.2");
+    ASSERT_EQ(std::string(v1), std::string("FIX.4.2"));
+    ASSERT_EQ(std::string(v2), std::string("FIX.4.2"));
 }
 
 TEST(message_test, should_get_and_set_tags)

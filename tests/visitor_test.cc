@@ -1,5 +1,7 @@
 #include "gtest/gtest.h"
 
+#pragma warning(disable:4503)
+
 #include <fixpp/versions/v42.h>
 #include <fixpp/versions/v44.h>
 #include <fixpp/visitor.h>
@@ -27,7 +29,7 @@ namespace should_visit_repeating_group_in_logon_frame
 
     struct Visitor
     {
-        void operator()(const Fix::v42::Header::Ref& header, const Fix::v42::Message::Logon::Ref& logon)
+        void operator()(const Fix::v42::Header::Ref&, const Fix::v42::Message::Logon::Ref& logon)
         {
             auto msgTypes = Fix::get<Fix::Tag::NoMsgTypes>(logon);
             ASSERT_EQ(msgTypes.size(), 2);
@@ -84,7 +86,7 @@ namespace should_visit_incremental_refresh_frame
 {
     struct Visitor
     {
-        void operator()(const Fix::v42::Header::Ref& header, const Fix::v42::Message::MarketDataIncrementalRefresh::Ref& message)
+        void operator()(const Fix::v42::Header::Ref&, const Fix::v42::Message::MarketDataIncrementalRefresh::Ref& message)
         {
             using namespace Fix;
 
@@ -145,8 +147,7 @@ namespace should_visit_custom_snapshot_frame
         static constexpr bool StrictMode = false;
     };
 
-    struct Visitor
-    {
+    struct Visitor    {
         void operator()(const Fix::v44::Header::Ref& header, const Snapshot::Ref& message)
         {
             using namespace Fix;

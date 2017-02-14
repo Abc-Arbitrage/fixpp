@@ -71,31 +71,31 @@ namespace Fix
             using Result = VersionnedMessage<VersionT, MsgTypeChar, Tags..., Tag>;
         };
 
+        template<typename Tag, typename TargetGroupTag, typename... NewTags>
+        struct ExtendGroupImpl
+        {
+            using Result = Tag;
+        };
+
+        template<typename TargetGroupTag, typename... Tags, typename... NewTags>
+        struct ExtendGroupImpl<RepeatingGroup<TargetGroupTag, Tags...>, TargetGroupTag, NewTags...>
+        {
+            using Result = RepeatingGroup<TargetGroupTag, Tags..., NewTags...>;
+        };
+
+        template<typename TargetGroupTag, typename... Tags, typename... NewTags>
+        struct ExtendGroupImpl<Required<RepeatingGroup<TargetGroupTag, Tags...>>, TargetGroupTag, NewTags...>
+        {
+            using Result = Required<RepeatingGroup<TargetGroupTag, Tags..., NewTags...>>;
+        };
+
         template<typename VersionT, char MsgTypeChar, typename... Tags, typename GroupTag, typename... NewTags>
         struct ApplyOne<
             VersionnedMessage<VersionT, MsgTypeChar, Tags...>,
             ExtendGroup<GroupTag, NewTags...>
         >
         {
-            template<typename Tag>
-            struct Impl
-            {
-                using Result = Tag;
-            };
-
-            template<typename... GroupTags>
-            struct Impl<RepeatingGroup<GroupTag, GroupTags...>>
-            {
-                using Result = RepeatingGroup<GroupTag, GroupTags..., NewTags...>;
-            };
-
-            template<typename... GroupTags>
-            struct Impl<Required<RepeatingGroup<GroupTag, GroupTags...>>>
-            {
-                using Result = Required<RepeatingGroup<GroupTag, GroupTags..., NewTags...>>;
-            };
-
-            using Result = VersionnedMessage<VersionT, MsgTypeChar, typename Impl<Tags>::Result...>;
+            using Result = VersionnedMessage<VersionT, MsgTypeChar, typename ExtendGroupImpl<Tags, GroupTag, NewTags...>::Result...>;
         };
 
         template<typename MessageT, typename... Changes>

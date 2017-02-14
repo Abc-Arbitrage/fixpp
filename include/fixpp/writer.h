@@ -82,7 +82,7 @@ std::ostream& writeTag(std::ostream& os, Value&& value)
 template<typename Field>
 std::ostream& writeField(std::ostream& os, const Field& field)
 {
-    details::FieldWriter<Field>::write(os, field);
+    return details::FieldWriter<Field>::write(os, field);
 }
 
 struct Writer
