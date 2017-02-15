@@ -234,7 +234,7 @@ namespace Fix
             TRY(match_int(&tag, cursor));
             
             if (tag != Tag::Id)
-               return std::make_pair(nullptr, Ret {});
+               return std::make_pair(false, Ret {});
 
             TRY(match_literal('=', cursor));
 
