@@ -330,11 +330,25 @@ namespace Fix
 
                 static int64_t of(int tag)
                 {
-                    return of_rec(tag, 0);
+                    //return of_rec(tag, 0);
+                    return of_binary_search(tag);
                 }
 
+
             private:
-                // TODO: binary search
+                static int64_t of_binary_search(int tag)
+                {
+                    int64_t low = 0;
+                    int64_t high = Size - 1;
+                    while (low <= high) {
+                       auto mid = (low + high) / 2;
+                       if (Sorted[mid] == tag) return mid;
+                       else if (Sorted[mid] < tag) low = mid + 1;
+                       else high = mid - 1;
+                    }
+                    return -1;
+                }
+
                 static constexpr int64_t of_rec(int tag, int64_t index)
                 {
                     return (index == Size ? -1 :
