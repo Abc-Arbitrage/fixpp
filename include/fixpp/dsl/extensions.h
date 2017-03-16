@@ -11,10 +11,10 @@ namespace Fix
 
     template<typename MessageT, typename... ExtensionTags> struct ExtendedMessage;
 
-    template<typename VersionT, char MsgTypeChar, typename... Tags, typename... ExtensionTags>
+    template<typename VersionT, typename Chars, typename... Tags, typename... ExtensionTags>
     struct ExtendedMessage<
-             VersionnedMessage<VersionT, MsgTypeChar, Tags...>, ExtensionTags...
-           > : public VersionnedMessage<VersionT, MsgTypeChar, Tags..., ExtensionTags...>
+             VersionnedMessage<VersionT, Chars, Tags...>, ExtensionTags...
+           > : public VersionnedMessage<VersionT, Chars, Tags..., ExtensionTags...>
     {
     };
 
@@ -38,9 +38,9 @@ namespace Fix
         template<typename T, typename Change>
         struct ApplyOne;
 
-        template<typename VersionT, char MsgTypeChar, typename... Tags, typename Tag, typename Type>
+        template<typename VersionT, typename Chars, typename... Tags, typename Tag, typename Type>
         struct ApplyOne<
-            VersionnedMessage<VersionT, MsgTypeChar, Tags...>,
+            VersionnedMessage<VersionT, Chars, Tags...>,
             ChangeType<Tag, Type>
         >
         {
@@ -59,16 +59,16 @@ namespace Fix
                 using Result = Required<TagT<N, Type>>;
             };
 
-            using Result = VersionnedMessage<VersionT, MsgTypeChar, typename Impl<Tags, Tag>::Result...>;
+            using Result = VersionnedMessage<VersionT, Chars, typename Impl<Tags, Tag>::Result...>;
         };
 
-        template<typename VersionT, char MsgTypeChar, typename... Tags, typename Tag>
+        template<typename VersionT, typename Chars, typename... Tags, typename Tag>
         struct ApplyOne<
-            VersionnedMessage<VersionT, MsgTypeChar, Tags...>,
+            VersionnedMessage<VersionT, Chars, Tags...>,
             AddTag<Tag>
         >
         {
-            using Result = VersionnedMessage<VersionT, MsgTypeChar, Tags..., Tag>;
+            using Result = VersionnedMessage<VersionT, Chars, Tags..., Tag>;
         };
 
         template<typename Tag, typename TargetGroupTag, typename... NewTags>
@@ -89,13 +89,13 @@ namespace Fix
             using Result = Required<RepeatingGroup<TargetGroupTag, Tags..., NewTags...>>;
         };
 
-        template<typename VersionT, char MsgTypeChar, typename... Tags, typename GroupTag, typename... NewTags>
+        template<typename VersionT, typename Chars, typename... Tags, typename GroupTag, typename... NewTags>
         struct ApplyOne<
-            VersionnedMessage<VersionT, MsgTypeChar, Tags...>,
+            VersionnedMessage<VersionT, Chars, Tags...>,
             ExtendGroup<GroupTag, NewTags...>
         >
         {
-            using Result = VersionnedMessage<VersionT, MsgTypeChar, typename ExtendGroupImpl<Tags, GroupTag, NewTags...>::Result...>;
+            using Result = VersionnedMessage<VersionT, Chars, typename ExtendGroupImpl<Tags, GroupTag, NewTags...>::Result...>;
         };
 
         template<typename MessageT, typename... Changes>

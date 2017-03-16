@@ -17,11 +17,11 @@ namespace Fix
 
         namespace Message
         {
-            using Heartbeat = MessageV<'0', Tag::TestReqID>;
+            using Heartbeat = MessageV<Chars<'0'>, Tag::TestReqID>;
 
-            using TestRequest = MessageV<'1', Required<Tag::TestReqID>>;
+            using TestRequest = MessageV<Chars<'1'>, Required<Tag::TestReqID>>;
 
-            using MarketDataSnapshot = MessageV<'W',
+            using MarketDataSnapshot = MessageV<Chars<'W'>,
                   Tag::MDReqID,
                   Component::Instrument,
                   RepeatingGroup<

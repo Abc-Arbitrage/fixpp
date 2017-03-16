@@ -66,7 +66,8 @@ namespace Fix
             template<typename First, typename Second, typename... Rest>
             struct OverridesValidator<meta::map::Map<meta::map::Pair<First, Second>, Rest...>> : public OverridesValidator<meta::map::Map<Rest...>>
             {
-                static_assert(First::MsgType == Second::MsgType, "Invalid Override: Message types must be the same");
+                static_assert(std::is_same<typename First::MsgTypeChars, typename Second::MsgTypeChars>::value,
+                              "Invalid Override: MsgType must be the same");
             };
 
             template<>
@@ -404,8 +405,8 @@ namespace Fix
             std::bitset<Indexes::Size> bits;
         };
 
-        template<typename VersionT, char MsgTypeChar, typename... Tags>
-        struct TagSet<VersionnedMessage<VersionT, MsgTypeChar, Tags...>> : public TagSet<Tags...>
+        template<typename VersionT, typename Chars, typename... Tags>
+        struct TagSet<VersionnedMessage<VersionT, Chars, Tags...>> : public TagSet<Tags...>
         {
         };
 
@@ -414,8 +415,8 @@ namespace Fix
         {
         };
 
-        template<char MsgTypeChar, typename... Tags>
-        struct TagSet<MessageRef<MsgTypeChar, Tags...>> : public TagSet<Tags...>
+        template<typename Chars, typename... Tags>
+        struct TagSet<MessageRef<Chars, Tags...>> : public TagSet<Tags...>
         {
         };
 

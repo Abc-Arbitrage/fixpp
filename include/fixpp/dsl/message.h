@@ -61,15 +61,31 @@ namespace Fix
         std::unordered_map<int, View> unparsed;
     };
 
+
+    // ------------------------------------------------
+    // Chars
+    // ------------------------------------------------
+
+    // A parameter pack of char...
+
+    template<char ...> struct Chars { };
+
     // ------------------------------------------------
     // MessageRef
     // ------------------------------------------------
 
     // A "view" on a Message
+    //
+    
+    template<typename MsgType, typename... Tags> struct MessageRef;
 
-    template<char MsgTypeChar, typename... Tags> struct MessageRef : public MessageBase<FieldRef, Tags...>
+    template<char... MsgTypeChar, typename... Tags>
+    struct MessageRef<Chars<MsgTypeChar...>, Tags...> : public MessageBase<FieldRef, Tags...>
     {
-        static constexpr const char MsgType = MsgTypeChar;
+        static constexpr const char MsgType[] = { MsgTypeChar... };
+        static constexpr size_t MsgTypeLen = sizeof...(MsgTypeChar);
+
+        using MsgTypeChars = Chars<MsgTypeChar...>;
     };
 
     // ------------------------------------------------
@@ -77,19 +93,23 @@ namespace Fix
     // ------------------------------------------------
 
     // A real Message with its MsgType
+    //
+    template<typename MsgType, typename... Tags> struct MessageT;
 
-    template<char MsgTypeChar, typename... Tags> struct MessageT : public MessageBase<Field, Tags...>
+    template<char... MsgTypeChar, typename... Tags>
+    struct MessageT<Chars<MsgTypeChar...>, Tags...> : public MessageBase<Field, Tags...>
     {
-        static constexpr const char MsgType = MsgTypeChar;
+        static constexpr const char MsgType[] = { MsgTypeChar... };
+        static constexpr size_t MsgTypeLen = sizeof...(MsgTypeChar);
 
-        using Ref = MessageRef<MsgTypeChar, Tags...>;
+        using MsgTypeChars = Chars<MsgTypeChar...>;
     };
 
-    template<char MsgTypeChar, typename... Tags>
-    constexpr const char MessageT<MsgTypeChar, Tags...>::MsgType;
+    template<char... MsgTypeChar, typename... Tags>
+    constexpr const char MessageT<Chars<MsgTypeChar...>, Tags...>::MsgType[];
 
-    template<char MsgTypeChar, typename... Tags>
-    constexpr const char MessageRef<MsgTypeChar, Tags...>::MsgType;
+    template<char... MsgTypeChar, typename... Tags>
+    constexpr const char MessageRef<Chars<MsgTypeChar...>, Tags...>::MsgType[];
 
     // ------------------------------------------------
     // VersionnedMessage
@@ -97,8 +117,8 @@ namespace Fix
 
     // A Message that knows its FIX version
 
-    template<typename VersionT, char MsgTypeChar, typename... Tags>
-    struct VersionnedMessage : public MessageT<MsgTypeChar, Tags...>
+    template<typename VersionT, typename Chars, typename... Tags>
+    struct VersionnedMessage : public MessageT<Chars, Tags...>
     {
         using Version = VersionT;
     };

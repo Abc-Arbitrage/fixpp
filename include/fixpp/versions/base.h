@@ -21,8 +21,8 @@
             }                                                              \
         };                                                                 \
         constexpr const char* Version::Str;                                \
-        template<char MsgTypeChar, typename... Tags>                       \
-        using MessageV = VersionnedMessage<Version, MsgTypeChar, Tags...>; \
+        template<typename Chars, typename... Tags>                         \
+        using MessageV = VersionnedMessage<Version, Chars, Tags...>;       \
     }                                                                      \
     namespace name                                                         \
 

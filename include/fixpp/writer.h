@@ -80,6 +80,16 @@ std::ostream& writeTag(std::ostream& os, Value&& value)
     return os;
 }
 
+template<typename Tag>
+std::ostream& writeRaw(std::ostream& os, const char* data, size_t len)
+{
+    os << Tag::Id << "=";
+    os.write(data, len);
+    os << SOH;
+
+    return os;
+}
+
 template<typename Field>
 std::ostream& writeField(std::ostream& os, const Field& field)
 {
@@ -102,9 +112,6 @@ struct Writer
             throw std::runtime_error(error.str());
         }
 
-        const char msgType[] = { Message::MsgType, 0 };
-
-        set<Tag::MsgType>(header, msgType);
         set<Tag::SendingTime>(header, std::time(nullptr));
         set<Tag::MsgSeqNum>(header, 1);
 
@@ -113,6 +120,7 @@ struct Writer
             throw std::runtime_error("Missing values for header");
         }
 
+        writeRaw<Tag::MsgType>(os, Message::MsgType, Message::MsgTypeLen);
         write(os, header.values, meta::make_index_sequence<Header::TotalTags>());
         write(os, message.values, meta::make_index_sequence<Message::TotalTags>());
 

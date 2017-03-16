@@ -16,21 +16,21 @@ namespace Fix
     {
         namespace Message
         {
-            using Heartbeat = MessageV<'0', Tag::TestReqID>;
+            using Heartbeat = MessageV<Chars<'0'>, Tag::TestReqID>;
 
-            using TestRequest = MessageV<'1', Required<Tag::TestReqID>>;
+            using TestRequest = MessageV<Chars<'1'>, Required<Tag::TestReqID>>;
 
-            using ResendRequest = MessageV<'2', Required<Tag::BeginSeqNo>, Required<Tag::EndSeqNo>>;
+            using ResendRequest = MessageV<Chars<'2'>, Required<Tag::BeginSeqNo>, Required<Tag::EndSeqNo>>;
 
-            using Reject = MessageV<'3',
+            using Reject = MessageV<Chars<'3'>,
                             Required<Tag::RefSeqNum>, Tag::RefTagID, Tag::RefMsgType, Tag::SessionRejectReason,
                             Tag::Text, Tag::EncodedTextLen, Tag::EncodedText>;
 
-            using SequenceReset = MessageV<'4', Tag::GapFillFlag, Required<Tag::NewSeqNo>>;
+            using SequenceReset = MessageV<Chars<'4'>, Tag::GapFillFlag, Required<Tag::NewSeqNo>>;
 
-            using Logout = MessageV<'5', Tag::Text, Tag::EncodedTextLen, Tag::EncodedText>;
+            using Logout = MessageV<Chars<'5'>, Tag::Text, Tag::EncodedTextLen, Tag::EncodedText>;
 
-            using IndicationOfInterest = MessageV<'6',
+            using IndicationOfInterest = MessageV<Chars<'6'>,
                   Required<Tag::IOIid>, Required<Tag::IOITransType>, Tag::IOIRefID, Required<Tag::Symbol>, Tag::SymbolSfx,
                   Tag::SecurityID, Tag::IDSource, Tag::SecurityType, Tag::MaturityMonthYear,
                   Tag::MaturityDay, Tag::PutOrCall, Tag::StrikePrice, Tag::OptAttribute,
@@ -43,13 +43,13 @@ namespace Fix
                   RepeatingGroup<Tag::NoRoutingIDs, Tag::RoutingType, Tag::RoutingID>,
                   Tag::SpreadToBenchmark, Tag::Benchmark>;
 
-            using Logon = MessageV<'A',
+            using Logon = MessageV<Chars<'A'>,
                   Required<Tag::EncryptMethod>, Required<Tag::HeartBtInt>, Tag::RawDataLength, Tag::RawData,
                   Tag::ResetSeqNumFlag, Tag::MaxMessageSize,
                   RepeatingGroup<Tag::NoMsgTypes, Tag::RefMsgType, Tag::MsgDirection>
              >;
 
-            using NewOrderSingle = MessageV<'D',
+            using NewOrderSingle = MessageV<Chars<'D'>,
                   Required<Tag::ClOrdID>, Tag::ClientID, Tag::ExecBroker, Tag::Account,
                   RepeatingGroup<Tag::NoAllocs,
                       Tag::AllocAccount, Tag::AllocShares
@@ -71,7 +71,7 @@ namespace Fix
                   Tag::DiscretionInst, Tag::DiscretionOffset, Tag::ClearingFirm, Tag::ClearingAccount
             >;
 
-            using Quote = MessageV<'S',
+            using Quote = MessageV<Chars<'S'>,
                 Tag::QuoteReqID, Required<Tag::QuoteID>, Tag::QuoteResponseLevel, Tag::TradingSessionID,
                 Required<Tag::Symbol>, Tag::SymbolSfx, Tag::SecurityID, Tag::IDSource, Tag::SecurityType,
                 Tag::MaturityMonthYear, Tag::MaturityDay, Tag::PutOrCall, Tag::StrikePrice, Tag::OptAttribute,
@@ -82,7 +82,7 @@ namespace Fix
                 Tag::FutSettDate, Tag::OrdType, Tag::FutSettDate2, Tag::OrderQty2, Tag::Currency
             >;
 
-            using MarketDataRequest = MessageV<'V',
+            using MarketDataRequest = MessageV<Chars<'V'>,
                   Required<Tag::MDReqID>, Required<Tag::SubscriptionRequestType>,
                   Required<Tag::MarketDepth>, Tag::MDUpdateType, Tag::AggregatedBook,
                   RepeatingGroup<Tag::NoMDEntryTypes, Tag::MDEntryType>,
@@ -96,7 +96,7 @@ namespace Fix
                  >
              >;
 
-            using MarketDataSnapshot = MessageV<'W',
+            using MarketDataSnapshot = MessageV<Chars<'W'>,
                   Tag::MDReqID, Required<Tag::Symbol>, Tag::SymbolSfx, Tag::SecurityID,
                   Tag::IDSource, Tag::SecurityType, Tag::MaturityMonthYear, Tag::MaturityDay,
                   Tag::PutOrCall, Tag::StrikePrice, Tag::OptAttribute, Tag::ContractMultiplier,
@@ -115,7 +115,7 @@ namespace Fix
                    >
                >;
 
-            using MarketDataIncrementalRefresh = MessageV<'X',
+            using MarketDataIncrementalRefresh = MessageV<Chars<'X'>,
                   Tag::MDReqID,
                   Required<RepeatingGroup<Tag::NoMDEntries,
                       Required<Tag::MDUpdateAction>, Tag::DeleteReason, Tag::MDEntryType, Tag::MDEntryID,
