@@ -458,13 +458,13 @@ namespace Fix
         }                                                     \
     } while (0)
 
-#define TRY_MATCH_UNTIL(c, error) \
-    do { \
-        if (!match_until(c, cursor)) \
-        { \
+#define TRY_MATCH_UNTIL(c, error)                             \
+    do {                                                      \
+        if (!match_until(c, cursor))                          \
+        {                                                     \
             context.setError<ErrorKind::ParsingError>(error); \
-            return; \
-        } \
+            return;                                           \
+        }                                                     \
     } while (0)
 
         template<typename T>
