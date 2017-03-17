@@ -15,8 +15,9 @@
         {                                                                  \
             static constexpr const char* Str = string;                     \
             static constexpr size_t Size = sizeof(string) - 1;             \
-            static bool equals(const char* version)                        \
+            static bool equals(const char* version, size_t size)           \
             {                                                              \
+                if (Size != size) return false;                            \
                 return !strncmp(Str, version, Size);                       \
             }                                                              \
         };                                                                 \

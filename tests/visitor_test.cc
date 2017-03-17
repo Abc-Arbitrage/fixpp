@@ -147,7 +147,8 @@ namespace should_visit_custom_snapshot_frame
         static constexpr bool StrictMode = false;
     };
 
-    struct Visitor    {
+    struct Visitor
+    {
         void operator()(const Fix::v44::Header::Ref& header, const Snapshot::Ref& message)
         {
             using namespace Fix;
@@ -269,10 +270,34 @@ namespace should_visit_unknown_tags_in_non_strict_mode
     };
 };
 
-template<typename Visitor>
-void doVisit(const char* frame, Visitor visitor)
+struct AssertVisitRules : public Fix::VisitRules
 {
-    Fix::visit(frame, std::strlen(frame), visitor);
+    using Overrides = OverrideSet<>;
+
+    static constexpr bool ValidateChecksum = false;
+    static constexpr bool ValidateLength = false;
+    static constexpr bool StrictMode = true;
+};
+
+struct AssertVisitor
+{
+    template<typename Header, typename Message>
+    void operator()(Header, Message)
+    {
+        ASSERT_TRUE(false);
+    }
+};
+
+template<typename Visitor>
+Fix::VisitError doVisit(const char* frame, Visitor visitor)
+{
+    return Fix::visit(frame, std::strlen(frame), visitor);
+}
+
+template<typename Visitor, typename Rules>
+Fix::VisitError doVisit(const char* frame, Visitor visitor, Rules rules)
+{
+    return Fix::visit(frame, std::strlen(frame), visitor, rules);
 }
 
 TEST(visitor_test, should_visit_logon_frame)
@@ -290,7 +315,7 @@ TEST(visitor_test, should_visit_repeating_group_in_logon_frame)
 TEST(visitor_test, should_visit_custom_message)
 {
     const char* frame = "8=FIX.4.2|9=84|35=A|34=1|49=ABC|52=20120309-16:54:02|56=TT_ORDER|96=12345678|2154=1212|98=0|108=60|141=Y|10=248";
-    Fix::visit(frame, std::strlen(frame), should_visit_custom_message::Visitor(), should_visit_custom_message::MyVisitRules());
+    doVisit(frame, should_visit_custom_message::Visitor(), should_visit_custom_message::MyVisitRules());
 }
 
 TEST(visitor_test, should_visit_incremental_refresh_frame)
@@ -315,7 +340,7 @@ TEST(visitor_test, should_visit_snapshot_frame)
     using Visitor = should_visit_custom_snapshot_frame::Visitor;
     using VisitRules = should_visit_custom_snapshot_frame::VisitRules;
 
-    Fix::visit(frame, std::strlen(frame), Visitor(), VisitRules());
+    doVisit(frame, Visitor(), VisitRules());
 }
 
 TEST(visitor_test, should_visit_nested_repeating_groups)
@@ -350,5 +375,28 @@ TEST(visitor_test, should_visit_unknown_tags_in_non_strict_mode)
     using Visitor = should_visit_unknown_tags_in_non_strict_mode::Visitor;
     using VisitRules = should_visit_unknown_tags_in_non_strict_mode::VisitRules;
 
-    Fix::visit(frame, std::strlen(frame), Visitor(), VisitRules());
+    doVisit(frame, Visitor(), VisitRules());
+}
+
+TEST(visitor_test, should_stop_when_encountering_invalid_fix_version)
+{
+    const char* frame = "8=FIX.5.1|9=0000|35=0|49=Prov|56=MDABC|10=213";
+
+    auto error = doVisit(frame, AssertVisitor(), AssertVisitRules());
+    ASSERT_FALSE(error.isOk());
+
+    auto errorKind = error.unwrapErr();
+    ASSERT_EQ(errorKind.type(), Fix::ErrorKind::InvalidVersion);
+
+}
+
+TEST(visitor_test, should_stop_in_strict_mode_when_encountering_an_unknown_tag)
+{
+    const char* frame = "8=FIX.4.2|9=0000|35=0|49=Prov|56=MDABC|221=A|10=213";
+
+    auto error = doVisit(frame, AssertVisitor(), AssertVisitRules());
+    ASSERT_FALSE(error.isOk());
+
+    auto errorKind = error.unwrapErr();
+    ASSERT_EQ(errorKind.type(), Fix::ErrorKind::UnknownTag);
 }
