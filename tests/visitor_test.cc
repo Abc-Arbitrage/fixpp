@@ -399,4 +399,5 @@ TEST(visitor_test, should_stop_in_strict_mode_when_encountering_an_unknown_tag)
 
     auto errorKind = error.unwrapErr();
     ASSERT_EQ(errorKind.type(), Fix::ErrorKind::UnknownTag);
+    ASSERT_EQ(errorKind.asString(), "Encountered unknown tag 221");
 }

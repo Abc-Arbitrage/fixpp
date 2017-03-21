@@ -7,6 +7,8 @@
 #pragma once
 
 #include <cstring>
+#include <cstdio>
+#include <cstdarg>
 #include <type_traits>
 #include <algorithm>
 
@@ -35,68 +37,17 @@ namespace Fix
     // ------------------------------------------------
 
     // Encapsulates types of errors that can occur during parsing.
-    // This class is represented as an union of different error types.
-    //
-    // Note that it's using union underneath to represent things just
-    // to avoid allocating extra memory for strings and stuff, which
-    // makes it more complicated to write and understand.
-    // It might be extra-defensive, so maybe we'll decide later on
-    // to just remove all that crap and just keep a std::string as
-    // an error string, as we already avoid throwing exceptions
 
     struct ErrorKind
     {
-        enum Type { ParsingError, UnknownTag,
+        enum Type { Incomplete, ParsingError, UnknownTag,
                     InvalidVersion, InvalidTag, InvalidChecksum, InvalidLength };
 
-        ErrorKind(details::TaggedEnum<ParsingError>, size_t column, const char* context)
-            : type_(ParsingError)
+        ErrorKind(Type type, size_t column, std::string str)
+            : type_(type)
             , column_(column)
-        {
-            error.parsingerror.context = context;
-        }
-
-        ErrorKind(details::TaggedEnum<InvalidVersion>, size_t column, const char* value, size_t size)
-            : type_(InvalidVersion)
-            , column_(column)
-        {
-            error.invalidversion.value = value;
-            error.invalidversion.size = size;
-        }
-
-        ErrorKind(details::TaggedEnum<InvalidTag>, size_t column, int tag, const char* value, size_t size)
-            : type_(InvalidTag)
-            , column_(column)
-        {
-            error.invalidtag.tag = tag;
-            error.invalidtag.value = value;
-            error.invalidtag.size = size;
-        };
-
-        ErrorKind(details::TaggedEnum<UnknownTag>, size_t column, int tag, const char* value, size_t size)
-            : type_(UnknownTag)
-            , column_(column)
-        {
-            error.unknowntag.tag = tag;
-            error.unknowntag.value = value;
-            error.unknowntag.size = size;
-        }
-
-        ErrorKind(details::TaggedEnum<InvalidChecksum>, size_t column, uint32_t value, uint32_t expected)
-            : type_(InvalidChecksum)
-            , column_(column)
-        {
-            error.checksum.value = value;
-            error.checksum.expected = expected;
-        }
-
-        ErrorKind(details::TaggedEnum<InvalidLength>, size_t column, uint32_t value, uint32_t expected)
-            : type_(InvalidLength)
-            , column_(column)
-        {
-            error.length.value = value;
-            error.length.expected = expected;
-        }
+            , str_(std::move(str))
+        { }
 
         Type type() const
         {
@@ -105,36 +56,7 @@ namespace Fix
 
         std::string asString() const
         {
-            std::ostringstream oss;
-
-            switch (type_)
-            {
-            case Type::ParsingError:
-                oss << "Parsing error, column=" << column_ << ": " << error.parsingerror.context;
-                break;
-            case Type::InvalidVersion:
-                oss << "Invalid FIX version, column=" << column_ << ", value="
-                    << std::string(error.invalidversion.value, error.invalidversion.size);
-                break;
-            case Type::UnknownTag:
-                oss << "Unknown Tag(" << error.unknowntag.tag << "), column=" << column_
-                    << "value=" << std::string(error.unknowntag.value, error.unknowntag.size);
-                break;
-            case Type::InvalidTag:
-                oss << "Invalid Tag(" << error.invalidtag.tag << "), column=" << column_
-                    << "value=" << std::string(error.invalidtag.value, error.invalidtag.size);
-                break;
-            case Type::InvalidChecksum:
-                oss << "Invalid checksum, got " << error.checksum.value
-                    << ", expected " << error.checksum.expected;
-                break;
-            case Type::InvalidLength:
-                oss << "Invalid length, got " << error.length.value
-                    << ", expected " << error.length.expected;
-                break;
-            }
-
-            return oss.str();
+            return str_;
         }
 
         size_t column() const
@@ -145,62 +67,23 @@ namespace Fix
     private:
         Type type_;
         size_t column_;
-
-        union
-        {
-            struct
-            {
-                const char* context;
-            } parsingerror;
-
-            struct
-            {
-                const char* value;
-                size_t size;
-            } invalidversion;
-
-            struct
-            {
-                int tag;
-                const char *value;
-                size_t size;
-            } invalidtag;
-
-            struct
-            {
-                int tag;
-                const char* value;
-                size_t size;
-            } unknowntag;
-
-            struct
-            {
-                uint32_t value;
-                uint32_t expected;
-            } checksum;
-
-            struct
-            {
-                uint32_t value;
-                uint32_t expected;
-            } length;
-
-        } error;
+        std::string str_;
     };
 
     using VisitError = Result<void, ErrorKind>;
 
-    template<int EnumT, typename... Args>
-    ErrorKind makeErrorKind(Args&& ...args)
-    {
-        return ErrorKind(details::TaggedEnum<EnumT>{}, std::forward<Args>(args)...);
-    }
-
-    template<int EnumT, typename... Args>
-    VisitError makeError(StreamCursor& cursor, Args&& ...args)
+    VisitError makeError(ErrorKind::Type type, const StreamCursor& cursor, const char* errFmt, ...)
     {
         const size_t column = static_cast<size_t>(cursor);
-        return Err(makeErrorKind<EnumT>(column, std::forward<Args>(args)...));
+
+        char error[255];
+        std::memset(error, 0, sizeof error);
+        va_list args;
+        va_start(args, errFmt);
+        auto count = std::vsnprintf(error, sizeof error, errFmt, args);
+        va_end(args);
+
+        return Err(ErrorKind(type, column, std::string(error, count)));
     }
 
     namespace impl
@@ -211,7 +94,7 @@ namespace Fix
         // ------------------------------------------------
 
         // A sample helper template to defer construction
-        // of a certain type
+        // of a certain type (lightweight optional)
 
         template<typename T>
         struct Deferred
@@ -264,11 +147,18 @@ namespace Fix
                 , sum(0)
             { }
 
-            template<int ErrorT, typename... Args>
-            void setError(Args&& ...args)
+            void setError(ErrorKind::Type type, const char* errFmt, ...)
             {
                 auto column = static_cast<size_t>(cursor);
-                error.construct(details::TaggedEnum<ErrorT> {}, column, std::forward<Args>(args)...);
+
+                char errStr[255];
+                std::memset(errStr, 0, sizeof errStr);
+                va_list args;
+                va_start(args, errFmt);
+                auto count = std::vsnprintf(errStr, sizeof errStr, errFmt, args);
+                va_end(args);
+
+                error.construct(type, column, std::string(errStr, count));
             }
 
             bool hasError() const
@@ -404,7 +294,7 @@ namespace Fix
             }
             else
             {
-                return makeError<ErrorKind::InvalidVersion>(cursor, version, size);
+                return makeError(ErrorKind::InvalidVersion, cursor, "Got invalid FIX version '%s'", version);
             }
 
             if (visitor.hasError())
@@ -440,32 +330,34 @@ namespace Fix
             return doVisitField(message, tag, visitor, meta::make_index_sequence<Size>{});
         }
 
-#define TRY_ADVANCE(error)                                     \
-    do {                                                       \
-        if (!cursor.advance(1))                                \
-        {                                                      \
-            context.setError<ErrorKind::ParsingError>(error);  \
-            return;                                            \
-        }                                                      \
+#define TRY_ADVANCE(fmt, ...)                                           \
+    do {                                                                \
+        if (!cursor.advance(1))                                         \
+        {                                                               \
+            context.setError(ErrorKind::Incomplete, fmt, __VA_ARGS__);  \
+            return;                                                     \
+        }                                                               \
     } while (0)
 
-#define TRY_MATCH_INT(out, error)                             \
+#define TRY_MATCH_INT(out, fmt, ...)                             \
     do {                                                      \
         if (!match_int(&out, cursor))                         \
         {                                                     \
-            context.setError<ErrorKind::ParsingError>(error); \
+            context.setError(ErrorKind::ParsingError, fmt, __VA_ARGS__); \
             return;                                           \
         }                                                     \
     } while (0)
 
-#define TRY_MATCH_UNTIL(c, error)                             \
+#define TRY_MATCH_UNTIL(c, fmt, ...)                             \
     do {                                                      \
         if (!match_until(c, cursor))                          \
         {                                                     \
-            context.setError<ErrorKind::ParsingError>(error); \
+            context.setError(ErrorKind::ParsingError, fmt, __VA_ARGS__); \
             return;                                           \
         }                                                     \
     } while (0)
+
+#define CURSOR_CURRENT(c) (c.eof() ? '?' : c.current())
 
         template<typename T>
         struct TagMatcher;
@@ -740,10 +632,10 @@ namespace Fix
                 auto& cursor = context.cursor;
                 // @Todo: In Strict mode, validate the type of the Tag
                 StreamCursor::Token valueToken(context.cursor);
-                TRY_MATCH_UNTIL('|', "Expected value tag, got EOF");
+                TRY_MATCH_UNTIL('|', "Expected value tag '%d', got EOF", TagT::Id);
 
                 auto view = valueToken.view();
-                TRY_ADVANCE("Expected value after Tag, got EOF");
+                TRY_ADVANCE("Expected value after tag '%d', got EOF", TagT::Id);
 
                 field.set(view);
                 tagSet.set(field.tag());
@@ -846,8 +738,12 @@ namespace Fix
                 auto& cursor = context.cursor;
 
                 int instances;
-                TRY_MATCH_INT(instances, "Could not parse instances number in RepeatingGroup");
-                TRY_ADVANCE("Expected RepeatingGroup, got EOF");
+                TRY_MATCH_INT(
+                    instances,
+                    "Could not parse instances number in RepeatingGroup %d, expected int, got '%c'",
+                     GroupTag::Id, CURSOR_CURRENT(cursor)
+                );
+                TRY_ADVANCE("Expected RepeatingGroup %d, got EOF", GroupTag::Id);
 
                 field.reserve(instances);
 
@@ -864,7 +760,11 @@ namespace Fix
                     {
 
                         StreamCursor::Revert revertTag(cursor);
-                        TRY_MATCH_INT(tag, "Could not parse tag in RepeatingGroup");
+                        TRY_MATCH_INT(
+                            tag,
+                            "Could not parse tag in RepeatingGroup %d, expected int, got '%c'",
+                            GroupTag::Id, CURSOR_CURRENT(cursor)
+                        );
 
                         // The tag we just encountered is invalid for the RepeatingGroup
                         if (!groupSet.valid(tag))
@@ -874,20 +774,20 @@ namespace Fix
                             if (!tagSet.valid(tag) && tag != 10)
                             {
                                 revertTag.ignore();
-                                TRY_ADVANCE("Expected value after Tag, got EOF");
+                                TRY_ADVANCE("Expected value after tag %d, got EOF", tag);
 
                                 StreamCursor::Token valueToken(cursor);
-                                TRY_MATCH_UNTIL('|', "Expected value after Tag, got EOF");
+                                TRY_MATCH_UNTIL('|', "Expected value after tag %d, got EOF", tag);
 
                                 if (!strict)
                                 {
                                     groupRef.unparsed.insert(std::make_pair(tag, valueToken.view()));
-                                    TRY_ADVANCE("Got early EOF after Tag value");
+                                    TRY_ADVANCE("Got early EOF after tag %d value", tag);
                                     continue;
                                 }
                                 else
                                 {
-                                    context.setError<ErrorKind::UnknownTag>(tag, valueToken.rawText(), valueToken.size());
+                                    context.setError(ErrorKind::UnknownTag, "Encountered unknown tag %d in RepeatingGroup %d", tag, GroupTag::Id);
                                     return;
                                 }
                             }
@@ -901,12 +801,12 @@ namespace Fix
                             break;
 
                         revertTag.ignore();
-                        TRY_ADVANCE("Expected value after Tag, got EOF");
+                        TRY_ADVANCE("Expected value after Tag %d, got EOF", tag);
 
                         groupSet.set(tag);
 
                         StreamCursor::Token valueToken(cursor);
-                        TRY_MATCH_UNTIL('|', "Expected value after Tag, got EOF");
+                        TRY_MATCH_UNTIL('|', "Expected value after tag %d, got EOF", tag);
 
                         auto view = valueToken.view();
                         Visitor visitor(view, context, groupSet, strict);
@@ -919,7 +819,7 @@ namespace Fix
 
                         // If we are in a recursive RepeatingGroup parsing, we must *NOT* advance the cursor
                         if (!visitor.recursive)
-                            TRY_ADVANCE("Got early EOF in RepeatingGroup");
+                            TRY_ADVANCE("Got early EOF in RepeatingGroup %d", GroupTag::Id);
                     }
 
                     field.add(std::move(groupRef));
@@ -987,8 +887,13 @@ namespace Fix
                 while (!cursor.eof() && !hasError())
                 {
                     int tag;
-                    TRY_MATCH_INT(tag, "Could not parse Tag");
-                    TRY_ADVANCE("Expected value after Tag, got EOF");
+
+                    TRY_MATCH_INT(
+                        tag,
+                        "Encountered invalid tag, expected int, got '%c'",
+                        CURSOR_CURRENT(cursor)
+                    );
+                    TRY_ADVANCE("Expected value after Tag %d, got EOF", tag);
 
                     if (state == State::InHeader)
                     {
@@ -1012,12 +917,16 @@ namespace Fix
 
                     if (tag == 10)
                     {
-                        TRY_MATCH_INT(checksum, "Could not parse Checksum");
+                        TRY_MATCH_INT(
+                            checksum,
+                            "Invalid checksum, expected int, got '%c'",
+                             CURSOR_CURRENT(cursor)
+                        );
                     }
                     else
                     {
                         StreamCursor::Token valueToken(cursor);
-                        TRY_MATCH_UNTIL('|', "Expected value after tag, got EOF");
+                        TRY_MATCH_UNTIL('|', "Expected value after tag %d, got EOF", tag);
 
                         if (!Rules::StrictMode)
                         {
@@ -1028,12 +937,13 @@ namespace Fix
                         }
                         else
                         {
-                            context.setError<ErrorKind::UnknownTag>(tag, valueToken.rawText(), valueToken.size());
+                            context.setError(ErrorKind::UnknownTag, "Encountered unknown tag %d", tag);
                             break;
                         }
                     }
 
-                    TRY_ADVANCE("Got early EOF");
+                    // Dirty hack to force the expansion of ellipsis in the macro
+                    TRY_ADVANCE("Got early %s", "EOF");
 
                 }
 
@@ -1108,18 +1018,18 @@ namespace Fix
         auto beginString = impl::matchTag<Tag::BeginString>(cursor);
 
         if (!cursor.advance(1))
-            return makeError<ErrorKind::ParsingError>(cursor, "Expected BodyLength after BeginString, got EOF");
+            return makeError(ErrorKind::Incomplete, cursor, "Expected BodyLength after BeginString, got EOF");
 
         if (!impl::matchTag<Tag::BodyLength>(cursor).first)
-            return makeError<ErrorKind::InvalidTag>(cursor, 9 /* Tag::BodyLength::Id */, "", 0);
+            return makeError(ErrorKind::InvalidTag, cursor, "Could not parse BodyLength, expected int, got '%c'", CURSOR_CURRENT(cursor));
 
         if (!cursor.advance(1))
-            return makeError<ErrorKind::ParsingError>(cursor, "Expected MsgType after BodyLength, got EOF");
+            return makeError(ErrorKind::ParsingError, cursor, "Expected MsgType after BodyLength, got EOF");
 
         auto msgType = impl::matchTag<Tag::MsgType>(cursor);
         
         if (!cursor.advance(1))
-            return makeError<ErrorKind::ParsingError>(cursor, "Expected Header after MsgType, got EOF");
+            return makeError(ErrorKind::ParsingError, cursor, "Expected Header after MsgType, got EOF");
 
         return impl::visitMessage(msgType.second.first, beginString.second.first, beginString.second.second, cursor, visitor, rules);
     }
