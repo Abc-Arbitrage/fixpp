@@ -25,12 +25,8 @@
 namespace Fix
 {
 
-    namespace details
-    {
-
-        template<int T>
-        struct TaggedEnum { };
-    };
+    // @Todo use string_view when available
+    using View = std::pair<const char*, size_t>;
 
     // ------------------------------------------------
     // ErrorKind
@@ -86,90 +82,111 @@ namespace Fix
         return Err(ErrorKind(type, column, std::string(error, count)));
     }
 
-    namespace impl
+    // ------------------------------------------------
+    // Deferred
+    // ------------------------------------------------
+
+    // A sample helper template to defer construction
+    // of a certain type (lightweight optional)
+
+    template<typename T>
+    struct Deferred
+    {
+        Deferred()
+            : empty_(true)
+        { }
+
+        typedef typename std::aligned_storage<sizeof (T), alignof (T)>::type Storage;
+
+        template<typename... Args>
+        void construct(Args&& ...args)
+        {
+            new (&storage_) T(std::forward<Args>(args)...);
+            empty_ = false;
+        }
+
+        bool isEmpty() const
+        {
+            return empty_;
+        }
+
+        const T& get() const
+        {
+            // @Safety Assert that empty_ is false
+            return *reinterpret_cast<const T *>(&storage_);
+        }
+
+        T* operator->()
+        {
+            // @Safety Assert that empty_ is false
+            return reinterpret_cast<T *>(&storage_);
+        }
+
+        const T* operator->() const
+        {
+            // @Safety Assert that empty_ is false
+            return reinterpret_cast<const T*>(&storage_);
+        }
+
+    private:
+        Storage storage_;
+        bool empty_;
+    };
+
+    struct ParsingContext
     {
 
-        // ------------------------------------------------
-        // Deferred
-        // ------------------------------------------------
+        ParsingContext(StreamCursor& cursor)
+            : cursor(cursor)
+            , sum(0)
+        { }
 
-        // A sample helper template to defer construction
-        // of a certain type (lightweight optional)
-
-        template<typename T>
-        struct Deferred
+        void setError(ErrorKind::Type type, const char* errFmt, ...)
         {
-            Deferred()
-                : empty_(true)
-            { }
+            auto column = static_cast<size_t>(cursor);
 
-            typedef typename std::aligned_storage<sizeof (T), alignof (T)>::type Storage;
+            char errStr[255];
+            std::memset(errStr, 0, sizeof errStr);
+            va_list args;
+            va_start(args, errFmt);
+            auto count = std::vsnprintf(errStr, sizeof errStr, errFmt, args);
+            va_end(args);
 
-            template<typename... Args>
-            void construct(Args&& ...args)
-            {
-                new (&storage_) T(std::forward<Args>(args)...);
-                empty_ = false;
-            }
+            error.construct(type, column, std::string(errStr, count));
+        }
 
-            bool isEmpty() const
-            {
-                return empty_;
-            }
-
-            const T& get() const
-            {
-                // @Safety Assert that empty_ is false
-                return *reinterpret_cast<const T *>(&storage_);
-            }
-
-            T* operator->()
-            {
-                // @Safety Assert that empty_ is false
-                return reinterpret_cast<T *>(&storage_);
-            }
-
-            const T* operator->() const
-            {
-                // @Safety Assert that empty_ is false
-                return reinterpret_cast<const T*>(&storage_);
-            }
-
-        private:
-            Storage storage_;
-            bool empty_;
-        };
-
-        struct ParsingContext
+        bool hasError() const
         {
-            ParsingContext(StreamCursor& cursor)
-                : cursor(cursor)
-                , sum(0)
-            { }
+            return !error.isEmpty();
+        }
 
-            void setError(ErrorKind::Type type, const char* errFmt, ...)
-            {
-                auto column = static_cast<size_t>(cursor);
+        void setBodyLength(int length)
+        {
+            bodyLength = length;
+        }
 
-                char errStr[255];
-                std::memset(errStr, 0, sizeof errStr);
-                va_list args;
-                va_start(args, errFmt);
-                auto count = std::vsnprintf(errStr, sizeof errStr, errFmt, args);
-                va_end(args);
+        void setMsgType(const View& view)
+        {
+            msgType = view;
+        }
 
-                error.construct(type, column, std::string(errStr, count));
-            }
+        void setVersion(const View& view)
+        {
+            version = view;
+        }
 
-            bool hasError() const
-            {
-                return !error.isEmpty();
-            }
+        StreamCursor& cursor;
+        Deferred<ErrorKind> error;
 
-            StreamCursor& cursor;
-            Deferred<ErrorKind> error;
-            size_t sum;
-        };
+        View version;
+        int bodyLength;
+        View msgType;
+
+        size_t sum;
+    };
+
+    namespace impl
+    {
 
         namespace rules
         {
@@ -231,7 +248,7 @@ namespace Fix
             = typename meta::map::ops::atOr<Overrides, Message, Message>::type::Ref;
 
         template<typename Visitor, typename Rules>
-        VisitError visitMessageType(StreamCursor& cursor, const char* msgType, const char* version, size_t size, Visitor& visitor, Rules)
+        void visitMessage(ParsingContext& context, Visitor& visitor, Rules)
         {
 
             using Overrides = typename Rules::Overrides;
@@ -239,7 +256,12 @@ namespace Fix
             using Version42 = Fix::v42::Version;
             using Version44 = Fix::v44::Version;
 
-            if (Version42::equals(version, size))
+            auto version = context.version.first;
+            auto versionSize = context.version.second;
+
+            auto msgType = context.msgType.first;
+
+            if (Version42::equals(version, versionSize))
             {
                 using Header = Fix::v42::Header::Ref;
 
@@ -281,7 +303,7 @@ namespace Fix
                         visitor(id<Header> {}, id<OverrideFor<Fix::v42::Message::MarketDataIncrementalRefresh, Overrides>> {});
                 }
             }
-            else if (Version44::equals(version, size))
+            else if (Version44::equals(version, versionSize))
             {
                 using Header = Fix::v44::Header::Ref;
 
@@ -294,13 +316,8 @@ namespace Fix
             }
             else
             {
-                return makeError(ErrorKind::InvalidVersion, cursor, "Got invalid FIX version '%s'", version);
+                context.setError(ErrorKind::InvalidVersion, "Got invalid FIX version '%s'", version);
             }
-
-            if (visitor.hasError())
-                return Err(visitor.error());
-
-            return Ok();
         }
 
         template<typename Field, typename Visitor>
@@ -330,31 +347,32 @@ namespace Fix
             return doVisitField(message, tag, visitor, meta::make_index_sequence<Size>{});
         }
 
-#define TRY_ADVANCE(fmt, ...)                                           \
-    do {                                                                \
-        if (!cursor.advance(1))                                         \
-        {                                                               \
-            context.setError(ErrorKind::Incomplete, fmt, __VA_ARGS__);  \
-            return;                                                     \
-        }                                                               \
+
+#define TRY_ADVANCE(fmt, ...)                                                    \
+    do {                                                                         \
+        if (!cursor.advance(1))                                                  \
+        {                                                                        \
+            context.setError(ErrorKind::Incomplete, fmt, ## __VA_ARGS__);        \
+            return;                                                              \
+        }                                                                        \
     } while (0)
 
-#define TRY_MATCH_INT(out, fmt, ...)                             \
-    do {                                                      \
-        if (!match_int(&out, cursor))                         \
-        {                                                     \
-            context.setError(ErrorKind::ParsingError, fmt, __VA_ARGS__); \
-            return;                                           \
-        }                                                     \
+#define TRY_MATCH_INT(out, fmt, ...)                                              \
+    do {                                                                          \
+        if (!match_int(&out, cursor))                                             \
+        {                                                                         \
+            context.setError(ErrorKind::ParsingError, fmt, ## __VA_ARGS__);       \
+            return;                                                               \
+        }                                                                         \
     } while (0)
 
-#define TRY_MATCH_UNTIL(c, fmt, ...)                             \
-    do {                                                      \
-        if (!match_until(c, cursor))                          \
-        {                                                     \
-            context.setError(ErrorKind::ParsingError, fmt, __VA_ARGS__); \
-            return;                                           \
-        }                                                     \
+#define TRY_MATCH_UNTIL(c, fmt, ...)                                              \
+    do {                                                                          \
+        if (!match_until(c, cursor))                                              \
+        {                                                                         \
+            context.setError(ErrorKind::ParsingError, fmt, ## __VA_ARGS__);       \
+            return;                                                               \
+        }                                                                         \
     } while (0)
 
 #define CURSOR_CURRENT(c) (c.eof() ? '?' : c.current())
@@ -378,7 +396,7 @@ namespace Fix
         template<>
         struct TagMatcher<Type::String>
         {
-            using Return = std::pair<const char*, size_t>;
+            using Return = View;
 
             static bool matchValue(Return* value, StreamCursor& cursor)
             {
@@ -863,8 +881,8 @@ namespace Fix
         template<typename Visitor, typename Rules>
         struct MessageVisitor
         {
-            MessageVisitor(StreamCursor& cursor)
-                : context(cursor)
+            MessageVisitor(ParsingContext& context)
+                : context(context)
             { }
 
             template<typename Message, typename Header>
@@ -942,8 +960,7 @@ namespace Fix
                         }
                     }
 
-                    // Dirty hack to force the expansion of ellipsis in the macro
-                    TRY_ADVANCE("Got early %s", "EOF");
+                    TRY_ADVANCE("Got early EOF");
 
                 }
 
@@ -956,26 +973,10 @@ namespace Fix
                 return context.hasError();
             }
 
-            ErrorKind error() const
-            {
-                return context.error.get();
-            }
-
         private:
             Visitor visitor;
-            ParsingContext context;
+            ParsingContext& context;
         };
-
-        template<typename Visitor, typename Rules>
-        VisitError visitMessage(const char* msgType, const char* version, size_t size, StreamCursor& cursor, Visitor, Rules rules)
-        {
-            MessageVisitor<Visitor, Rules> messageVisitor(cursor);
-            return visitMessageType(cursor, msgType, version, size, messageVisitor, rules);
-        }
-
-#undef TRY_ADVANCE
-#undef TRY_MATCH_INT
-#undef TRY_MATCH_UNTIL
 
     } // namespace impl
 
@@ -1001,6 +1002,35 @@ namespace Fix
     };
 
     template<typename Visitor, typename Rules>
+    void visitMessage(ParsingContext& context, Visitor visitor, Rules rules)
+    {
+        auto& cursor = context.cursor;
+        auto beginString = impl::matchTag<Tag::BeginString>(cursor);
+
+        TRY_ADVANCE("Expected BodyLength after BeginString, got EOFs");
+
+        auto bodyLength = impl::matchTag<Tag::BodyLength>(cursor);
+        if (!bodyLength.first)
+        {
+            context.setError(ErrorKind::ParsingError,
+                             "Could not parse BodyLength, expected int, got '%c'",
+                              CURSOR_CURRENT(cursor));
+            return;
+        }
+
+        TRY_ADVANCE("Expected MsgType after BodyLength, got EOF");
+        auto msgType = impl::matchTag<Tag::MsgType>(cursor);
+        TRY_ADVANCE("Expected Header after MsgType, got EOF");
+
+        context.setVersion(beginString.second);
+        context.setBodyLength(bodyLength.second);
+        context.setMsgType(msgType.second);
+
+        impl::MessageVisitor<Visitor, Rules> messageVisitor(context);
+        impl::visitMessage(context, messageVisitor, rules);
+    }
+
+    template<typename Visitor, typename Rules>
     VisitError visit(const char* frame, size_t size, Visitor visitor, Rules rules)
     {
         static_assert(std::is_base_of<VisitRules, Rules>::value, "Visit rules must inherit from VisitRules");
@@ -1015,23 +1045,15 @@ namespace Fix
         RawStreamBuf<> streambuf(const_cast<char *>(frame), size);
         StreamCursor cursor(&streambuf);
 
-        auto beginString = impl::matchTag<Tag::BeginString>(cursor);
+        ParsingContext context(cursor);
+        visitMessage(context, visitor, rules);
 
-        if (!cursor.advance(1))
-            return makeError(ErrorKind::Incomplete, cursor, "Expected BodyLength after BeginString, got EOF");
+        if (context.hasError())
+        {
+            return Err(context.error.get());
+        }
 
-        if (!impl::matchTag<Tag::BodyLength>(cursor).first)
-            return makeError(ErrorKind::InvalidTag, cursor, "Could not parse BodyLength, expected int, got '%c'", CURSOR_CURRENT(cursor));
-
-        if (!cursor.advance(1))
-            return makeError(ErrorKind::ParsingError, cursor, "Expected MsgType after BodyLength, got EOF");
-
-        auto msgType = impl::matchTag<Tag::MsgType>(cursor);
-        
-        if (!cursor.advance(1))
-            return makeError(ErrorKind::ParsingError, cursor, "Expected Header after MsgType, got EOF");
-
-        return impl::visitMessage(msgType.second.first, beginString.second.first, beginString.second.second, cursor, visitor, rules);
+        return Ok();
     }
 
     template<typename Visitor>
@@ -1039,5 +1061,9 @@ namespace Fix
     {
         return visit(frame, size, visitor, DefaultRules {});
     }
+
+#undef TRY_ADVANCE
+#undef TRY_MATCH_INT
+#undef TRY_MATCH_UNTIL
 
 } // namespace Fix
