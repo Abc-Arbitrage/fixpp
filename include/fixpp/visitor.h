@@ -375,6 +375,7 @@ namespace Fix
         }                                                                         \
     } while (0)
 
+// @Improvement: Figure out how to properly print EOF
 #define CURSOR_CURRENT(c) (c.eof() ? '?' : c.current())
 
         template<typename T>
@@ -674,9 +675,17 @@ namespace Fix
             static constexpr bool Recursive = false;
 
             template<typename TagSet>
-            void operator()(Field& field, const std::pair<const char*, size_t>& view,
-                            ParsingContext&, TagSet&, bool)
+            void operator()(Field& field,
+                            ParsingContext& context, TagSet&, bool)
             {
+                static constexpr auto Tag = Field::Tag::Id;
+                auto& cursor = context.cursor;
+
+                StreamCursor::Token valueToken(cursor);
+                TRY_MATCH_UNTIL('|', "Expected value after tag %d, got EOF", Tag);
+
+                auto view = valueToken.view();
+
                 field.set(view);
             }
         };
@@ -691,7 +700,7 @@ namespace Fix
             static constexpr bool Recursive = true;
 
             template<typename Field, typename TagSet>
-            void operator()(Field& field, const std::pair<const char*, size_t>&,
+            void operator()(Field& field,
                             ParsingContext& context, TagSet& outerSet, bool strict)
             {
                 FieldParser<Field> parser;
@@ -721,9 +730,8 @@ namespace Fix
 
             struct Visitor
             {
-                Visitor(const std::pair<const char*, size_t>& view, ParsingContext& context, GroupSet& groupSet, bool strict)
-                    : view(view)
-                    , context(context)
+                Visitor(ParsingContext& context, GroupSet& groupSet, bool strict)
+                    : context(context)
                     , groupSet(groupSet)
                     , strict(strict)
                     , recursive(0)
@@ -735,7 +743,7 @@ namespace Fix
                     using GroupVisitor = FieldGroupVisitor<Field>;
 
                     GroupVisitor visitor;
-                    visitor(field, view, context, groupSet, strict);
+                    visitor(field, context, groupSet, strict);
 
                     recursive = GroupVisitor::Recursive;
                 }
@@ -744,7 +752,6 @@ namespace Fix
                 int recursive;
 
             private:
-                std::pair<const char*, size_t> view;
                 ParsingContext& context;
                 GroupSet& groupSet;
                 bool strict;
@@ -761,6 +768,8 @@ namespace Fix
                     "Could not parse instances number in RepeatingGroup %d, expected int, got '%c'",
                      GroupTag::Id, CURSOR_CURRENT(cursor)
                 );
+
+                // Literal('=')
                 TRY_ADVANCE("Expected RepeatingGroup %d, got EOF", GroupTag::Id);
 
                 field.reserve(instances);
@@ -819,15 +828,13 @@ namespace Fix
                             break;
 
                         revertTag.ignore();
+
+                        // Literal('=')
                         TRY_ADVANCE("Expected value after Tag %d, got EOF", tag);
 
                         groupSet.set(tag);
 
-                        StreamCursor::Token valueToken(cursor);
-                        TRY_MATCH_UNTIL('|', "Expected value after tag %d, got EOF", tag);
-
-                        auto view = valueToken.view();
-                        Visitor visitor(view, context, groupSet, strict);
+                        Visitor visitor(context, groupSet, strict);
 
                         // Invariant: here visitField should ALWAYS return true as we are checking if the tag
                         // is valid prior to the call
@@ -940,6 +947,7 @@ namespace Fix
                             "Invalid checksum, expected int, got '%c'",
                              CURSOR_CURRENT(cursor)
                         );
+                        break;
                     }
                     else
                     {

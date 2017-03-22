@@ -33,14 +33,24 @@ namespace Fix
 
         Field(const Field& other)
         {
-            if (!other.empty())
-            {
-                val_ = other.val_;
-            }
-            empty_ = other.empty_;
+            operator=(other);
         }
 
         Field(Field&& other)
+        {
+            operator=(std::move(other));
+        }
+
+        Field& operator=(const Field& other)
+        {
+            if (!other.empty())
+                val_ = other.val_;
+
+            empty_ = other.empty_;
+            return *this;
+        }
+
+        Field& operator=(Field&& other)
         {
             if (!other.empty())
             {
@@ -52,6 +62,7 @@ namespace Fix
             {
                 empty_ = true;
             }
+            return *this;
         }
 
         template<typename T>

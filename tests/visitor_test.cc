@@ -303,19 +303,22 @@ Fix::VisitError doVisit(const char* frame, Visitor visitor, Rules rules)
 TEST(visitor_test, should_visit_logon_frame)
 {
     const char* frame = "8=FIX.4.2|9=84|35=A|34=1|49=ABC|52=20120309-16:54:02|56=TT_ORDER|96=12345678|98=0|108=60|141=Y|10=248";
-    doVisit(frame, should_visit_logon_frame::Visitor());
+    auto err = doVisit(frame, should_visit_logon_frame::Visitor());
+    ASSERT_TRUE(err.isOk());
 }
 
 TEST(visitor_test, should_visit_repeating_group_in_logon_frame)
 {
     const char* frame = "8=FIX.4.2|9=84|35=A|34=1|49=ABC|52=20120309-16:54:02|56=TT_ORDER|96=12345678|384=2|372=TEST|385=C|372=TEST|10=248";
-    doVisit(frame, should_visit_repeating_group_in_logon_frame::Visitor());
+    auto err = doVisit(frame, should_visit_repeating_group_in_logon_frame::Visitor());
+    ASSERT_TRUE(err.isOk());
 }
 
 TEST(visitor_test, should_visit_custom_message)
 {
     const char* frame = "8=FIX.4.2|9=84|35=A|34=1|49=ABC|52=20120309-16:54:02|56=TT_ORDER|96=12345678|2154=1212|98=0|108=60|141=Y|10=248";
-    doVisit(frame, should_visit_custom_message::Visitor(), should_visit_custom_message::MyVisitRules());
+    auto err = doVisit(frame, should_visit_custom_message::Visitor(), should_visit_custom_message::MyVisitRules());
+    ASSERT_TRUE(err.isOk());
 }
 
 TEST(visitor_test, should_visit_incremental_refresh_frame)
@@ -327,7 +330,8 @@ TEST(visitor_test, should_visit_incremental_refresh_frame)
                         "279=0|55=CHF/JPY|269=1|278=0453665277|270=00104.856000|271=001000000.00|15=CHF|"
                         "10=213";
 
-    doVisit(frame, should_visit_incremental_refresh_frame::Visitor());
+    auto err = doVisit(frame, should_visit_incremental_refresh_frame::Visitor());
+    ASSERT_TRUE(err.isOk());
 }
 
 TEST(visitor_test, should_visit_snapshot_frame)
@@ -340,7 +344,8 @@ TEST(visitor_test, should_visit_snapshot_frame)
     using Visitor = should_visit_custom_snapshot_frame::Visitor;
     using VisitRules = should_visit_custom_snapshot_frame::VisitRules;
 
-    doVisit(frame, Visitor(), VisitRules());
+   auto err = doVisit(frame, Visitor(), VisitRules());
+   ASSERT_TRUE(err.isOk());
 }
 
 TEST(visitor_test, should_visit_nested_repeating_groups)
@@ -355,7 +360,8 @@ TEST(visitor_test, should_visit_nested_repeating_groups)
                             "269=0|271=500000|272=20170103|299=02z00000hdi:A|"
                             "269=1|271=500000|272=20170103|299=02z00000hdi:A|"
                         "10=213";
-    doVisit(frame, should_visit_nested_repeating_groups::Visitor());
+    auto err = doVisit(frame, should_visit_nested_repeating_groups::Visitor());
+    ASSERT_TRUE(err.isOk());
 }
 
 TEST(visitor_test, should_visit_unknown_tags_in_non_strict_mode)
@@ -375,7 +381,8 @@ TEST(visitor_test, should_visit_unknown_tags_in_non_strict_mode)
     using Visitor = should_visit_unknown_tags_in_non_strict_mode::Visitor;
     using VisitRules = should_visit_unknown_tags_in_non_strict_mode::VisitRules;
 
-    doVisit(frame, Visitor(), VisitRules());
+    auto err = doVisit(frame, Visitor(), VisitRules());
+    ASSERT_TRUE(err.isOk());
 }
 
 TEST(visitor_test, should_stop_when_encountering_invalid_fix_version)
