@@ -174,9 +174,12 @@ bool match_raw(const void* buf, size_t len, StreamCursor& cursor);
 bool match_string(const char *str, size_t len, StreamCursor& cursor,
         CaseSensitivity cs = CaseSensitivity::Insensitive);
 bool match_literal(char c, StreamCursor& cursor, CaseSensitivity cs = CaseSensitivity::Insensitive);
+bool match_literal_fast(char c, StreamCursor& cursor);
 bool match_until(char c, StreamCursor& cursor, CaseSensitivity cs = CaseSensitivity::Insensitive);
+bool match_until_fast(char c, StreamCursor& cursor);
 bool match_until(std::initializer_list<char> chars, StreamCursor& cursor, CaseSensitivity cs = CaseSensitivity::Insensitive);
 bool match_double(double* val, StreamCursor& cursor);
 bool match_int(int* val, StreamCursor& cursor);
+bool match_int_fast(int* val, StreamCursor& cursor);
 
 void skip_whitespaces(StreamCursor& cursor);

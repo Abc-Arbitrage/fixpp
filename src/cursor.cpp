@@ -118,6 +118,19 @@ match_literal(char c, StreamCursor& cursor, CaseSensitivity cs) {
 }
 
 bool
+match_literal_fast(char c, StreamCursor& cursor) {
+    if (cursor.eof())
+        return false;
+
+    if (c == cursor.current()) {
+        cursor.advance(1);
+        return true;
+    }
+
+    return false;
+}
+
+bool
 match_until(char c, StreamCursor& cursor, CaseSensitivity cs) {
     return match_until( { c }, cursor, cs);
 }
@@ -147,6 +160,17 @@ match_until(std::initializer_list<char> chars, StreamCursor& cursor, CaseSensiti
     return false;
 }
 
+bool match_until_fast(char c, StreamCursor& cursor) {
+    size_t i = 0;
+    while (!cursor.eof()) {
+        const char cur = cursor.current();
+        if (c == cur) return true;
+        cursor.advance(1);
+    }
+
+    return false;
+}
+
 bool
 match_double(double* val, StreamCursor &cursor) {
     // @Todo: strtod does not support a length argument
@@ -168,6 +192,39 @@ match_int(int* val, StreamCursor &cursor) {
 
     cursor.advance(static_cast<ptrdiff_t>(end - cursor.offset()));
     return true;
+}
+
+bool
+match_int_fast(int* val, StreamCursor& cursor) {
+    if (cursor.eof())
+        return false;
+
+    size_t i = 0;
+    const char *p = cursor.offset();
+    size_t remaining = cursor.remaining();
+
+    int integer = 0;
+
+    for (;;)
+    {
+        const char c = *p++;
+        if (!(c >= '0' && c <= '9'))
+            break;
+
+        integer *= 10;
+        integer += c - '0';
+        ++i;
+        if (--remaining == 0)
+            break;
+    }
+
+    if (i > 0) {
+        *val = integer;
+        cursor.advance(i);
+        return true;
+    }
+
+    return false;
 }
 
 void

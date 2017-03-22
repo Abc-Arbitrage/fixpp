@@ -359,7 +359,7 @@ namespace Fix
 
 #define TRY_MATCH_INT(out, fmt, ...)                                              \
     do {                                                                          \
-        if (!match_int(&out, cursor))                                             \
+        if (!match_int_fast(&out, cursor))                                        \
         {                                                                         \
             context.setError(ErrorKind::ParsingError, fmt, ## __VA_ARGS__);       \
             return;                                                               \
@@ -368,7 +368,7 @@ namespace Fix
 
 #define TRY_MATCH_UNTIL(c, fmt, ...)                                              \
     do {                                                                          \
-        if (!match_until(c, cursor))                                              \
+        if (!match_until_fast(c, cursor))                                         \
         {                                                                         \
             context.setError(ErrorKind::ParsingError, fmt, ## __VA_ARGS__);       \
             return;                                                               \
@@ -401,7 +401,7 @@ namespace Fix
             static bool matchValue(Return* value, StreamCursor& cursor)
             {
                 StreamCursor::Token valueToken(cursor);
-                if (!match_until('|', cursor)) return false;
+                if (!match_until_fast('|', cursor)) return false;
 
                 *value = valueToken.view(); 
                 return true;
@@ -416,7 +416,7 @@ namespace Fix
             static bool matchValue(Return* value, StreamCursor& cursor)
             {
                 int val;
-                if (!match_int(&val, cursor)) return false;
+                if (!match_int_fast(&val, cursor)) return false;
 
                 *value = val;
                 return true;
@@ -433,14 +433,14 @@ namespace Fix
                return std::make_pair(false, Ret {})
 
             StreamCursor::Revert revert(cursor);
-            
+
             int tag;
-            TRY_MATCH(match_int(&tag, cursor));
-            
+            TRY_MATCH(match_int_fast(&tag, cursor));
+
             if (tag != Tag::Id)
                return std::make_pair(false, Ret {});
 
-            TRY_MATCH(match_literal('=', cursor));
+            TRY_MATCH(match_literal_fast('=', cursor));
 
             Ret ret;
 
