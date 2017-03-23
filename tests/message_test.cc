@@ -16,6 +16,12 @@ TEST(message_test, should_bring_correct_version_with_message_type)
     ASSERT_EQ(std::string(v2), std::string("FIX.4.2"));
 }
 
+TEST(message_test, should_compare_version)
+{
+    using v42 = Fix::v42::Version;
+    ASSERT_TRUE(v42::equals("FIX.4.2", 7));
+}
+
 TEST(message_test, should_get_and_set_tags)
 {
     Fix::v42::Message::Logon logon;
