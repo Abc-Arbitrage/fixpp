@@ -148,6 +148,21 @@ namespace meta
                 using Result = List2;
             };
 
+            template<typename, typename Ret, Ret Result, template<typename, Ret> class Op>
+            struct Fold;
+
+            template<typename Ret, Ret Result, template<typename, Ret> class Op>
+            struct Fold<NullType, Ret, Result, Op>
+            {
+                static constexpr Ret Value = Result;
+            };
+
+            template<typename Head, typename Tail, typename Ret, Ret Result, template<typename, Ret> class Op>
+            struct Fold<TypeList<Head, Tail>, Ret, Result, Op>
+            {
+                static constexpr Ret Value = Fold<Tail, Ret, Op<Head, Result>::Result, Op>::Value;
+            };
+
         } // namespace ops
 
     } // namespace typelist
@@ -270,5 +285,60 @@ namespace meta
     template<> struct make_index_sequence<0> : index_sequence<> { };
     template<> struct make_index_sequence<1> : index_sequence<0> { };
 
+    template<size_t N>
+    using make_index_sequence_t = typename make_index_sequence<N>::type;
+
+    template<typename T>
+    T max(T&& value)
+    {
+        return std::forward<T>(value);
+    }
+
+    template<typename T0, typename T1, typename... Ts>
+    constexpr typename std::common_type<
+        T0, T1, Ts...
+    >::type max(T0&& t0, T1&& t1, Ts&& ...rest)
+    {
+        return (t0 > t1) ?
+            max(t0, std::forward<Ts>(rest)...) :
+            max(t1, std::forward<Ts>(rest)...);
+    }
+
 
 } // namespace meta
+
+namespace meta2
+{
+    template<class T, T... Ints> struct integer_sequence
+    {
+    };
+
+    template<class S> struct next_integer_sequence;
+
+    template<class T, T... Ints> struct next_integer_sequence<integer_sequence<T, Ints...>>
+    {
+            using type = integer_sequence<T, Ints..., sizeof...(Ints)>;
+    };
+
+    template<class T, T I, T N> struct make_int_seq_impl;
+
+    template<class T, T N>
+            using make_integer_sequence = typename make_int_seq_impl<T, 0, N>::type;
+
+    template<class T, T I, T N> struct make_int_seq_impl
+    {
+            using type = typename next_integer_sequence<
+                        typename make_int_seq_impl<T, I+1, N>::type>::type;
+    };
+
+    template<class T, T N> struct make_int_seq_impl<T, N, N>
+    {
+            using type = integer_sequence<T>;
+    };
+
+    template<std::size_t... Ints>
+            using index_sequence = integer_sequence<std::size_t, Ints...>;
+
+    template<std::size_t N>
+            using make_index_sequence = make_integer_sequence<std::size_t, N>;
+}
