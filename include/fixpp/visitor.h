@@ -340,129 +340,11 @@ namespace Fix
             return found;
         }
 
-        namespace details
-        {
-
-            template<size_t Index, typename Tuple, typename Visitor>
-            void apply_func(Tuple& tuple, Visitor& visitor)
-            {
-                visitor(std::get<Index>(tuple));
-            }
-
-            template<typename Tuple, unsigned Tag, int Index>
-            struct FindTagIndexImpl;
-
-            template<typename Head, typename... Tail, unsigned Tag, int Index>
-            struct FindTagIndexImpl<std::tuple<Head, Tail...>, Tag, Index>
-            {
-                static constexpr int Value = FindTagIndexImpl<std::tuple<Tail...>, Tag, Index + 1>::Value;
-            };
-
-            template<typename T, typename... Tail, unsigned Tag, int Index>
-            struct FindTagIndexImpl<std::tuple<FieldRef<TagT<Tag, T>>, Tail...>, Tag, Index>
-            {
-                static constexpr int Value = Index;
-            };
-
-            template<typename T, typename... GroupTags, typename... Tail, unsigned Tag, int Index>
-            struct FindTagIndexImpl<std::tuple<FieldRef<RepeatingGroup<TagT<Tag, T>, GroupTags...>>, Tail...>, Tag, Index>
-            {
-                static constexpr int Value = Index;
-            };
-
-            template<unsigned Tag, int Index>
-            struct FindTagIndexImpl<std::tuple<>, Tag, Index>
-            {
-                static constexpr int Value = -1;
-            };
-
-            template<typename Tuple, unsigned Tag>
-            struct FindTagIndex
-            {
-                static constexpr int Value = FindTagIndexImpl<Tuple, Tag, 0>::Value;
-            };
-
-            template<typename Visitor, typename Tuple, int Max>
-            struct LookupTableBuilder
-            {
-                using get_func_ptr = void (*)(Tuple&, Visitor&);
-
-                template<int Index, typename Dummy = void>
-                struct Getter
-                {
-                    static constexpr get_func_ptr get()
-                    {
-                        return &apply_func<Index>;
-                    }
-                };
-
-                template<typename Dummy>
-                struct Getter<-1, Dummy>
-                {
-                    static constexpr get_func_ptr get()
-                    {
-                        return nullptr;
-                    }
-                };
-
-                template<size_t Index>
-                static constexpr get_func_ptr get_apply_func()
-                {
-                    return Getter<FindTagIndex<Tuple, Index>::Value>::get();
-                }
-
-                get_func_ptr getFunc(int index)
-                {
-                    return doGetFunc(index, meta::make_index_sequence<Max>{});
-                }
-
-                template<size_t ...Seq>
-                get_func_ptr doGetFunc(int index, meta::index_sequence<Seq...>)
-                {
-                    static constexpr get_func_ptr table[sizeof...(Seq)] =
-                    {
-                         get_apply_func<Seq>()...
-                    };
-
-                    if (index >= sizeof...(Seq))
-                        return nullptr;
-
-                    return table[index];
-                }
-
-            };
-
-            template<typename Visitor, typename Message>
-            struct LookupTable
-                : public LookupTableBuilder<
-                            Visitor,
-                            typename Message::Fields,
-                            Message::MaxTag + 1
-                         >
-            {
-                bool operator()(Message& message, unsigned tag, Visitor& visitor)
-                {
-                    auto func = this->getFunc(tag);
-                    if (func == nullptr)
-                        return false;
-
-                    func(message.values, visitor);
-                    return true;
-                }
-            };
-
-        } // namespace details
-
         template<typename Message, typename Visitor>
         bool visitField(Message& message, unsigned tag, Visitor& visitor)
         {
             static constexpr size_t Size = Message::TotalTags;
-            static details::LookupTable<Visitor, Message> lookuper;
-
-            return lookuper(message, tag, visitor);
-
-
-            //return doVisitField(message, tag, visitor, meta::make_index_sequence<Size>{});
+            return doVisitField(message, tag, visitor, meta::make_index_sequence<Size>{});
         }
 
 
@@ -648,7 +530,6 @@ namespace Fix
             template<typename... Tags>
             struct IndexesImpl<meta::pack::Pack<Tags...>>
             {
-
                 static constexpr const_array<int, sizeof...(Tags)> Value = {
                     IndexOf<Tags>::Value...
                 };
