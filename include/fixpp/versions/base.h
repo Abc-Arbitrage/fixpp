@@ -49,7 +49,7 @@ inline uint64_t getAsciiStringAsInt(const char* str, size_t size)
         {                                                                       \
             static constexpr const char* Str = string;                          \
             static constexpr size_t Size = sizeof(string) - 1;                  \
-            static bool equals_slow(const char* version, size_t size)           \
+            static bool equals_slow(const char* version, size_t)                \
             {                                                                   \
                 return !strncmp(Str, version, Size);                            \
             }                                                                   \

@@ -149,7 +149,7 @@ namespace should_visit_custom_snapshot_frame
 
     struct Visitor
     {
-        void operator()(const Fix::v44::Header::Ref& header, const Snapshot::Ref& message)
+        void operator()(const Fix::v44::Header::Ref&, const Snapshot::Ref& message) const
         {
             using namespace Fix;
 
@@ -183,7 +183,7 @@ namespace should_visit_nested_repeating_groups
 {
     struct Visitor
     {
-        void operator()(const Fix::v44::Header::Ref& header, const Fix::v44::Message::MarketDataSnapshot::Ref& message)
+        void operator()(const Fix::v44::Header::Ref&, const Fix::v44::Message::MarketDataSnapshot::Ref& message) const
         {
             using namespace Fix;
 
@@ -226,7 +226,7 @@ namespace should_visit_unknown_tags_in_non_strict_mode
 
     struct Visitor
     {
-        void operator()(const Fix::v44::Header::Ref& header, const Fix::v44::Message::MarketDataSnapshot::Ref& message)
+        void operator()(const Fix::v44::Header::Ref&, const Fix::v44::Message::MarketDataSnapshot::Ref& message)
         {
             using namespace Fix;
             ASSERT_EQ(message.unparsed.size(), 1);

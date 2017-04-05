@@ -2,6 +2,7 @@
    Mathieu Stefani, 12 november 2016
    
 */
+#pragma once
 
 #include <streambuf>
 #include <vector>
@@ -41,7 +42,7 @@ public:
     SmallStreamBuf& operator=(const SmallStreamBuf& other) = delete;
 
 protected:
-    int_type overflow(int_type ch)
+    int_type overflow(int_type ch) override
     {
         if (!traits_type::eq_int_type(ch, traits_type::eof()))
         {
@@ -65,7 +66,7 @@ protected:
             }
 
             Base::setp(&long_buffer[0] + oldSize, &long_buffer[0] + newSize);
-            *this->pptr() = ch;
+            *this->pptr() = static_cast<char>(ch);
             Base::pbump(1);
 
             return traits_type::not_eof(ch);
@@ -124,7 +125,7 @@ namespace Fix
 
         size_t sum() const
         {
-            return sum;
+            return sum_;
         }
 
         size_t count() const
@@ -140,7 +141,7 @@ namespace Fix
         void restore(const Context& context)
         {
             Base::setp(context.pbase, context.epptr);
-            Base::pbump(static_cast<size_t>(context.pptr - context.pbase));
+            Base::pbump(static_cast<int>(context.pptr - context.pbase));
         }
 
         std::string asString() const
@@ -149,7 +150,7 @@ namespace Fix
         }
 
     protected:
-        std::streamsize xsputn(const char_type* s, std::streamsize count)
+        std::streamsize xsputn(const char_type* s, std::streamsize count) override
         {
             auto result = Base::xsputn(s, count);
 
@@ -163,7 +164,7 @@ namespace Fix
             return result;
         }
 
-        pos_type seekpos(pos_type pos, std::ios_base::openmode)
+        pos_type seekpos(pos_type pos, std::ios_base::openmode) override
         {
             auto* base = Base::pbase();
             auto* end = Base::epptr();

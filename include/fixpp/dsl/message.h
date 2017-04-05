@@ -18,147 +18,156 @@
 namespace Fix
 {
 
-    // ------------------------------------------------
-    // MessageBase
-    // ------------------------------------------------
+	// ------------------------------------------------
+	// MessageBase
+	// ------------------------------------------------
 
-    // Stores the list of all fields inside a std::tuple
-    //
-    namespace details
-    {
-        template<typename Tag, int CurrentMax>
-        struct Max
-        {
-            static constexpr int Result = Tag::Id > CurrentMax ? Tag::Id : CurrentMax;
-        };
+	// Stores the list of all fields inside a std::tuple
+	//
+	namespace details
+	{
+		template<typename Tag, int CurrentMax>
+		struct Max
+		{
+			static constexpr int Result = Tag::Id > CurrentMax ? Tag::Id : CurrentMax;
+		};
 
-        template<typename Tag, int CurrentMax>
-        struct Max<Required<Tag>, CurrentMax>
-        {
-            static constexpr int Result = Tag::Id > CurrentMax ? Tag::Id : CurrentMax;
-        };
+		template<typename Tag, int CurrentMax>
+		struct Max<Required<Tag>, CurrentMax>
+		{
+			static constexpr int Result = Tag::Id > CurrentMax ? Tag::Id : CurrentMax;
+		};
 
-        template<typename GroupTag, typename... Tags, int CurrentMax>
-        struct Max<RepeatingGroup<GroupTag, Tags...>, CurrentMax>
-        {
-            static constexpr int Result = GroupTag::Id > CurrentMax ? GroupTag::Id : CurrentMax;
-        };
+		template<typename GroupTag, typename... Tags, int CurrentMax>
+		struct Max<RepeatingGroup<GroupTag, Tags...>, CurrentMax>
+		{
+			static constexpr int Result = GroupTag::Id > CurrentMax ? GroupTag::Id : CurrentMax;
+		};
 
-        template<typename GroupTag, typename... Tags, int CurrentMax>
-        struct Max<Required<RepeatingGroup<GroupTag, Tags...>>, CurrentMax>
-        {
-            static constexpr int Result = GroupTag::Id > CurrentMax ? GroupTag::Id : CurrentMax;
-        };
-    };
+		template<typename GroupTag, typename... Tags, int CurrentMax>
+		struct Max<Required<RepeatingGroup<GroupTag, Tags...>>, CurrentMax>
+		{
+			static constexpr int Result = GroupTag::Id > CurrentMax ? GroupTag::Id : CurrentMax;
+		};
+	};
 
-    template<template<typename> class FieldT, typename... Tags> struct MessageBase
-    {
-        using Fields = typename details::Flattened<FieldT, Tags...>::Fields;
-        using List = typename details::Flattened<FieldT, Tags...>::List;
+	template<template<typename> class FieldT, typename... Tags> struct MessageBase
+	{
+		using Fields = typename details::Flattened<FieldT, Tags...>::Fields;
+		using List = typename details::Flattened<FieldT, Tags...>::List;
 
-        using TagsList = typename meta::typelist::ops::Map<List, details::Unwrap>::Result;
+		using TagsList = typename meta::typelist::ops::Map<List, details::Unwrap>::Result;
 
-        //
-        // We first need to filter-out all the Required tags. However, the result of the
-        // filter operation will give us a typelist of Required<Tag> tags.
-        // We then need to 'unwrap' the Tag to get a final typelist of Tag. Thus, we
-        // call Map and unwrap the tag.
-        //
-        // Summary: RequiredList will be a TypeList<Tag1, Tag2, Tag3>, not TypeList<Required<Tag1>, ...>
-        //
-        using RequiredList =
-            typename meta::typelist::ops::Map<
-                typename meta::typelist::ops::Filter<List, details::IsRequired>::Result,
-                details::Unwrap
-            >::Result;
+		//
+		// We first need to filter-out all the Required tags. However, the result of the
+		// filter operation will give us a typelist of Required<Tag> tags.
+		// We then need to 'unwrap' the Tag to get a final typelist of Tag. Thus, we
+		// call Map and unwrap the tag.
+		//
+		// Summary: RequiredList will be a TypeList<Tag1, Tag2, Tag3>, not TypeList<Required<Tag1>, ...>
+		//
+		using RequiredList =
+			typename meta::typelist::ops::Map<
+			typename meta::typelist::ops::Filter<List, details::IsRequired>::Result,
+			details::Unwrap
+			>::Result;
 
-        using Ref = MessageBase<FieldRef, Tags...>;
+		using Ref = MessageBase<FieldRef, Tags...>;
 
-        static constexpr size_t RequiredTags = meta::typelist::ops::Length<RequiredList>::value;
-        // Note that TotalTags is *NOT* sizeof...(Tags) as we might have ComponentBlocks that
-        // we flattened here. See flatten.h for more details
-        static constexpr size_t TotalTags = meta::typelist::ops::Length<TagsList>::value;
+		static constexpr size_t RequiredTags = meta::typelist::ops::Length<RequiredList>::value;
+		// Note that TotalTags is *NOT* sizeof...(Tags) as we might have ComponentBlocks that
+		// we flattened here. See flatten.h for more details
+		static constexpr size_t TotalTags = meta::typelist::ops::Length<TagsList>::value;
 
-        static constexpr int MaxTag = meta::typelist::ops::Fold<
-                                            List, int, 0, details::Max
-                                      >::Value;
+		static constexpr int MaxTag = meta::typelist::ops::Fold<
+			List, int, 0, details::Max
+		>::Value;
 
-        Fields values;
+		Fields values;
 
-        std::bitset<RequiredTags> requiredBits;
-        std::bitset<TotalTags> allBits;
+		std::bitset<RequiredTags> requiredBits;
+		std::bitset<TotalTags> allBits;
 
-        using View = std::pair<const char*, size_t>;
-        std::unordered_map<int, View> unparsed;
-    };
+		using View = std::pair<const char*, size_t>;
+		std::unordered_map<int, View> unparsed;
+	};
 
 
-    // ------------------------------------------------
-    // Chars
-    // ------------------------------------------------
+	// ------------------------------------------------
+	// Chars
+	// ------------------------------------------------
 
-    // A parameter pack of char...
+	// A parameter pack of char...
 
-    template<char ...> struct Chars { };
+	template<char ...> struct Chars { };
 
-    // ------------------------------------------------
-    // MessageRef
-    // ------------------------------------------------
+	// ------------------------------------------------
+	// MessageRef
+	// ------------------------------------------------
 
-    // A "view" on a Message
-    //
-    
-    template<typename MsgType, typename... Tags> struct MessageRef;
+	// A "view" on a Message
+	//
 
-    template<char... MsgTypeChar, typename... Tags>
-    struct MessageRef<Chars<MsgTypeChar...>, Tags...> : public MessageBase<FieldRef, Tags...>
-    {
-        static constexpr const char MsgType[] = { MsgTypeChar... };
-        static constexpr size_t MsgTypeLen = sizeof...(MsgTypeChar);
+	template<typename MsgType, typename... Tags> struct MessageRef;
 
-        using MsgTypeChars = Chars<MsgTypeChar...>;
-    };
+	template<char... MsgTypeChar, typename... Tags>
+	struct MessageRef<Chars<MsgTypeChar...>, Tags...> : public MessageBase<FieldRef, Tags...>
+	{
+		static constexpr const char MsgType[] = { MsgTypeChar... };
+		static constexpr size_t MsgTypeLen = sizeof...(MsgTypeChar);
 
-    // ------------------------------------------------
-    // MessageT
-    // ------------------------------------------------
+		using MsgTypeChars = Chars<MsgTypeChar...>;
+	};
 
-    // A real Message with its MsgType
-    //
-    template<typename MsgType, typename... Tags> struct MessageT;
+	// ------------------------------------------------
+	// MessageT
+	// ------------------------------------------------
 
-    template<char... MsgTypeChar, typename... Tags>
-    struct MessageT<Chars<MsgTypeChar...>, Tags...> : public MessageBase<Field, Tags...>
-    {
-        static constexpr const char MsgType[] = { MsgTypeChar... };
-        static constexpr size_t MsgTypeLen = sizeof...(MsgTypeChar);
+	// A real Message with its MsgType
+	//
+	template<typename MsgType, typename... Tags> struct MessageT;
 
-        using MsgTypeChars = Chars<MsgTypeChar...>;
-    };
+	template<char... MsgTypeChar, typename... Tags>
+	struct MessageT<Chars<MsgTypeChar...>, Tags...> : public MessageBase<Field, Tags...>
+	{
+		static constexpr const char MsgType[] = { MsgTypeChar... };
+		static constexpr size_t MsgTypeLen = sizeof...(MsgTypeChar);
 
-    template<char... MsgTypeChar, typename... Tags>
-    constexpr const char MessageT<Chars<MsgTypeChar...>, Tags...>::MsgType[];
+		using MsgTypeChars = Chars<MsgTypeChar...>;
+	};
 
-    template<char... MsgTypeChar, typename... Tags>
-    constexpr const char MessageRef<Chars<MsgTypeChar...>, Tags...>::MsgType[];
+	template<char... MsgTypeChar, typename... Tags>
+	constexpr const char MessageT<Chars<MsgTypeChar...>, Tags...>::MsgType[];
 
-    // ------------------------------------------------
-    // VersionnedMessage
-    // ------------------------------------------------
+	template<char... MsgTypeChar, typename... Tags>
+	constexpr const char MessageRef<Chars<MsgTypeChar...>, Tags...>::MsgType[];
 
-    // A Message that knows its FIX version
+	// ------------------------------------------------
+	// VersionnedMessage
+	// ------------------------------------------------
 
-    template<typename VersionT, typename Chars, typename... Tags>
-    struct VersionnedMessage : public MessageT<Chars, Tags...>
-    {
-        using Version = VersionT;
-    };
+	// A Message that knows its FIX version
 
-    // ------------------------------------------------
-    // operations
-    // ------------------------------------------------
- 
-    // get / set operations on a FIX Message
+	template<typename VersionT, typename Chars, typename... Tags>
+	struct VersionnedMessage : public MessageT<Chars, Tags...>
+	{
+		using Version = VersionT;
+	};
+
+	// ------------------------------------------------
+	// operations
+	// ------------------------------------------------
+
+	// get / set operations on a FIX Message
+
+
+	// identity function used to remove warning C4127 in a constant expression
+	// warning C4127 : conditional expression is constant
+	template<typename T>
+	const T& identity(const T& t)
+	{
+		return t;
+	}
 
     template<typename Tag, typename Message, typename Value>
     typename std::enable_if<details::IsValidTag<Message, Tag>::value, void>::type
@@ -174,8 +183,8 @@ namespace Fix
 
         message.allBits.set(TagIndex);
 
-        if (RequiredBit != -1)
-            message.requiredBits.set(RequiredBit);
+        if (identity(RequiredBit) != -1)
+            message.requiredBits.set(static_cast<size_t>(RequiredBit));
     }
 
     template<typename Tag, typename Message>
@@ -227,10 +236,12 @@ namespace Fix
         static constexpr int Index = meta::typelist::ops::IndexOf<typename Message::TagsList, GroupT>::value;
         static constexpr int RequiredBit = meta::typelist::ops::IndexOf<typename Message::RequiredList, GroupT>::value;
 
-        if (RequiredBit != -1)
-            message.requiredBits.set(RequiredBit);
+        if (identity(RequiredBit) != -1)
+            message.requiredBits.set(static_cast<size_t>(RequiredBit));
 
-        return Group<GroupT> (std::get<Index>(message.values));
+		auto& group = std::get<Index>(message.values);
+		group.reserve(size);
+        return Group<GroupT> (group);
     }
 
 } // namespace Fix

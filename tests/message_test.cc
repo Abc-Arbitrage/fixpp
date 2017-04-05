@@ -138,7 +138,7 @@ TEST(message_test, should_optionally_get)
     Fix::set<Tag::Price>(ioi, 10.5);
 
     std::string symbol;
-    float price;
+    double price;
 
     ASSERT_TRUE(Fix::tryGet<Tag::Symbol>(ioi, symbol));
     ASSERT_EQ(symbol, "MySymbol");

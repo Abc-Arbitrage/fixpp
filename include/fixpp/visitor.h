@@ -1029,7 +1029,7 @@ namespace Fix
     };
 
     template<typename Visitor, typename Rules>
-    void visitMessage(ParsingContext& context, Visitor visitor, Rules rules)
+    void visitMessage(ParsingContext& context, Visitor, Rules rules)
     {
         auto& cursor = context.cursor;
         auto beginString = impl::matchTag<Tag::BeginString>(cursor);

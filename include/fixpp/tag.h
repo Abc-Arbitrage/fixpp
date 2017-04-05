@@ -59,7 +59,7 @@ namespace Fix
             Boolean(const Boxed&);
         };
 
-        struct Float : public Base<float>
+        struct Float : public Base<double>
         {
             using Base::Base;
         };

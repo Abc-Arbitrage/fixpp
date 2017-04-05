@@ -161,7 +161,6 @@ match_until(std::initializer_list<char> chars, StreamCursor& cursor, CaseSensiti
 }
 
 bool match_until_fast(char c, StreamCursor& cursor) {
-    size_t i = 0;
     while (!cursor.eof()) {
         const char cur = cursor.current();
         if (c == cur) return true;
