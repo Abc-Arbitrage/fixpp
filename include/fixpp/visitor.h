@@ -502,6 +502,12 @@ namespace Fix
             };
 
             template<typename Tag>
+            struct IndexOf<FieldRef<Tag>>
+            {
+                static constexpr int Value = Tag::Id;
+            };
+
+            template<typename Tag>
             struct IndexOf<Required<Tag>>
             {
                 static constexpr int Value = Tag::Id;
@@ -524,7 +530,6 @@ namespace Fix
             template<typename... Tags>
             struct IndexesImpl<meta::pack::Pack<Tags...>>
             {
-
                 static constexpr const_array<int, sizeof...(Tags)> Value = {
                     IndexOf<Tags>::Value...
                 };
@@ -532,13 +537,13 @@ namespace Fix
                 static constexpr const_array<int, sizeof...(Tags)> Sorted = const_selection_sort(Value);
 
                 static constexpr size_t Size = sizeof...(Tags);
+                static constexpr int Max = Sorted[Size - 1];
 
                 static int64_t of(int tag)
                 {
                     //return of_rec(tag, 0);
                     return of_binary_search(tag);
                 }
-
 
             private:
                 static int64_t of_binary_search(int tag)
@@ -578,6 +583,16 @@ namespace Fix
         // ------------------------------------------------
 
         // A bitset of valid tags inside a Message or RepeatingGroup
+        //
+        // Note that to avoid index lookup when setting or testing
+        // the value of a particular bit in the bitset, we "allocate"
+        // a bitset large enough to hold the maximum tag value
+        // (that is, if our TagSet has a tag numbered 10453, then
+        //  our bitself will hold up to 10453 + 1 bits).
+        //
+        // While it should not be a problem in most cases, if tags
+        // are large enough, we might cause a stack overflow as
+        // std::bitset is using automatic (stack) storage.
 
         template<typename... Tags>
         struct TagSet
@@ -587,12 +602,12 @@ namespace Fix
 
             void set(unsigned tag)
             {
-                bits.set(Indexes::of(tag));
+                bits.set(tag);
             }
 
             bool isset(unsigned tag)
             {
-                return bits.test(Indexes::of(tag));
+                return bits.test(tag);
             }
 
             void reset()
@@ -606,7 +621,11 @@ namespace Fix
             }
 
         private:
-            std::bitset<Indexes::Size> bits;
+            std::bitset<Indexes::Max + 1> bits;
+            // We can also use std::bitset<Indexes::Size> bits.
+            // However, with that bitset, we need to lookup the bit
+            // index for the tag any time we want to access a particular
+            // bit in the bitset.
         };
 
         template<typename VersionT, typename Chars, typename... Tags>

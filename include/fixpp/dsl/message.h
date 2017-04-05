@@ -23,6 +23,33 @@ namespace Fix
     // ------------------------------------------------
 
     // Stores the list of all fields inside a std::tuple
+    //
+    namespace details
+    {
+        template<typename Tag, int CurrentMax>
+        struct Max
+        {
+            static constexpr int Result = Tag::Id > CurrentMax ? Tag::Id : CurrentMax;
+        };
+
+        template<typename Tag, int CurrentMax>
+        struct Max<Required<Tag>, CurrentMax>
+        {
+            static constexpr int Result = Tag::Id > CurrentMax ? Tag::Id : CurrentMax;
+        };
+
+        template<typename GroupTag, typename... Tags, int CurrentMax>
+        struct Max<RepeatingGroup<GroupTag, Tags...>, CurrentMax>
+        {
+            static constexpr int Result = GroupTag::Id > CurrentMax ? GroupTag::Id : CurrentMax;
+        };
+
+        template<typename GroupTag, typename... Tags, int CurrentMax>
+        struct Max<Required<RepeatingGroup<GroupTag, Tags...>>, CurrentMax>
+        {
+            static constexpr int Result = GroupTag::Id > CurrentMax ? GroupTag::Id : CurrentMax;
+        };
+    };
 
     template<template<typename> class FieldT, typename... Tags> struct MessageBase
     {
@@ -51,6 +78,10 @@ namespace Fix
         // Note that TotalTags is *NOT* sizeof...(Tags) as we might have ComponentBlocks that
         // we flattened here. See flatten.h for more details
         static constexpr size_t TotalTags = meta::typelist::ops::Length<TagsList>::value;
+
+        static constexpr int MaxTag = meta::typelist::ops::Fold<
+                                            List, int, 0, details::Max
+                                      >::Value;
 
         Fields values;
 
