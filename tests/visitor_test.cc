@@ -149,7 +149,7 @@ namespace should_visit_custom_snapshot_frame
 
     struct Visitor
     {
-        void operator()(const Fix::v44::Header::Ref&, const Snapshot::Ref& message) const
+        void operator()(const Fix::v44::Header::Ref&, const Snapshot::Ref& message)
         {
             using namespace Fix;
 
@@ -183,7 +183,7 @@ namespace should_visit_nested_repeating_groups
 {
     struct Visitor
     {
-        void operator()(const Fix::v44::Header::Ref&, const Fix::v44::Message::MarketDataSnapshot::Ref& message) const
+        void operator()(const Fix::v44::Header::Ref&, const Fix::v44::Message::MarketDataSnapshot::Ref& message)
         {
             using namespace Fix;
 
