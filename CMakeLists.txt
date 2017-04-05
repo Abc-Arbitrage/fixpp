@@ -19,8 +19,6 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-omit-frame-pointer -ftemplate-depth
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
-add_subdirectory(src)
-
 find_package(GTest)
 if (GTEST_FOUND)
     include_directories(${GTEST_INCLUDE_DIRS})

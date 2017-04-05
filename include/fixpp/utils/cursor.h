@@ -6,6 +6,8 @@
 #pragma once
 
 #include <cstddef>
+#include <cctype>
+#include <cstring>
 #include <streambuf>
 
 template<typename CharT = char>
@@ -144,22 +146,67 @@ public:
 
     };
 
-    bool advance(size_t count);
+    bool advance(size_t count)
+    {
+        if (count > static_cast< size_t >(buf->in_avail()))
+            return false;
+
+        for (size_t i = 0; i < count; ++i) {
+            buf->sbumpc();
+        }
+
+        return true;
+    }
+
     operator size_t() const { return buf->position(); }
 
-    bool eof() const;
-    int next() const;
-    char current() const;
+    bool eof() const
+    {
+        return remaining() == 0;
+    }
 
-    const char* offset() const;
-    const char* offset(size_t off) const;
+    int next() const
+    {
+        if (buf->in_avail() < 1)
+            return Eof;
 
-    size_t diff(size_t other) const;
-    size_t diff(const StreamCursor& other) const;
+        return buf->snext();
+    }
 
-    size_t remaining() const;
+    char current() const
+    {
+        return static_cast< char >(buf->sgetc());
+    }
 
-    void reset();
+    const char* offset() const
+    {
+        return buf->curptr();
+    }
+
+    const char* offset(size_t off) const
+    {
+        return buf->begptr() + off;
+    }
+
+    size_t diff(size_t other) const
+    {
+        return buf->position() - other;
+    }
+
+    size_t diff(const StreamCursor& other) const
+    {
+        return other.buf->position() - buf->position();
+    }
+
+    size_t remaining() const
+    {
+        return buf->in_avail();
+    }
+
+    void reset()
+    {
+        buf->reset();
+    }
 
 public:
     StreamBuf<char>* buf;
@@ -170,16 +217,178 @@ enum class CaseSensitivity {
     Sensitive, Insensitive
 };
 
-bool match_raw(const void* buf, size_t len, StreamCursor& cursor);
-bool match_string(const char *str, size_t len, StreamCursor& cursor,
-        CaseSensitivity cs = CaseSensitivity::Insensitive);
-bool match_literal(char c, StreamCursor& cursor, CaseSensitivity cs = CaseSensitivity::Insensitive);
-bool match_literal_fast(char c, StreamCursor& cursor);
-bool match_until(char c, StreamCursor& cursor, CaseSensitivity cs = CaseSensitivity::Insensitive);
-bool match_until_fast(char c, StreamCursor& cursor);
-bool match_until(std::initializer_list<char> chars, StreamCursor& cursor, CaseSensitivity cs = CaseSensitivity::Insensitive);
-bool match_double(double* val, StreamCursor& cursor);
-bool match_int(int* val, StreamCursor& cursor);
-bool match_int_fast(int* val, StreamCursor& cursor);
+inline bool match_raw(const void* buf, size_t len, StreamCursor& cursor)
+{
+    if (cursor.remaining() < len)
+        return false;
 
-void skip_whitespaces(StreamCursor& cursor);
+    if (std::memcmp(cursor.offset(), buf, len) == 0) {
+        cursor.advance(len);
+        return true;
+    }
+
+    return false;
+}
+
+inline bool match_string(const char *str, size_t len, StreamCursor& cursor,
+        CaseSensitivity cs = CaseSensitivity::Insensitive)
+{
+    if (cursor.remaining() < len)
+        return false;
+
+    if (cs == CaseSensitivity::Sensitive) {
+        if (std::strncmp(cursor.offset(), str, len) == 0) {
+            cursor.advance(len);
+            return true;
+        }
+    } else {
+        const char *off = cursor.offset();
+        for (size_t i = 0; i < len; ++i) {
+            const auto lhs = std::tolower(str[i]);
+            const auto rhs = std::tolower(off[i]);
+            if (lhs != rhs) return false;
+        }
+
+        cursor.advance(len);
+        return true;
+    }
+
+    return false;
+}
+
+inline bool match_literal(char c, StreamCursor& cursor, CaseSensitivity cs = CaseSensitivity::Insensitive)
+{
+    if (cursor.eof())
+        return false;
+
+    char lhs = (cs == CaseSensitivity::Sensitive ? c : static_cast< char >(std::tolower(c)));
+    char rhs = (cs == CaseSensitivity::Sensitive ? cursor.current() : static_cast< char >(std::tolower(cursor.current())));
+
+    if (lhs == rhs) {
+        cursor.advance(1);
+        return true;
+    }
+
+    return false;
+}
+
+inline bool match_literal_fast(char c, StreamCursor& cursor)
+{
+    if (cursor.eof())
+        return false;
+
+    if (c == cursor.current()) {
+        cursor.advance(1);
+        return true;
+    }
+
+    return false;
+}
+
+inline bool match_until(char c, StreamCursor& cursor, CaseSensitivity cs = CaseSensitivity::Insensitive)
+{
+    return match_until( { c }, cursor, cs);
+}
+
+inline bool match_until_fast(char c, StreamCursor& cursor)
+{
+    while (!cursor.eof()) {
+        const char cur = cursor.current();
+        if (c == cur) return true;
+        cursor.advance(1);
+    }
+
+    return false;
+}
+
+inline bool match_until(std::initializer_list<char> chars, StreamCursor& cursor, CaseSensitivity cs = CaseSensitivity::Insensitive)
+{
+    if (cursor.eof())
+        return false;
+
+    auto find = [&](char val) {
+        for (auto c: chars) {
+            char lhs = cs == CaseSensitivity::Sensitive ? c : static_cast< char >(std::tolower(c));
+            char rhs = cs == CaseSensitivity::Insensitive ? val : static_cast< char >(std::tolower(val));
+
+            if (lhs == rhs) return true;
+        }
+
+        return false;
+    };
+
+    while (!cursor.eof()) {
+        const char c = cursor.current();
+        if (find(c)) return true;
+        cursor.advance(1);
+    }
+
+    return false;
+}
+
+inline bool match_double(double* val, StreamCursor& cursor)
+{
+    // @Todo: strtod does not support a length argument
+    char *end;
+    *val = strtod(cursor.offset(), &end);
+    if (end == cursor.offset())
+        return false;
+
+    cursor.advance(static_cast<ptrdiff_t>(end - cursor.offset()));
+    return true;
+}
+
+inline bool match_int(int* val, StreamCursor& cursor)
+{
+    char *end;
+    *val = strtol(cursor.offset(), &end, 10);
+    if (end == cursor.offset())
+        return false;
+
+    cursor.advance(static_cast<ptrdiff_t>(end - cursor.offset()));
+    return true;
+}
+
+inline bool match_int_fast(int* val, StreamCursor& cursor)
+{
+    if (cursor.eof())
+        return false;
+
+    size_t i = 0;
+    const char *p = cursor.offset();
+    size_t remaining = cursor.remaining();
+
+    int integer = 0;
+
+    for (;;)
+    {
+        const char c = *p++;
+        if (!(c >= '0' && c <= '9'))
+            break;
+
+        integer *= 10;
+        integer += c - '0';
+        ++i;
+        if (--remaining == 0)
+            break;
+    }
+
+    if (i > 0) {
+        *val = integer;
+        cursor.advance(i);
+        return true;
+    }
+
+    return false;
+}
+
+inline void skip_whitespaces(StreamCursor& cursor)
+{
+    if (cursor.eof())
+        return;
+
+    int c;
+    while ((c = cursor.current()) != StreamCursor::Eof && (c == ' ' || c == '\t')) {
+        cursor.advance(1);
+    }
+}
