@@ -24,6 +24,40 @@ namespace should_visit_logon_frame
 
 } // namespace should_visit_logon_frame
 
+namespace should_try_get_fields_after_parsing
+{
+    struct Visitor
+    {
+        void operator()(const Fix::v42::Header::Ref& header, const Fix::v42::Message::Logon::Ref& logon)
+        {
+            std::string senderCompId;
+            ASSERT_TRUE(Fix::tryGet<Fix::Tag::SenderCompID>(header, senderCompId));
+            ASSERT_EQ(senderCompId, "ABC");
+
+            auto msgTypes = Fix::get<Fix::Tag::NoMsgTypes>(logon);
+            ASSERT_EQ(msgTypes.size(), 2);
+
+            std::string refMsgType;
+            char msgDirection;
+
+            ASSERT_TRUE(Fix::tryGet<Fix::Tag::RefMsgType>(msgTypes[0], refMsgType));
+            ASSERT_EQ(refMsgType, "TEST");
+
+            ASSERT_TRUE(Fix::tryGet<Fix::Tag::MsgDirection>(msgTypes[0], msgDirection));
+            ASSERT_EQ(msgDirection, 'C');
+
+            ASSERT_TRUE(Fix::tryGet<Fix::Tag::RefMsgType>(msgTypes[1], refMsgType));
+            ASSERT_EQ(refMsgType, "TEST");
+        }
+
+        template<typename HeaderT, typename MessageT> void operator()(HeaderT, MessageT)
+        {
+            ASSERT_TRUE(false);
+        }
+    };
+
+} // namespace should_visit_logon_frame
+
 namespace should_visit_repeating_group_in_logon_frame
 {
 
@@ -407,4 +441,12 @@ TEST(visitor_test, should_stop_in_strict_mode_when_encountering_an_unknown_tag)
     auto errorKind = error.unwrapErr();
     ASSERT_EQ(errorKind.type(), Fix::ErrorKind::UnknownTag);
     ASSERT_EQ(errorKind.asString(), "Encountered unknown tag 221");
+}
+
+TEST(visitor_test, should_try_get_fields_after_parsing)
+{
+    const char* frame = "8=FIX.4.2|9=84|35=A|34=1|49=ABC|52=20120309-16:54:02|56=TT_ORDER|96=12345678|384=2|372=TEST|385=C|372=TEST|10=248";
+
+    auto err = doVisit(frame, should_try_get_fields_after_parsing::Visitor());
+    ASSERT_TRUE(err.isOk());
 }

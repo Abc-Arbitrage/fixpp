@@ -320,13 +320,13 @@ namespace Fix
             }
         }
 
-        template<typename Field, typename Visitor>
-        void doVisitSingleField(unsigned tag, Field& field, Visitor& visitor, bool* found)
+        template<size_t Index, typename Field, typename Visitor>
+        void doVisitSingleField(unsigned tag, Field& field, Visitor& visitor, int* index)
         {
             if (tag == field.tag())
             {
                 visitor(field);
-                *found = true;
+                *index = Index;
             }
         }
 
@@ -334,10 +334,13 @@ namespace Fix
         bool doVisitField(Message& message, unsigned tag, Visitor& visitor,
                           meta::index_sequence<Indexes...>)
         {
-            bool found = false;
-            int dummy[] = {0, (doVisitSingleField(tag, std::get<Indexes>(message.values), visitor, &found), 0)...};
+            int index = -1;
+            int dummy[] = {0, (doVisitSingleField<Indexes>(tag, std::get<Indexes>(message.values), visitor, &index), 0)...};
 
-            return found;
+            if (index != -1)
+                message.allBits.set(static_cast<size_t>(index));
+
+            return index != -1;
         }
 
         template<typename Message, typename Visitor>
