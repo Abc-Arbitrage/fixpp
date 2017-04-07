@@ -45,10 +45,23 @@ inline uint64_t getAsciiStringAsInt(const char* str, size_t size)
 #define FIX_BEGIN_VERSION_NAMESPACE(name, string)                               \
     namespace name                                                              \
     {                                                                           \
-        struct Version                                                          \
+        template<typename VersionT>                                             \
+        struct __VersionStaticHolder                                            \
         {                                                                       \
             static constexpr const char* Str = string;                          \
             static constexpr size_t Size = sizeof(string) - 1;                  \
+            static constexpr auto StrInt = getAsciiStringAsIntConst(Str, Size); \
+        };                                                                      \
+                                                                                \
+        template<typename VersionT>                                             \
+        constexpr const char* __VersionStaticHolder<VersionT>::Str;             \
+        template<typename VersionT>                                             \
+        constexpr size_t __VersionStaticHolder<VersionT>::Size;                 \
+        template<typename VersionT>                                             \
+        constexpr uint64_t __VersionStaticHolder<VersionT>::StrInt;             \
+                                                                                \
+        struct Version : public __VersionStaticHolder<Version>                  \
+        {                                                                       \
             static bool equals_slow(const char* version, size_t)                \
             {                                                                   \
                 return !strncmp(Str, version, Size);                            \
@@ -65,11 +78,7 @@ inline uint64_t getAsciiStringAsInt(const char* str, size_t size)
                     return equals_fast(version, size);                          \
                 return equals_slow(version, size);                              \
             }                                                                   \
-        public:                                                                 \
-            static constexpr auto StrInt = getAsciiStringAsIntConst(Str, Size); \
         };                                                                      \
-        constexpr const char* Version::Str;                                     \
-        constexpr uint64_t Version::StrInt;                                     \
         template<typename Chars, typename... Tags>                              \
         using MessageV = VersionnedMessage<Version, Chars, Tags...>;            \
     }                                                                           \
