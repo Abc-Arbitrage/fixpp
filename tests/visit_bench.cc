@@ -41,9 +41,11 @@ static void VisitCustomQuoteBenchmark(benchmark::State& state)
 
     const size_t size = std::strlen(frame);
 
+    MyVisitor visitor;
+
     while (state.KeepRunning())
     {
-        Fix::visit(frame, size, MyVisitor(), MyVisitRules()).otherwise([&](const Fix::ErrorKind& e) {
+        Fix::visit(frame, size, visitor, MyVisitRules()).otherwise([&](const Fix::ErrorKind& e) {
             auto errStr = e.asString();
             state.SkipWithError(errStr.c_str());
         });

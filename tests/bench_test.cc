@@ -62,9 +62,11 @@ int main()
 
     auto start = std::chrono::system_clock::now();
 
+    Visitor visitor;
+
     for (const auto& frame: frames)
     {
-        Fix::visit(frame.c_str(), frame.size(), Visitor(), VisitRules());
+        Fix::visit(frame.c_str(), frame.size(), visitor, VisitRules());
     }
 
     auto end = std::chrono::system_clock::now();

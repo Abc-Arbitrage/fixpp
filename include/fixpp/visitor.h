@@ -911,8 +911,9 @@ namespace Fix
         template<typename Visitor, typename Rules>
         struct MessageVisitor
         {
-            MessageVisitor(ParsingContext& context)
+            MessageVisitor(ParsingContext& context, Visitor& visitor)
                 : context(context)
+                , visitor(visitor)
             { }
 
             template<typename Message, typename Header>
@@ -1005,7 +1006,7 @@ namespace Fix
             }
 
         private:
-            Visitor visitor;
+            Visitor& visitor;
             ParsingContext& context;
         };
 
@@ -1033,7 +1034,7 @@ namespace Fix
     };
 
     template<typename Visitor, typename Rules>
-    void visitMessage(ParsingContext& context, Visitor, Rules rules)
+    void visitMessage(ParsingContext& context, Visitor& visitor, Rules rules)
     {
         auto& cursor = context.cursor;
         auto beginString = impl::matchTag<Tag::BeginString>(cursor);
@@ -1057,12 +1058,17 @@ namespace Fix
         context.setBodyLength(bodyLength.second);
         context.setMsgType(msgType.second);
 
-        impl::MessageVisitor<Visitor, Rules> messageVisitor(context);
+        impl::MessageVisitor<Visitor, Rules> messageVisitor(context, visitor);
         impl::visitMessage(context, messageVisitor, rules);
     }
 
+    //
+    // Note that the Visitor is passed by lvalue-reference, which means that is currently
+    // not possible to pass an rvalue like a lambda or a bind-expression as a Visitor.
+    // @Investigate a way to make it possible as it will be useful with polymorphic lambdas
+
     template<typename Visitor, typename Rules>
-    VisitError visit(const char* frame, size_t size, Visitor visitor, Rules rules)
+    VisitError visit(const char* frame, size_t size, Visitor& visitor, Rules rules)
     {
         static_assert(std::is_base_of<VisitRules, Rules>::value, "Visit rules must inherit from VisitRules");
 
@@ -1088,7 +1094,7 @@ namespace Fix
     }
 
     template<typename Visitor>
-    VisitError visit(const char* frame, size_t size, Visitor visitor)
+    VisitError visit(const char* frame, size_t size, Visitor& visitor)
     {
         return visit(frame, size, visitor, DefaultRules {});
     }
