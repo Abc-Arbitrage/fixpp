@@ -18,6 +18,7 @@
 #include <fixpp/tag.h>
 #include <fixpp/utils/cursor.h>
 #include <fixpp/utils/result.h>
+#include <fixpp/utils/soh.h>
 #include <fixpp/meta.h>
 #include <fixpp/dsl/details/unwrap.h>
 #include <fixpp/dsl/details/flatten.h>
@@ -405,7 +406,7 @@ namespace Fix
             static bool matchValue(Return* value, StreamCursor& cursor)
             {
                 StreamCursor::Token valueToken(cursor);
-                if (!match_until_fast('|', cursor)) return false;
+                if (!match_until_fast(SOH, cursor)) return false;
 
                 *value = valueToken.view(); 
                 return true;
@@ -673,7 +674,7 @@ namespace Fix
                 auto& cursor = context.cursor;
                 // @Todo: In Strict mode, validate the type of the Tag
                 StreamCursor::Token valueToken(context.cursor);
-                TRY_MATCH_UNTIL('|', "Expected value tag '%d', got EOF", TagT::Id);
+                TRY_MATCH_UNTIL(SOH, "Expected value tag '%d', got EOF", TagT::Id);
 
                 auto view = valueToken.view();
                 TRY_ADVANCE("Expected value after tag '%d', got EOF", TagT::Id);
@@ -704,7 +705,7 @@ namespace Fix
                 auto& cursor = context.cursor;
 
                 StreamCursor::Token valueToken(cursor);
-                TRY_MATCH_UNTIL('|', "Expected value after tag %d, got EOF", Tag);
+                TRY_MATCH_UNTIL(SOH, "Expected value after tag %d, got EOF", Tag);
 
                 auto view = valueToken.view();
 
@@ -826,7 +827,7 @@ namespace Fix
                                 TRY_ADVANCE("Expected value after tag %d, got EOF", tag);
 
                                 StreamCursor::Token valueToken(cursor);
-                                TRY_MATCH_UNTIL('|', "Expected value after tag %d, got EOF", tag);
+                                TRY_MATCH_UNTIL(SOH, "Expected value after tag %d, got EOF", tag);
 
                                 if (!strict)
                                 {
@@ -974,7 +975,7 @@ namespace Fix
                     else
                     {
                         StreamCursor::Token valueToken(cursor);
-                        TRY_MATCH_UNTIL('|', "Expected value after tag %d, got EOF", tag);
+                        TRY_MATCH_UNTIL(SOH, "Expected value after tag %d, got EOF", tag);
 
                         if (!Rules::StrictMode)
                         {

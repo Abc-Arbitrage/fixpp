@@ -1,5 +1,7 @@
 #include <benchmark/benchmark.h>
 
+#define SOH_CHARACTER '|'
+
 #include <fixpp/tag.h>
 #include <fixpp/dsl.h>
 #include <fixpp/versions/v42.h>
@@ -41,7 +43,10 @@ static void VisitCustomQuoteBenchmark(benchmark::State& state)
 
     while (state.KeepRunning())
     {
-        Fix::visit(frame, size, MyVisitor(), MyVisitRules());
+        Fix::visit(frame, size, MyVisitor(), MyVisitRules()).otherwise([&](const Fix::ErrorKind& e) {
+            auto errStr = e.asString();
+            state.SkipWithError(errStr.c_str());
+        });
     }
 
 }

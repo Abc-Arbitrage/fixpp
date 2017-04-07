@@ -3,6 +3,8 @@
 
 #pragma warning(disable:4503)
 
+#define SOH_CHARACTER '|'
+
 #include <fixpp/visitor.h>
 #include <fixpp/dsl.h>
 

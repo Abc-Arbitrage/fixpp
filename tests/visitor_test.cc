@@ -2,6 +2,8 @@
 
 #pragma warning(disable:4503)
 
+#define SOH_CHARACTER '|'
+
 #include <fixpp/versions/v42.h>
 #include <fixpp/versions/v44.h>
 #include <fixpp/visitor.h>
