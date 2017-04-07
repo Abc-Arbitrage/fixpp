@@ -74,9 +74,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\cursor.cpp" />
-  </ItemGroup>
-  <ItemGroup>
     <Text Include="..\src\CMakeLists.txt" />
   </ItemGroup>
 </Project>
