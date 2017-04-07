@@ -5,11 +5,11 @@
 
 #pragma warning(disable:4503)
 
+#define SOH_CHARACTER '|'
+
 #include <fixpp/versions/v42.h>
 #include <fixpp/versions/v44.h>
 #include <fixpp/writer.h>
-
-constexpr const char SOH = '|';
 
 template<typename Header>
 Header createHeader()
@@ -43,7 +43,7 @@ void check(const Header& header, const Message& message, std::initializer_list<s
     auto frame = writer.write(header, message);
 
     std::unordered_map<int, std::string> fields;
-    auto tokens = split(frame, SOH);
+    auto tokens = split(frame, SOH_CHARACTER);
 
     for (const auto& token: tokens)
     {

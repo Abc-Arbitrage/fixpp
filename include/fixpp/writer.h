@@ -14,10 +14,9 @@
 #include <fixpp/tag.h>
 #include <fixpp/dsl/message.h>
 #include <fixpp/streambuf.h>
+#include <fixpp/utils/soh.h>
 
 namespace Fix {
-
-static constexpr const char SOH = '|';
 
 namespace details
 {
