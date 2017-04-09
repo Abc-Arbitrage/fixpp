@@ -10,7 +10,7 @@
 
 namespace should_visit_logon_frame
 {
-    struct Visitor
+    struct Visitor : public Fix::StaticVisitor<void>
     {
         void operator()(const Fix::v42::Header::Ref& header, const Fix::v42::Message::Logon::Ref& logon)
         {
@@ -28,7 +28,7 @@ namespace should_visit_logon_frame
 
 namespace should_try_get_fields_after_parsing
 {
-    struct Visitor
+    struct Visitor : public Fix::StaticVisitor<void>
     {
         void operator()(const Fix::v42::Header::Ref& header, const Fix::v42::Message::Logon::Ref& logon)
         {
@@ -58,12 +58,52 @@ namespace should_try_get_fields_after_parsing
         }
     };
 
-} // namespace should_visit_logon_frame
+} // namespace should_try_get_fields_after_parsing
+
+namespace should_be_able_to_return_value_in_visitor
+{
+    struct Visitor : public Fix::StaticVisitor<int>
+    {
+        int operator()(const Fix::v42::Header::Ref& header, const Fix::v42::Message::Logon::Ref& logon)
+        {
+            doAssert(header, logon);
+            return 10;
+        }
+
+        void doAssert(const Fix::v42::Header::Ref& header, const Fix::v42::Message::Logon::Ref& logon)
+        {
+            std::string senderCompId;
+            ASSERT_TRUE(Fix::tryGet<Fix::Tag::SenderCompID>(header, senderCompId));
+            ASSERT_EQ(senderCompId, "ABC");
+
+            auto msgTypes = Fix::get<Fix::Tag::NoMsgTypes>(logon);
+            ASSERT_EQ(msgTypes.size(), 2);
+
+            std::string refMsgType;
+            char msgDirection;
+
+            ASSERT_TRUE(Fix::tryGet<Fix::Tag::RefMsgType>(msgTypes[0], refMsgType));
+            ASSERT_EQ(refMsgType, "TEST");
+
+            ASSERT_TRUE(Fix::tryGet<Fix::Tag::MsgDirection>(msgTypes[0], msgDirection));
+            ASSERT_EQ(msgDirection, 'C');
+
+            ASSERT_TRUE(Fix::tryGet<Fix::Tag::RefMsgType>(msgTypes[1], refMsgType));
+            ASSERT_EQ(refMsgType, "TEST");
+        }
+
+        template<typename HeaderT, typename MessageT> int operator()(HeaderT, MessageT)
+        {
+            return 0;
+        }
+    };
+
+} // namespace should_be_able_to_return_value_in_visitor
 
 namespace should_visit_repeating_group_in_logon_frame
 {
 
-    struct Visitor
+    struct Visitor : public Fix::StaticVisitor<void>
     {
         void operator()(const Fix::v42::Header::Ref&, const Fix::v42::Message::Logon::Ref& logon)
         {
@@ -101,7 +141,7 @@ namespace should_visit_custom_message
         static constexpr bool StrictMode = false;
     };
 
-    struct Visitor
+    struct Visitor : public Fix::StaticVisitor<void>
     {
         void operator()(const Fix::v42::Header::Ref& header, const MyMessage::Ref& message)
         {
@@ -120,7 +160,7 @@ namespace should_visit_custom_message
 
 namespace should_visit_incremental_refresh_frame
 {
-    struct Visitor
+    struct Visitor : public Fix::StaticVisitor<void>
     {
         void operator()(const Fix::v42::Header::Ref&, const Fix::v42::Message::MarketDataIncrementalRefresh::Ref& message)
         {
@@ -183,7 +223,7 @@ namespace should_visit_custom_snapshot_frame
         static constexpr bool StrictMode = false;
     };
 
-    struct Visitor
+    struct Visitor : public Fix::StaticVisitor<void>
     {
         void operator()(const Fix::v44::Header::Ref&, const Snapshot::Ref& message)
         {
@@ -217,7 +257,7 @@ namespace should_visit_custom_snapshot_frame
 
 namespace should_visit_nested_repeating_groups
 {
-    struct Visitor
+    struct Visitor : public Fix::StaticVisitor<void>
     {
         void operator()(const Fix::v44::Header::Ref&, const Fix::v44::Message::MarketDataSnapshot::Ref& message)
         {
@@ -260,7 +300,7 @@ namespace should_visit_unknown_tags_in_non_strict_mode
         static constexpr bool StrictMode = false;
     };
 
-    struct Visitor
+    struct Visitor : public Fix::StaticVisitor<void>
     {
         void operator()(const Fix::v44::Header::Ref&, const Fix::v44::Message::MarketDataSnapshot::Ref& message)
         {
@@ -315,7 +355,7 @@ struct AssertVisitRules : public Fix::VisitRules
     static constexpr bool StrictMode = true;
 };
 
-struct AssertVisitor
+struct AssertVisitor : public Fix::StaticVisitor<void>
 {
     template<typename Header, typename Message>
     void operator()(Header, Message)
@@ -325,13 +365,13 @@ struct AssertVisitor
 };
 
 template<typename Visitor>
-Fix::VisitError doVisit(const char* frame, Visitor visitor)
+Fix::VisitError<typename Visitor::ResultType> doVisit(const char* frame, Visitor visitor)
 {
     return Fix::visit(frame, std::strlen(frame), visitor);
 }
 
 template<typename Visitor, typename Rules>
-Fix::VisitError doVisit(const char* frame, Visitor visitor, Rules rules)
+Fix::VisitError<typename Visitor::ResultType> doVisit(const char* frame, Visitor visitor, Rules rules)
 {
     return Fix::visit(frame, std::strlen(frame), visitor, rules);
 }
@@ -451,4 +491,12 @@ TEST(visitor_test, should_try_get_fields_after_parsing)
 
     auto err = doVisit(frame, should_try_get_fields_after_parsing::Visitor());
     ASSERT_TRUE(err.isOk());
+}
+
+TEST(visitor_test, should_be_able_to_return_value_in_visitor)
+{
+    const char* frame = "8=FIX.4.2|9=84|35=A|34=1|49=ABC|52=20120309-16:54:02|56=TT_ORDER|96=12345678|384=2|372=TEST|385=C|372=TEST|10=248";
+
+    auto err = doVisit(frame, should_be_able_to_return_value_in_visitor::Visitor());
+    ASSERT_EQ(err.unwrapOr(0), 10);
 }

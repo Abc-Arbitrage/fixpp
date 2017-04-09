@@ -24,7 +24,7 @@ struct MyVisitRules : public Fix::VisitRules
     static constexpr bool StrictMode = false;
 };
 
-struct MyVisitor
+struct MyVisitor : public Fix::StaticVisitor<void>
 {
     void operator()(const Fix::v42::Header::Ref&, const MyQuote::Ref&)
     {

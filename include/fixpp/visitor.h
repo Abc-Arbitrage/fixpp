@@ -67,21 +67,8 @@ namespace Fix
         std::string str_;
     };
 
-    using VisitError = Result<void, ErrorKind>;
-
-    VisitError makeError(ErrorKind::Type type, const StreamCursor& cursor, const char* errFmt, ...)
-    {
-        const size_t column = static_cast<size_t>(cursor);
-
-        char error[255];
-        std::memset(error, 0, sizeof error);
-        va_list args;
-        va_start(args, errFmt);
-        auto count = std::vsnprintf(error, sizeof error, errFmt, args);
-        va_end(args);
-
-        return Err(ErrorKind(type, column, std::string(error, count)));
-    }
+    template<typename T>
+    using VisitError = Result<T, ErrorKind>;
 
     // ------------------------------------------------
     // Deferred
@@ -136,7 +123,6 @@ namespace Fix
 
     struct ParsingContext
     {
-
         ParsingContext(StreamCursor& cursor)
             : cursor(cursor)
             , sum(0)
@@ -186,6 +172,47 @@ namespace Fix
         size_t sum;
     };
 
+    template<typename T>
+    struct TypedParsingContext : public ParsingContext
+    {
+        using Type = T;
+
+        TypedParsingContext(StreamCursor& cursor)
+            : ParsingContext(cursor)
+        { }
+
+        void setValue(T value)
+        {
+            resultValue.construct(value);
+        }
+
+        VisitError<T> toVisitError() const
+        {
+            if (hasError())
+                return Err(error.get());
+            return Ok(resultValue.get());
+        }
+
+        Deferred<T> resultValue;
+    };
+
+    template<>
+    struct TypedParsingContext<void> : public ParsingContext
+    {
+        using Type = void;
+
+        TypedParsingContext(StreamCursor& cursor)
+            : ParsingContext(cursor)
+        { }
+
+        VisitError<void> toVisitError() const
+        {
+            if (hasError())
+                return Err(error.get());
+            return Ok();
+        }
+    };
+
     namespace impl
     {
 
@@ -225,6 +252,15 @@ namespace Fix
                   > : std::true_type
             { };
 
+            template<typename T, typename = void> struct IsStaticVisitor : std::false_type { };
+            template<typename T>
+            struct IsStaticVisitor<
+                    T,
+                    void_t<typename T::ResultType>
+                   > : std::true_type
+            {
+            };
+
             template<typename Overrides>
             struct OverridesValidator;
 
@@ -248,8 +284,8 @@ namespace Fix
         template<typename Message, typename Overrides> using OverrideFor
             = typename meta::map::ops::atOr<Overrides, Message, Message>::type::Ref;
 
-        template<typename Visitor, typename Rules>
-        void visitMessage(ParsingContext& context, Visitor& visitor, Rules)
+        template<typename Visitor, typename Rules, typename Context>
+        void visitMessage(Context& context, Visitor& visitor, Rules)
         {
 
             using Overrides = typename Rules::Overrides;
@@ -911,7 +947,11 @@ namespace Fix
         template<typename Visitor, typename Rules>
         struct MessageVisitor
         {
-            MessageVisitor(ParsingContext& context, Visitor& visitor)
+
+            using ResultType = typename Visitor::ResultType;
+            using Context = TypedParsingContext<ResultType>;
+
+            MessageVisitor(Context& context, Visitor& visitor)
                 : context(context)
                 , visitor(visitor)
             { }
@@ -997,7 +1037,7 @@ namespace Fix
                 }
 
                 if (!hasError())
-                    visitor(header, message);
+                    callVisitor(header, message, std::is_void<typename Context::Type>{});
             }
 
             bool hasError() const
@@ -1006,8 +1046,21 @@ namespace Fix
             }
 
         private:
+            template<typename Header, typename Message>
+            void callVisitor(const Header& header, const Message& message, std::true_type /* is_void */)
+            {
+                visitor(header, message);
+            }
+
+            template<typename Header, typename Message>
+            void callVisitor(const Header& header, const Message& message, std::false_type /* is_void */)
+            {
+                auto res = visitor(header, message);
+                context.setValue(res);
+            }
+
             Visitor& visitor;
-            ParsingContext& context;
+            Context& context;
         };
 
     } // namespace impl
@@ -1023,6 +1076,13 @@ namespace Fix
         template<typename T> using As = T;
     };
 
+
+    template<typename T>
+    struct StaticVisitor
+    {
+        using ResultType = T;
+    };
+
     struct DefaultRules : public VisitRules
     {
         using Overrides = OverrideSet<>;
@@ -1033,8 +1093,8 @@ namespace Fix
         static constexpr bool StrictMode = false;
     };
 
-    template<typename Visitor, typename Rules>
-    void visitMessage(ParsingContext& context, Visitor& visitor, Rules rules)
+    template<typename Visitor, typename Rules, typename Context>
+    void visitMessage(Context& context, Visitor& visitor, Rules rules)
     {
         auto& cursor = context.cursor;
         auto beginString = impl::matchTag<Tag::BeginString>(cursor);
@@ -1068,10 +1128,12 @@ namespace Fix
     // @Investigate a way to make it possible as it will be useful with polymorphic lambdas
 
     template<typename Visitor, typename Rules>
-    VisitError visit(const char* frame, size_t size, Visitor& visitor, Rules rules)
+    auto visit(const char* frame, size_t size, Visitor& visitor, Rules rules) -> VisitError<typename Visitor::ResultType>
     {
         static_assert(std::is_base_of<VisitRules, Rules>::value, "Visit rules must inherit from VisitRules");
 
+        static_assert(impl::rules::IsStaticVisitor<Visitor>::value,
+                "Visitor must fulfill StaticVisitor requirement and must expose an inner type ResultType");
         static_assert(impl::rules::HasOverrides<Rules>::value, "Visit rules must provide an Overrides typedef");
         static_assert(impl::rules::HasValidateChecksum<Rules>::value, "Visit rules must provide a static ValidateChecksum boolean");
         static_assert(impl::rules::HasValidateLength<Rules>::value, "Visit rules must provide a static ValidateLength boolean");
@@ -1082,19 +1144,16 @@ namespace Fix
         RawStreamBuf<> streambuf(const_cast<char *>(frame), size);
         StreamCursor cursor(&streambuf);
 
-        ParsingContext context(cursor);
+        using ResultType = typename Visitor::ResultType;
+
+        TypedParsingContext<ResultType> context(cursor);
         visitMessage(context, visitor, rules);
 
-        if (context.hasError())
-        {
-            return Err(context.error.get());
-        }
-
-        return Ok();
+        return context.toVisitError();
     }
 
     template<typename Visitor>
-    VisitError visit(const char* frame, size_t size, Visitor& visitor)
+    auto visit(const char* frame, size_t size, Visitor& visitor) -> VisitError<typename Visitor::ResultType>
     {
         return visit(frame, size, visitor, DefaultRules {});
     }
