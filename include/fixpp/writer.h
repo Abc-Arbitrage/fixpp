@@ -98,7 +98,7 @@ std::ostream& writeField(std::ostream& os, const Field& field)
 struct Writer
 {
     template<typename Header, typename Message>
-    std::string write(Header header, const Message& message)
+    std::string write(const Header& header, const Message& message)
     {
         StreamBuf<Message> buf;
         std::ostream os(&buf);
@@ -110,9 +110,6 @@ struct Writer
             error << "Missing " << missingBits << " required value(s) for Message";
             throw std::runtime_error(error.str());
         }
-
-        set<Tag::SendingTime>(header, std::time(nullptr));
-        set<Tag::MsgSeqNum>(header, 1);
 
         if (!header.requiredBits.all())
         {

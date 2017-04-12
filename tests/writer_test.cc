@@ -17,6 +17,8 @@ Header createHeader()
     Header header;
     Fix::set<Fix::Tag::SenderCompID>(header, "SNDR");
     Fix::set<Fix::Tag::TargetCompID>(header, "TRGT");
+    Fix::set<Fix::Tag::MsgSeqNum>(header, 1);
+    Fix::set<Fix::Tag::SendingTime>(header, std::time(nullptr));
 
     return header;
 }
