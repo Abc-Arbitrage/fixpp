@@ -500,3 +500,26 @@ TEST(visitor_test, should_be_able_to_return_value_in_visitor)
     auto err = doVisit(frame, should_be_able_to_return_value_in_visitor::Visitor());
     ASSERT_EQ(err.unwrapOr(0), 10);
 }
+
+TEST(visitor_test, should_visit_tag)
+{
+    const char* frame = "8=FIX.4.2|9=84|35=A|34=1|49=ABC|52=20120309-16:54:02|56=TT_ORDER|96=12345678|384=2|372=TEST|385=C|372=TEST|10=248|";
+
+    auto assertFalse = [&](const Fix::ErrorKind&) { ASSERT_TRUE(false); };
+
+    Fix::visitTag<Fix::Tag::MsgType>(frame, std::strlen(frame))
+      .then([&](const std::string& msgType) { ASSERT_EQ(msgType, "A"); })
+      .otherwise(assertFalse);
+
+    Fix::visitTag<Fix::Tag::RefMsgType>(frame, std::strlen(frame))
+        .then([&](const std::string& ref) { ASSERT_EQ(ref, "TEST"); })
+        .otherwise(assertFalse);
+
+    Fix::visitTag<Fix::Tag::BodyLength>(frame, std::strlen(frame))
+        .then([&](int length) { ASSERT_EQ(length, 84); })
+        .otherwise(assertFalse);
+
+    Fix::visitTag<Fix::Tag::OnBehalfOfCompID>(frame, std::strlen(frame))
+        .then([&](const std::string&) { ASSERT_TRUE(false); })
+        .otherwise([&](const Fix::ErrorKind& e) { ASSERT_EQ(e.type(), Fix::ErrorKind::UnknownTag); });
+}

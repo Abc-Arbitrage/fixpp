@@ -61,6 +61,9 @@ namespace impl {
     template<typename Ret, typename Cls, typename... Args>
     struct result_of<Ret (Cls::*)(Args...)> : public result_of<Ret (Args...)> { };
 
+    template<typename Ret, typename Cls, typename... Args>
+    struct result_of<Ret (Cls::*)(Args...) const> : public result_of<Ret (Args...)> { };
+
     template<typename Ret, typename... Args>
     struct result_of<Ret (Args...)> {
         typedef Ret type;

@@ -53,6 +53,38 @@ static void VisitCustomQuoteBenchmark(benchmark::State& state)
 
 }
 
+static void VisitTagViewBenchmark(benchmark::State& state)
+{
+    const char *frame = "8=FIX.4.2|9=0225|35=S|49=FIXPROV|56=TRGT|34=1579321|52=20161230-11:05:36.052|115=TRGT|142=MRS|55=ZAR/JPY|60=20161230-11:05:36.052|63=0|64=20170105|117=d20052s3866|131=1276|132=8.525|133=8.547|134=1000000|135=1000000|303=2|537=1|11325=0|10=087|";
+
+    const size_t size = std::strlen(frame);
+
+    while (state.KeepRunning())
+    {
+        Fix::visitTagView<Fix::Tag::MsgType>(frame, size).otherwise([&](const Fix::ErrorKind& e) {
+            auto errStr = e.asString();
+            state.SkipWithError(errStr.c_str());
+        });
+    }
+}
+
+static void VisitTagBenchmark(benchmark::State& state)
+{
+    const char *frame = "8=FIX.4.2|9=0225|35=S|49=FIXPROV|56=TRGT|34=1579321|52=20161230-11:05:36.052|115=TRGT|142=MRS|55=ZAR/JPY|60=20161230-11:05:36.052|63=0|64=20170105|117=d20052s3866|131=1276|132=8.525|133=8.547|134=1000000|135=1000000|303=2|537=1|11325=0|10=087|";
+
+    const size_t size = std::strlen(frame);
+
+    while (state.KeepRunning())
+    {
+        Fix::visitTag<Fix::Tag::MsgType>(frame, size).otherwise([&](const Fix::ErrorKind& e) {
+            auto errStr = e.asString();
+            state.SkipWithError(errStr.c_str());
+        });
+    }
+}
+
 BENCHMARK(VisitCustomQuoteBenchmark);
+BENCHMARK(VisitTagViewBenchmark);
+BENCHMARK(VisitTagBenchmark);
 
 BENCHMARK_MAIN();

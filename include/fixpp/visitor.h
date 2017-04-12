@@ -22,6 +22,7 @@
 #include <fixpp/meta.h>
 #include <fixpp/dsl/details/unwrap.h>
 #include <fixpp/dsl/details/flatten.h>
+#include <fixpp/dsl/details/lexical_cast.h>
 
 namespace Fix
 {
@@ -1156,6 +1157,55 @@ namespace Fix
     auto visit(const char* frame, size_t size, Visitor& visitor) -> VisitError<typename Visitor::ResultType>
     {
         return visit(frame, size, visitor, DefaultRules {});
+    }
+
+    template<typename Tag>
+    VisitError<View> visitTagView(const char* frame, size_t size)
+    {
+        RawStreamBuf<> streambuf(const_cast<char *>(frame), size);
+        StreamCursor cursor(&streambuf);
+
+        TypedParsingContext<View> context(cursor);
+
+        auto doVisitTag = [&]() {
+            do
+            {
+                int tag;
+                TRY_MATCH_INT(
+                    tag,
+                    "Encountered invalid tag, expected int, got '%c'",
+                    CURSOR_CURRENT(cursor)
+                );
+                TRY_ADVANCE("Expected value after tag %d, got EOF", tag);
+
+                StreamCursor::Token valueToken(cursor);
+                TRY_MATCH_UNTIL(SOH, "Expected value after tag %d, got EOF", tag);
+
+                if (tag == Tag::Id)
+                {
+                    context.setValue(valueToken.view());
+                    return;
+                }
+
+                cursor.advance(1);
+
+            } while (!cursor.eof() && !context.hasError());
+
+            context.setError(ErrorKind::UnknownTag, "Could not find tag %d in given frame", Tag::Id);
+        };
+
+        doVisitTag();
+
+        return context.toVisitError();
+    }
+
+    template<typename Tag>
+    auto visitTag(const char* frame, size_t size) -> VisitError<typename Tag::Type::UnderlyingType>
+    {
+        return visitTagView<Tag>(frame, size).map([](const View& view)
+        {
+            return details::LexicalCast<typename Tag::Type>::cast(view.first, view.second);
+        });
     }
 
 #undef TRY_ADVANCE
