@@ -42,7 +42,7 @@ namespace Fix
         template<>
         struct LexicalCast<Type::Float>
         {
-            static int cast(const char* offset, size_t /*size*/)
+            static double cast(const char* offset, size_t /*size*/)
             {
                 char *end;
                 return strtod(offset, &end);
