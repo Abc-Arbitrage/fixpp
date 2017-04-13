@@ -13,6 +13,7 @@
 #include <algorithm>
 
 #include <fixpp/versions/v42.h>
+#include <fixpp/versions/v43.h>
 #include <fixpp/versions/v44.h>
 
 #include <fixpp/tag.h>
@@ -292,6 +293,7 @@ namespace Fix
             using Overrides = typename Rules::Overrides;
 
             using Version42 = Fix::v42::Version;
+            using Version43 = Fix::v43::Version;
             using Version44 = Fix::v44::Version;
 
             auto version = context.version.first;
@@ -307,6 +309,7 @@ namespace Fix
                 {
                     case '0':
                         visitor(id<Header> {}, id<OverrideFor<Fix::v42::Message::Heartbeat, Overrides>> {});
+                        break;
                     case '1':
                         visitor(id<Header> {}, id<OverrideFor<Fix::v42::Message::TestRequest, Overrides>> {});
                         break;
@@ -339,6 +342,33 @@ namespace Fix
                         break;
                     case 'X':
                         visitor(id<Header> {}, id<OverrideFor<Fix::v42::Message::MarketDataIncrementalRefresh, Overrides>> {});
+                        break;
+                }
+            }
+            else if (Version43::equals(version, versionSize))
+            {
+                using Header = Fix::v43::Header::Ref;
+
+                switch (msgType[0])
+                {
+                    case '0':
+                        visitor(id<Header> {}, id<OverrideFor<Fix::v43::Message::Heartbeat, Overrides>> {});
+                        break;
+                    case '1':
+                        visitor(id<Header> {}, id<OverrideFor<Fix::v43::Message::TestRequest, Overrides>> {});
+                        break;
+                    case '2':
+                        visitor(id<Header> {}, id<OverrideFor<Fix::v43::Message::ResendRequest, Overrides>> {});
+                        break;
+                    case '4':
+                        visitor(id<Header> {}, id<OverrideFor<Fix::v43::Message::SequenceReset, Overrides>> {});
+                        break;
+                    case '5':
+                        visitor(id<Header> {}, id<OverrideFor<Fix::v43::Message::Logout, Overrides>> {});
+                        break;
+                    case 'A':
+                        visitor(id<Header> {}, id<OverrideFor<Fix::v43::Message::Logon, Overrides>> {});
+                        break;
                 }
             }
             else if (Version44::equals(version, versionSize))
