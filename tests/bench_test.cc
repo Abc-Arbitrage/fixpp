@@ -12,7 +12,7 @@ size_t total = 0;
 
 using MyTag1 = Fix::TagT<11325, Fix::Type::Int>;
 using MyTag2 = Fix::TagT<537, Fix::Type::Int>;
-using MyQuote = Fix::ExtendedMessage<Fix::v42::Message::Quote, Fix::Tag::QuoteResponseType, Fix::Tag::SettlmntTyp, MyTag1, MyTag2>;
+using MyQuote = Fix::ExtendedMessage<Fix::v42::Message::Quote, Fix::Tag::QuoteRequestType, Fix::Tag::SettlmntTyp, MyTag1, MyTag2>;
 
 struct VisitRules : public Fix::VisitRules
 {

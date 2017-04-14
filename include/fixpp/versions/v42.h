@@ -41,13 +41,84 @@ namespace Fix
                   Tag::IOIQltyInd, Tag::IOINaturalFlag, RepeatingGroup<Tag::NoIOIQualifiers, Tag::IOIQualifier>,
                   Tag::Text, Tag::EncodedTextLen, Tag::EncodedText, Tag::TransactTime, Tag::URLLink,
                   RepeatingGroup<Tag::NoRoutingIDs, Tag::RoutingType, Tag::RoutingID>,
-                  Tag::SpreadToBenchmark, Tag::Benchmark>;
+                  Tag::SpreadToBenchmark, Tag::Benchmark
+            >;
+
+            using Advertisement = MessageV<Chars<'7'>,
+                  Required<Tag::AdvId>, Required<Tag::AdvTransType>, Tag::AdvRefID, Required<Tag::Symbol>, Tag::SymbolSfx,
+                  Tag::SecurityID, Tag::IDSource, Tag::SecurityType, Tag::MaturityMonthYear, Tag::MaturityDay, Tag::PutOrCall,
+                  Tag::StrikePrice, Tag::OptAttribute, Tag::ContractMultiplier, Tag::CouponRate, Tag::SecurityExchange,
+                  Tag::Issuer, Tag::EncodedIssuerLen, Tag::EncodedIssuer, Tag::SecurityDesc, Tag::EncodedSecurityDescLen,
+                  Tag::EncodedSecurityDesc, Required<Tag::AdvSide>, Required<Tag::Shares>, Tag::Price, Tag::Currency,
+                  Tag::TradeDate, Tag::TransactTime, Tag::Text, Tag::EncodedTextLen, Tag::EncodedText, Tag::URLLink,
+                  Tag::LastMkt, Tag::TradingSessionID
+            >;
+
+            using ExecutionReport = MessageV<Chars<'8'>,
+                  Required<Tag::OrderID>, Tag::SecondaryOrderID, Tag::ClOrdID, Tag::OrigClOrdID, Tag::ClientID, Tag::ExecBroker,
+                  RepeatingGroup<
+                      Tag::NoContraBrokers,
+                      Tag::ContraBroker, Tag::ContraTrader, Tag::ContraTradeQty, Tag::ContraTradeTime
+                  >, Tag::ListID, Required<Tag::ExecID>, Required<Tag::ExecTransType>, Tag::ExecRefID, Required<Tag::ExecType>,
+                  Required<Tag::OrdStatus>, Tag::OrdRejReason, Tag::ExecRestatementReason, Tag::Account, Tag::SettlmntTyp, Tag::FutSettDate,
+                  Required<Tag::Symbol>, Tag::SymbolSfx, Tag::SecurityID, Tag::IDSource, Tag::SecurityType, Tag::MaturityMonthYear,
+                  Tag::MaturityDay, Tag::PutOrCall, Tag::StrikePrice, Tag::OptAttribute, Tag::ContractMultiplier, Tag::CouponRate,
+                  Tag::SecurityExchange, Tag::Issuer, Tag::EncodedIssuerLen, Tag::EncodedIssuer, Tag::SecurityDesc, Tag::EncodedSecurityDescLen,
+                  Tag::EncodedSecurityDesc, Required<Tag::Side>, Tag::OrderQty, Tag::CashOrderQty, Tag::OrdType, Tag::Price,
+                  Tag::StopPx, Tag::PegDifference, Tag::DiscretionInst, Tag::DiscretionOffset, Tag::Currency, Tag::ComplianceID,
+                  Tag::SolicitedFlag, Tag::TimeInForce, Tag::EffectiveTime, Tag::ExpireDate, Tag::ExpireTime, Tag::ExecInst, Tag::Rule80A,
+                  Tag::LastShares, Tag::LastPx, Tag::LastSpotRate, Tag::LastForwardPoints, Tag::LastMkt, Tag::TradingSessionID,
+                  Tag::LastCapacity, Required<Tag::LeavesQty>, Required<Tag::CumQty>, Required<Tag::AvgPx>, Tag::DayOrderQty, Tag::DayCumQty,
+                  Tag::DayAvgPx, Tag::GTBookingInst, Tag::TradeDate, Tag::TransactTime, Tag::ReportToExch, Tag::Commission, Tag::CommType,
+                  Tag::GrossTradeAmt, Tag::SettlCurrAmt, Tag::SettlCurrency, Tag::SettlCurrFxRate, Tag::SettlCurrFxRateCalc, Tag::HandlInst,
+                  Tag::MinQty, Tag::MaxFloor, Tag::OpenClose, Tag::MaxShow, Tag::Text, Tag::EncodedTextLen, Tag::EncodedText, Tag::FutSettDate2,
+                  Tag::OrderQty2, Tag::ClearingFirm, Tag::ClearingAccount, Tag::MultiLegReportingType
+            >;
+
+            using OrderCancelReject = MessageV<Chars<'9'>,
+                  Required<Tag::OrderID>, Tag::SecondaryOrderID, Required<Tag::ClOrdID>, Required<Tag::OrigClOrdID>, Required<Tag::OrdStatus>,
+                  Tag::ClientID, Tag::ExecBroker, Tag::ListID, Tag::Account, Tag::TransactTime, Required<Tag::CxlRejResponseTo>, Tag::CxlRejReason,
+                  Tag::Text, Tag::EncodedTextLen, Tag::EncodedText
+            >;
 
             using Logon = MessageV<Chars<'A'>,
                   Required<Tag::EncryptMethod>, Required<Tag::HeartBtInt>, Tag::RawDataLength, Tag::RawData,
                   Tag::ResetSeqNumFlag, Tag::MaxMessageSize,
                   RepeatingGroup<Tag::NoMsgTypes, Tag::RefMsgType, Tag::MsgDirection>
              >;
+
+            using News = MessageV<Chars<'B'>,
+                  Tag::OrigTime, Tag::Urgency, Required<Tag::Headline>, Tag::EncodedHeadlineLen, Tag::EncodedHeadline,
+                  RepeatingGroup<
+                      Tag::NoRoutingIDs,
+                      Tag::RoutingType, Tag::RoutingID
+                  >,
+                  RepeatingGroup<
+                      Tag::NoRelatedSym,
+                      Tag::RelatdSym, Tag::SymbolSfx, Tag::SecurityID, Tag::IDSource, Tag::SecurityType, Tag::MaturityMonthYear,
+                      Tag::MaturityDay, Tag::PutOrCall, Tag::StrikePrice, Tag::OptAttribute, Tag::ContractMultiplier, Tag::CouponRate,
+                      Tag::SecurityExchange, Tag::Issuer, Tag::EncodedIssuerLen, Tag::EncodedIssuer, Tag::SecurityDesc,
+                      Tag::EncodedSecurityDescLen, Tag::EncodedSecurityDesc>,
+                      Required<
+                          RepeatingGroup<
+                              Tag::LinesOfText,
+                              Required<Tag::Text>, Tag::EncodedTextLen, Tag::EncodedText
+                          >
+                      >, Tag::URLLink, Tag::RawDataLength, Tag::RawData
+            >;
+
+            using Email = MessageV<Chars<'C'>,
+                  Required<Tag::EmailThreadID>, Required<Tag::EmailType>, Tag::OrigTime, Required<Tag::Subject>, Tag::EncodedSubjectLen,
+                  Tag::EncodedSubject, RepeatingGroup<Tag::NoRoutingIDs, Tag::RoutingType, Tag::RoutingID>,
+                  RepeatingGroup<
+                      Tag::NoRelatedSym,
+                      Tag::RelatdSym, Tag::SymbolSfx, Tag::SecurityID, Tag::IDSource, Tag::SecurityType, Tag::MaturityMonthYear, Tag::MaturityDay,
+                      Tag::PutOrCall, Tag::StrikePrice, Tag::OptAttribute, Tag::ContractMultiplier, Tag::CouponRate, Tag::SecurityExchange,
+                      Tag::Issuer, Tag::EncodedIssuerLen, Tag::EncodedIssuer, Tag::SecurityDesc, Tag::EncodedSecurityDescLen, Tag::EncodedSecurityDesc
+                  >,
+                  Tag::OrderID, Tag::ClOrdID, Required<RepeatingGroup<Tag::LinesOfText, Required<Tag::Text>, Tag::EncodedTextLen, Tag::EncodedText>>,
+                  Tag::RawDataLength, Tag::RawData
+            >;
 
             using NewOrderSingle = MessageV<Chars<'D'>,
                   Required<Tag::ClOrdID>, Tag::ClientID, Tag::ExecBroker, Tag::Account,
@@ -71,6 +142,145 @@ namespace Fix
                   Tag::DiscretionInst, Tag::DiscretionOffset, Tag::ClearingFirm, Tag::ClearingAccount
             >;
 
+            using NewOrderList = MessageV<Chars<'E'>,
+                  Required<Tag::ListID>, Tag::BidID, Tag::ClientBidID, Tag::ProgRptReqs, Required<Tag::BidType>, Tag::ProgPeriodInterval,
+                  Tag::ListExecInstType, Tag::ListExecInst, Tag::EncodedListExecInstLen, Tag::EncodedListExecInst, Required<Tag::TotNoOrders>,
+                  Required<
+                      RepeatingGroup<
+                          Tag::NoOrders, Required<Tag::ClOrdID>, Required<Tag::ListSeqNo>, Tag::SettlInstMode, Tag::ClientID,
+                          Tag::ExecBroker, Tag::Account,
+                          RepeatingGroup<
+                          Tag::NoAllocs,
+                              Tag::AllocAccount, Tag::AllocShares
+                          >, Tag::SettlmntTyp, Tag::FutSettDate, Tag::HandlInst, Tag::ExecInst, Tag::MinQty, Tag::MaxFloor, Tag::ExDestination,
+                          RepeatingGroup<
+                              Tag::NoTradingSessions,
+                              Tag::TradingSessionID
+                          >, Tag::ProcessCode, Required<Tag::Symbol>, Tag::SymbolSfx, Tag::SecurityID, Tag::IDSource,
+                          Tag::SecurityType, Tag::MaturityMonthYear, Tag::MaturityDay, Tag::PutOrCall, Tag::StrikePrice, Tag::OptAttribute,
+                          Tag::ContractMultiplier, Tag::CouponRate, Tag::SecurityExchange, Tag::Issuer, Tag::EncodedIssuerLen,
+                          Tag::EncodedIssuer, Tag::SecurityDesc, Tag::EncodedSecurityDescLen, Tag::EncodedSecurityDesc, Tag::PrevClosePx,
+                          Required<Tag::Side>, Tag::SideValueInd, Tag::LocateReqd, Tag::TransactTime, Tag::OrderQty, Tag::CashOrderQty,
+                          Tag::OrdType, Tag::Price, Tag::StopPx, Tag::Currency, Tag::ComplianceID, Tag::SolicitedFlag, Tag::IOIid, Tag::QuoteID,
+                          Tag::TimeInForce, Tag::EffectiveTime, Tag::ExpireDate, Tag::ExpireTime, Tag::GTBookingInst, Tag::Commission,
+                          Tag::CommType, Tag::Rule80A, Tag::ForexReq, Tag::SettlCurrency, Tag::Text, Tag::EncodedTextLen, Tag::EncodedText,
+                          Tag::FutSettDate2, Tag::OrderQty2, Tag::OpenClose, Tag::CoveredOrUncovered, Tag::CustomerOrFirm, Tag::MaxShow,
+                          Tag::PegDifference, Tag::DiscretionInst, Tag::DiscretionOffset, Tag::ClearingFirm, Tag::ClearingAccount
+                    >
+                >
+            >;
+
+            using OrderCancelRequest = MessageV<Chars<'F'>,
+                  Required<Tag::OrigClOrdID>, Tag::OrderID, Required<Tag::ClOrdID>, Tag::ListID, Tag::Account, Tag::ClientID, Tag::ExecBroker,
+                  Required<Tag::Symbol>, Tag::SymbolSfx, Tag::SecurityID, Tag::IDSource, Tag::SecurityType, Tag::MaturityMonthYear, Tag::MaturityDay,
+                  Tag::PutOrCall, Tag::StrikePrice, Tag::OptAttribute, Tag::ContractMultiplier, Tag::CouponRate, Tag::SecurityExchange, Tag::Issuer,
+                  Tag::EncodedIssuerLen, Tag::EncodedIssuer, Tag::SecurityDesc, Tag::EncodedSecurityDescLen, Tag::EncodedSecurityDesc,
+                  Required<Tag::Side>, Required<Tag::TransactTime>, Tag::OrderQty, Tag::CashOrderQty, Tag::ComplianceID, Tag::SolicitedFlag,
+                  Tag::Text, Tag::EncodedTextLen, Tag::EncodedText
+            >;
+
+            using OrderCancelReplaceRequest = MessageV<Chars<'G'>,
+                  Tag::OrderID, Tag::ClientID, Tag::ExecBroker, Required<Tag::OrigClOrdID>, Required<Tag::ClOrdID>, Tag::ListID, Tag::Account,
+                  RepeatingGroup<
+                      Tag::NoAllocs, Tag::AllocAccount, Tag::AllocShares
+                  >, Tag::SettlmntTyp, Tag::FutSettDate, Required<Tag::HandlInst>, Tag::ExecInst, Tag::MinQty, Tag::MaxFloor, Tag::ExDestination,
+                  RepeatingGroup<
+                      Tag::NoTradingSessions, Tag::TradingSessionID
+                  >,
+                  Required<Tag::Symbol>, Tag::SymbolSfx, Tag::SecurityID, Tag::IDSource, Tag::SecurityType, Tag::MaturityMonthYear, Tag::MaturityDay,
+                  Tag::PutOrCall, Tag::StrikePrice, Tag::OptAttribute, Tag::ContractMultiplier, Tag::CouponRate, Tag::SecurityExchange, Tag::Issuer,
+                  Tag::EncodedIssuerLen, Tag::EncodedIssuer, Tag::SecurityDesc, Tag::EncodedSecurityDescLen, Tag::EncodedSecurityDesc, Required<Tag::Side>,
+                  Required<Tag::TransactTime>, Tag::OrderQty, Tag::CashOrderQty, Required<Tag::OrdType>, Tag::Price, Tag::StopPx, Tag::PegDifference,
+                  Tag::DiscretionInst, Tag::DiscretionOffset, Tag::ComplianceID, Tag::SolicitedFlag, Tag::Currency, Tag::TimeInForce, Tag::EffectiveTime,
+                  Tag::ExpireDate, Tag::ExpireTime, Tag::GTBookingInst, Tag::Commission, Tag::CommType, Tag::Rule80A, Tag::ForexReq, Tag::SettlCurrency,
+                  Tag::Text, Tag::EncodedTextLen, Tag::EncodedText, Tag::FutSettDate2, Tag::OrderQty2, Tag::OpenClose, Tag::CoveredOrUncovered,
+                  Tag::CustomerOrFirm, Tag::MaxShow, Tag::LocateReqd, Tag::ClearingFirm, Tag::ClearingAccount
+            >;
+
+            using OrderStatusRequest = MessageV<Chars<'H'>,
+                  Tag::OrderID, Required<Tag::ClOrdID>, Tag::ClientID, Tag::Account, Tag::ExecBroker, Required<Tag::Symbol>, Tag::SymbolSfx, Tag::SecurityID,
+                  Tag::IDSource, Tag::SecurityType, Tag::MaturityMonthYear, Tag::MaturityDay, Tag::PutOrCall, Tag::StrikePrice, Tag::OptAttribute,
+                  Tag::ContractMultiplier, Tag::CouponRate, Tag::SecurityExchange, Tag::Issuer, Tag::EncodedIssuerLen, Tag::EncodedIssuer, Tag::SecurityDesc,
+                  Tag::EncodedSecurityDescLen, Tag::EncodedSecurityDesc, Required<Tag::Side>
+            >;
+
+            using Allocation = MessageV<Chars<'J'>,
+                  Required<Tag::AllocID>, Required<Tag::AllocTransType>, Tag::RefAllocID, Tag::AllocLinkID, Tag::AllocLinkType,
+                  RepeatingGroup<
+                      Tag::NoOrders,
+                      Tag::ClOrdID, Tag::OrderID, Tag::SecondaryOrderID, Tag::ListID, Tag::WaveNo>, RepeatingGroup<Tag::NoExecs, Tag::LastShares,
+                      Tag::ExecID, Tag::LastPx, Tag::LastCapacity
+                  >, Required<Tag::Side>, Required<Tag::Symbol>, Tag::SymbolSfx, Tag::SecurityID, Tag::IDSource, Tag::SecurityType,
+                  Tag::MaturityMonthYear, Tag::MaturityDay, Tag::PutOrCall, Tag::StrikePrice, Tag::OptAttribute, Tag::ContractMultiplier,
+                  Tag::CouponRate, Tag::SecurityExchange, Tag::Issuer, Tag::EncodedIssuerLen, Tag::EncodedIssuer, Tag::SecurityDesc,
+                  Tag::EncodedSecurityDescLen, Tag::EncodedSecurityDesc, Required<Tag::Shares>, Tag::LastMkt, Tag::TradingSessionID,
+                  Required<Tag::AvgPx>, Tag::Currency, Tag::AvgPrxPrecision, Required<Tag::TradeDate>, Tag::TransactTime, Tag::SettlmntTyp,
+                  Tag::FutSettDate, Tag::GrossTradeAmt, Tag::NetMoney, Tag::OpenClose, Tag::Text, Tag::EncodedTextLen, Tag::EncodedText,
+                  Tag::NumDaysInterest, Tag::AccruedInterestRate,
+                  RepeatingGroup<
+                      Tag::NoAllocs,
+                      Tag::AllocAccount, Tag::AllocPrice, Required<Tag::AllocShares>, Tag::ProcessCode, Tag::BrokerOfCredit, Tag::NotifyBrokerOfCredit,
+                      Tag::AllocHandlInst, Tag::AllocText, Tag::EncodedAllocTextLen, Tag::EncodedAllocText, Tag::ExecBroker, Tag::ClientID,
+                      Tag::Commission, Tag::CommType, Tag::AllocAvgPx, Tag::AllocNetMoney, Tag::SettlCurrAmt, Tag::SettlCurrency, Tag::SettlCurrFxRate,
+                      Tag::SettlCurrFxRateCalc, Tag::AccruedInterestAmt, Tag::SettlInstMode,
+                      RepeatingGroup<
+                          Tag::NoMiscFees,
+                          Tag::MiscFeeAmt, Tag::MiscFeeCurr, Tag::MiscFeeType
+                      >
+                  >
+            >;
+
+            using ListCancelRequest = MessageV<Chars<'K'>,
+                  Required<Tag::ListID>, Required<Tag::TransactTime>, Tag::Text, Tag::EncodedTextLen, Tag::EncodedText
+            >;
+
+            using ListExecute = MessageV<Chars<'L'>,
+                  Required<Tag::ListID>, Tag::ClientBidID, Tag::BidID, Required<Tag::TransactTime>, Tag::Text, Tag::EncodedTextLen, Tag::EncodedText
+            >;
+
+            using ListStatusRequest = MessageV<Chars<'M'>,
+                  Required<Tag::ListID>, Tag::Text, Tag::EncodedTextLen, Tag::EncodedText
+            >;
+
+            using ListStatus = MessageV<Chars<'N'>,
+                  Required<Tag::ListID>, Required<Tag::ListStatusType>, Required<Tag::NoRpts>, Required<Tag::ListOrderStatus>, Required<Tag::RptSeq>,
+                  Tag::ListStatusText, Tag::EncodedListStatusTextLen, Tag::EncodedListStatusText, Tag::TransactTime, Required<Tag::TotNoOrders>,
+                  Required<
+                      RepeatingGroup<
+                          Tag::NoOrders,
+                          Required<Tag::ClOrdID>, Required<Tag::CumQty>, Required<Tag::OrdStatus>, Required<Tag::LeavesQty>,
+                          Required<Tag::CxlQty>, Required<Tag::AvgPx>, Tag::OrdRejReason, Tag::Text, Tag::EncodedTextLen, Tag::EncodedText
+                      >
+                  >
+            >;
+
+            using AllocationInstructionAck = MessageV<Chars<'P'>,
+                  Tag::ClientID, Tag::ExecBroker, Required<Tag::AllocID>, Required<Tag::TradeDate>, Tag::TransactTime, Required<Tag::AllocStatus>,
+                  Tag::AllocRejCode, Tag::Text, Tag::EncodedTextLen, Tag::EncodedText
+            >;
+
+            using DontKnowTrade = MessageV<Chars<'Q'>,
+                  Required<Tag::OrderID>, Required<Tag::ExecID>, Required<Tag::DKReason>, Required<Tag::Symbol>, Tag::SymbolSfx, Tag::SecurityID,
+                  Tag::IDSource, Tag::SecurityType, Tag::MaturityMonthYear, Tag::MaturityDay, Tag::PutOrCall, Tag::StrikePrice, Tag::OptAttribute,
+                  Tag::ContractMultiplier, Tag::CouponRate, Tag::SecurityExchange, Tag::Issuer, Tag::EncodedIssuerLen, Tag::EncodedIssuer,
+                  Tag::SecurityDesc, Tag::EncodedSecurityDescLen, Tag::EncodedSecurityDesc, Required<Tag::Side>, Tag::OrderQty, Tag::CashOrderQty,
+                  Tag::LastShares, Tag::LastPx, Tag::Text, Tag::EncodedTextLen, Tag::EncodedText
+            >;
+
+            using QuoteRequest = MessageV<Chars<'R'>,
+                  Required<Tag::QuoteReqID>,
+                  Required<
+                      RepeatingGroup<
+                          Tag::NoRelatedSym,
+                          Required<Tag::Symbol>, Tag::SymbolSfx, Tag::SecurityID, Tag::IDSource, Tag::SecurityType, Tag::MaturityMonthYear,
+                          Tag::MaturityDay, Tag::PutOrCall, Tag::StrikePrice, Tag::OptAttribute, Tag::ContractMultiplier, Tag::CouponRate,
+                          Tag::SecurityExchange, Tag::Issuer, Tag::EncodedIssuerLen, Tag::EncodedIssuer, Tag::SecurityDesc, Tag::EncodedSecurityDescLen,
+                          Tag::EncodedSecurityDesc, Tag::PrevClosePx, Tag::QuoteRequestType, Tag::TradingSessionID, Tag::Side, Tag::OrderQty,
+                          Tag::FutSettDate, Tag::OrdType, Tag::FutSettDate2, Tag::OrderQty2, Tag::ExpireTime, Tag::TransactTime, Tag::Currency
+                      >
+                  >
+            >;
+
             using Quote = MessageV<Chars<'S'>,
                 Tag::QuoteReqID, Required<Tag::QuoteID>, Tag::QuoteResponseLevel, Tag::TradingSessionID,
                 Required<Tag::Symbol>, Tag::SymbolSfx, Tag::SecurityID, Tag::IDSource, Tag::SecurityType,
@@ -80,6 +290,17 @@ namespace Fix
                 Tag::BidPx, Tag::OfferPx, Tag::BidSize, Tag::OfferSize, Tag::ValidUntilTime, Tag::BidSpotRate,
                 Tag::OfferSpotRate, Tag::BidForwardPoints, Tag::OfferForwardPoints, Tag::TransactTime,
                 Tag::FutSettDate, Tag::OrdType, Tag::FutSettDate2, Tag::OrderQty2, Tag::Currency
+            >;
+
+            using SettlementInstructions = MessageV<Chars<'T'>,
+                  Required<Tag::SettlInstID>, Required<Tag::SettlInstTransType>, Required<Tag::SettlInstRefID>, Required<Tag::SettlInstMode>,
+                  Required<Tag::SettlInstSource>, Required<Tag::AllocAccount>, Tag::SettlLocation, Tag::TradeDate, Tag::AllocID,
+                  Tag::LastMkt, Tag::TradingSessionID, Tag::Side, Tag::SecurityType, Tag::EffectiveTime, Required<Tag::TransactTime>,
+                  Tag::ClientID, Tag::ExecBroker, Tag::StandInstDbType, Tag::StandInstDbName, Tag::StandInstDbID, Tag::SettlDeliveryType,
+                  Tag::SettlDepositoryCode, Tag::SettlBrkrCode, Tag::SettlInstCode, Tag::SecuritySettlAgentName, Tag::SecuritySettlAgentCode,
+                  Tag::SecuritySettlAgentAcctNum, Tag::SecuritySettlAgentAcctName, Tag::SecuritySettlAgentContactName,
+                  Tag::SecuritySettlAgentContactPhone, Tag::CashSettlAgentName, Tag::CashSettlAgentCode, Tag::CashSettlAgentAcctNum,
+                  Tag::CashSettlAgentAcctName, Tag::CashSettlAgentContactName, Tag::CashSettlAgentContactPhone
             >;
 
             using MarketDataRequest = MessageV<Chars<'V'>,
@@ -139,7 +360,6 @@ namespace Fix
 
         using Header = MessageBase<
                           Field,
-                          Tag::MsgType,
                           Required<Tag::SenderCompID>, Required<Tag::TargetCompID>, Tag::OnBehalfOfCompID, Tag::DeliverToCompID,
                           Tag::SecureDataLen, Tag::SecureData, Required<Tag::MsgSeqNum>, Tag::SenderSubID,
                           Tag::SenderLocationID, Tag::TargetSubID, Tag::TargetLocationID, Tag::OnBehalfOfSubID,
@@ -147,6 +367,33 @@ namespace Fix
                           Tag::PossDupFlag, Tag::PossResend, Required<Tag::SendingTime>, Tag::OrigSendingTime,
                           Tag::XmlDataLen, Tag::XmlData, Tag::MessageEncoding,
                           Tag::LastMsgSeqNumProcessed, Tag::OnBehalfOfSendingTime>;
+
+        namespace Spec
+        {
+
+            struct Session
+            {
+                using Header = Fix::v42::Header;
+
+                using Heartbeat = Message::Heartbeat;
+                using TestRequest = Message::TestRequest;
+                using ResendRequest = Message::ResendRequest;
+                using Reject = Message::Reject;
+                using SequenceReset = Message::SequenceReset;
+                using Logout = Message::Logout;
+                using Logon = Message::Logon;
+            };
+
+            struct Application
+            {
+                using IndicationOfIntereset = Message::IndicationOfInterest;
+                using NewOrderSingle = Message::NewOrderSingle;
+                using Quote = Message::Quote;
+                using MarketDataRequest = Message::MarketDataRequest;
+                using MarketDataSnapshot = Message::MarketDataSnapshot;
+                using MarketDataIncrementalRefresh = Message::MarketDataIncrementalRefresh;
+            };
+        };
 
     }
     FIX_END_VERSION_NAMESPACE
