@@ -586,6 +586,26 @@ namespace Fix
                 using BidResponse = Message::BidResponse;
                 using ListStrikePrice = Message::ListStrikePrice;
             };
+
+            struct Dictionary
+            {
+                using Version = Fix::v42::Version;
+                using Header = Fix::v42::Header;
+                
+                using Messages = typename meta::typelist::make<
+                    Message::Heartbeat, Message::TestRequest, Message::ResendRequest, Message::Reject, Message::SequenceReset,
+                    Message::Logout, Message::Logon, Message::MarketDataIncrementalRefresh, Message::Quote,
+                    Message::IndicationOfInterest, Message::Advertisement, Message::ExecutionReport,
+                    Message::OrderCancelReject, Message::News, Message::Email, Message::NewOrderSingle, Message::NewOrderList, Message::OrderCancelRequest,
+                    Message::OrderStatusRequest, Message::Allocation,
+                    Message::ListCancelRequest, Message::ListExecute, Message::ListStatusRequest, Message::ListStatusRequest,
+                    Message::ListStatus, Message::AllocationInstructionAck, Message::DontKnowTrade, Message::QuoteRequest, Message::Quote,
+                    Message::SettlementInstructions, Message::MarketDataRequest, Message::MarketDataSnapshot, Message::MarketDataIncrementalRefresh,
+                    Message::MarketDataRequestReject, Message::QuoteCancel, Message::QuoteStatusRequest, Message::MassQuote,
+                    Message::BusinessMessageReject, Message::BidRequest, Message::BidResponse, Message::ListStrikePrice
+                >::Result;
+            };
+
         };
 
     }

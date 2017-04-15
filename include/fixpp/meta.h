@@ -163,6 +163,32 @@ namespace meta
                 static constexpr Ret Value = Fold<Tail, Ret, Op<Head, Result>::Result, Op>::Value;
             };
 
+            template<typename List, typename VisitorT>
+            struct Visitor;
+
+            template<typename Head, typename Tail, typename VisitorT>
+            struct Visitor<TypeList<Head, Tail>, VisitorT>
+            {
+                template<typename... Args>
+                static bool visit(Args&& ...args)
+                {
+                    if (VisitorT::template visit<Head>(std::forward<Args>(args)...))
+                        return true;
+
+                    return Visitor<Tail, VisitorT>::visit(std::forward<Args>(args)...);
+                }
+            };
+
+            template<typename VisitorT>
+            struct Visitor<NullType, VisitorT>
+            {
+                template<typename... Args>
+                static bool visit(Args&& ...)
+                {
+                    return false;
+                }
+            };
+
         } // namespace ops
 
     } // namespace typelist

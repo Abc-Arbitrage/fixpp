@@ -39,7 +39,7 @@ namespace Fix
 
     struct ErrorKind
     {
-        enum Type { Incomplete, ParsingError, UnknownTag,
+        enum Type { Incomplete, ParsingError, UnknownTag, UnknownMessage,
                     InvalidVersion, InvalidTag, InvalidChecksum, InvalidLength };
 
         ErrorKind(Type type, size_t column, std::string str)
@@ -123,6 +123,13 @@ namespace Fix
         bool empty_;
     };
 
+    // ------------------------------------------------
+    // ParsingContext
+    // ------------------------------------------------
+
+    // Keeps information related to the current parsing context like
+    // MsgType or version and encapsulates the parsing error if any
+
     struct ParsingContext
     {
         ParsingContext(StreamCursor& cursor)
@@ -174,6 +181,14 @@ namespace Fix
         size_t sum;
     };
 
+    // ------------------------------------------------
+    // TypedParsingContext
+    // ------------------------------------------------
+
+    // Encapsulates the result of the parsing. Will encapsulate
+    // the return type of the visitor when used through visit()
+    // or the value of the tag when used through visitTag<T>()
+
     template<typename T>
     struct TypedParsingContext : public ParsingContext
     {
@@ -197,6 +212,8 @@ namespace Fix
 
         Deferred<T> resultValue;
     };
+
+    // Specialization for a void result
 
     template<>
     struct TypedParsingContext<void> : public ParsingContext
@@ -286,106 +303,110 @@ namespace Fix
         template<typename Message, typename Overrides> using OverrideFor
             = typename meta::map::ops::atOr<Overrides, Message, Message>::type::Ref;
 
-        template<typename Visitor, typename Rules, typename Context>
-        void visitMessage(Context& context, Visitor& visitor, Rules)
+        // ------------------------------------------------
+        // DictionaryVisitor
+        // ------------------------------------------------
+
+        // Visit a single message from the FIX Dictionary
+
+        template<typename Header, typename Overrides>
+        struct DictionaryVisitor
         {
+            template<typename Message, typename Context, typename Visitor>
+            static bool visit(const Context& context, Visitor& visitor)
+            {
+                auto msgType = context.msgType.first;
+                if (Message::MsgType[0] == msgType[0])
+                {
+                    visitor(id<Header> { }, id<OverrideFor<Message, Overrides>> {});
+                    return true;
+                }
+
+                return false;
+            }
+        };
+
+        enum class VisitStatus
+        {
+            Ok,              // The version matched and the message has been found
+            VersionMismatch, // The version did not match
+            NotFound         // The version matched but the message could not be found in the typelist
+        };
+
+        // Every FIX version has a special Spec namespace that provides a list of structure
+        // that represent a specific version of FIX. The Dictionary struct regroups the list
+        // of all valid messages for a specific FIX version as well as the Version type itself.
+        //
+        // All valid messages for a version are encoded through a meta::typelist. Thus, at
+        // run-time, after parsing the MsgType, we visit all the messages from the typelist
+        // of the specific version until we find the corresponding one.
+        //
+        // That way, we only need to add new messages in this special typelist to make
+        // them visible from the visitor
+        
+        template<typename Dictionary, typename Context, typename Visitor, typename Rules>
+        VisitStatus visitDictionary(Context& context, Visitor& visitor, Rules)
+        {
+            using Version = typename Dictionary::Version;
+            using Header = typename Dictionary::Header::Ref;
+            using Messages = typename Dictionary::Messages;
 
             using Overrides = typename Rules::Overrides;
-
-            using Version42 = Fix::v42::Version;
-            using Version43 = Fix::v43::Version;
-            using Version44 = Fix::v44::Version;
 
             auto version = context.version.first;
             auto versionSize = context.version.second;
 
-            auto msgType = context.msgType.first;
+            using MessageVisitor = DictionaryVisitor<Header, Overrides>;
 
-            if (Version42::equals(version, versionSize))
+            if (Version::equals(version, versionSize))
             {
-                using Header = Fix::v42::Header::Ref;
+                using AllMessagesVisitor = meta::typelist::ops::Visitor<Messages, MessageVisitor>;
+                if (AllMessagesVisitor::visit(context, visitor))
+                    return VisitStatus::Ok;
 
-                switch (msgType[0])
-                {
-                    case '0':
-                        visitor(id<Header> {}, id<OverrideFor<Fix::v42::Message::Heartbeat, Overrides>> {});
-                        break;
-                    case '1':
-                        visitor(id<Header> {}, id<OverrideFor<Fix::v42::Message::TestRequest, Overrides>> {});
-                        break;
-                    case '2':
-                        visitor(id<Header> {}, id<OverrideFor<Fix::v42::Message::ResendRequest, Overrides>> {});
-                        break;
-                    case '3':
-                        visitor(id<Header> {}, id<OverrideFor<Fix::v42::Message::Reject, Overrides>> {});
-                        break;
-                    case '4':
-                        visitor(id<Header> {}, id<OverrideFor<Fix::v42::Message::SequenceReset, Overrides>> {});
-                        break;
-                    case '5':
-                        visitor(id<Header> {}, id<OverrideFor<Fix::v42::Message::Logout, Overrides>> {});
-                        break;
-                    case '6':
-                        visitor(id<Header> {}, id<OverrideFor<Fix::v42::Message::IndicationOfInterest, Overrides>> {});
-                        break;
-                    case 'A':
-                        visitor(id<Header> {}, id<OverrideFor<Fix::v42::Message::Logon, Overrides>> {});
-                        break;
-                    case 'S':
-                        visitor(id<Header> {}, id<OverrideFor<Fix::v42::Message::Quote, Overrides>> {});
-                        break;
-                    case 'V':
-                        visitor(id<Header> {}, id<OverrideFor<Fix::v42::Message::MarketDataRequest, Overrides>> {});
-                        break;
-                    case 'W':
-                        visitor(id<Header> {}, id<OverrideFor<Fix::v42::Message::MarketDataSnapshot, Overrides>> {});
-                        break;
-                    case 'X':
-                        visitor(id<Header> {}, id<OverrideFor<Fix::v42::Message::MarketDataIncrementalRefresh, Overrides>> {});
-                        break;
-                }
+                return VisitStatus::NotFound;
             }
-            else if (Version43::equals(version, versionSize))
-            {
-                using Header = Fix::v43::Header::Ref;
 
-                switch (msgType[0])
-                {
-                    case '0':
-                        visitor(id<Header> {}, id<OverrideFor<Fix::v43::Message::Heartbeat, Overrides>> {});
-                        break;
-                    case '1':
-                        visitor(id<Header> {}, id<OverrideFor<Fix::v43::Message::TestRequest, Overrides>> {});
-                        break;
-                    case '2':
-                        visitor(id<Header> {}, id<OverrideFor<Fix::v43::Message::ResendRequest, Overrides>> {});
-                        break;
-                    case '4':
-                        visitor(id<Header> {}, id<OverrideFor<Fix::v43::Message::SequenceReset, Overrides>> {});
-                        break;
-                    case '5':
-                        visitor(id<Header> {}, id<OverrideFor<Fix::v43::Message::Logout, Overrides>> {});
-                        break;
-                    case 'A':
-                        visitor(id<Header> {}, id<OverrideFor<Fix::v43::Message::Logon, Overrides>> {});
-                        break;
-                }
-            }
-            else if (Version44::equals(version, versionSize))
-            {
-                using Header = Fix::v44::Header::Ref;
+            return VisitStatus::VersionMismatch;
+        }
 
-                switch (msgType[0])
-                {
-                    case 'W':
-                        visitor(id<Header> {}, id<OverrideFor<Fix::v44::Message::MarketDataSnapshot, Overrides>> {});
-                        break;
-                }
-            }
-            else
+        template<typename Visitor, typename Rules, typename Context>
+        void visitMessage(Context& context, Visitor& visitor, Rules rules)
+        {
+            do
             {
-                context.setError(ErrorKind::InvalidVersion, "Got invalid FIX version '%s'", version);
-            }
+                auto status = visitDictionary<Fix::v42::Spec::Dictionary>(context, visitor, rules);
+                if (status == VisitStatus::Ok)
+                    return;
+                else if (status == VisitStatus::NotFound)
+                    break;
+
+                status = visitDictionary<Fix::v43::Spec::Dictionary>(context, visitor, rules);
+                if (status == VisitStatus::Ok)
+                    return;
+                else if (status == VisitStatus::NotFound)
+                    break;
+
+                status = visitDictionary<Fix::v44::Spec::Dictionary>(context, visitor, rules);
+                if (status == VisitStatus::Ok)
+                    return;
+                else if (status == VisitStatus::NotFound)
+                    break;
+
+                // Every version we tried did not match, the version is thus unknown
+                std::string versionStr(context.version.first, context.version.second);
+                context.setError(ErrorKind::InvalidVersion, "Got invalid FIX version '%s'", versionStr.c_str());
+                return;
+
+            } while (false);
+
+            // If we end up here, it means that we've hit a NotFound branch above, which in turn means
+            // that we matched a version but could not find the right message
+
+            std::string versionStr(context.version.first, context.version.second);
+            std::string msgTypeStr(context.msgType.first, context.msgType.second);
+
+            context.setError(ErrorKind::UnknownMessage, "Unknown MsgType(%s) for FIX version %s", msgTypeStr.c_str(), versionStr.c_str());
         }
 
         template<size_t Index, typename Field, typename Visitor>

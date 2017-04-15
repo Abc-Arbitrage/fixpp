@@ -470,7 +470,6 @@ TEST(visitor_test, should_stop_when_encountering_invalid_fix_version)
 
     auto errorKind = error.unwrapErr();
     ASSERT_EQ(errorKind.type(), Fix::ErrorKind::InvalidVersion);
-
 }
 
 TEST(visitor_test, should_stop_in_strict_mode_when_encountering_an_unknown_tag)
