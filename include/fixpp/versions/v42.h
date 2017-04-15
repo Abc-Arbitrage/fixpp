@@ -356,6 +356,173 @@ namespace Fix
                 >>
             >;
 
+            using MarketDataRequestReject = MessageV<Chars<'Y'>,
+                  Required<Tag::MDReqID>, Tag::MDReqRejReason, Tag::Text, Tag::EncodedTextLen, Tag::EncodedText
+            >;
+
+            using QuoteCancel = MessageV<Chars<'Z'>,
+                  Tag::QuoteReqID, Required<Tag::QuoteID>, Required<Tag::QuoteCancelType>, Tag::QuoteResponseLevel,
+                  Tag::TradingSessionID,
+                  Required<
+                      RepeatingGroup<
+                          Tag::NoQuoteEntries,
+                          Required<Tag::Symbol>, Tag::SymbolSfx, Tag::SecurityID, Tag::IDSource,
+                          Tag::SecurityType, Tag::MaturityMonthYear, Tag::MaturityDay, Tag::PutOrCall, Tag::StrikePrice,
+                          Tag::OptAttribute, Tag::ContractMultiplier, Tag::CouponRate, Tag::SecurityExchange, Tag::Issuer,
+                          Tag::EncodedIssuerLen, Tag::EncodedIssuer, Tag::SecurityDesc, Tag::EncodedSecurityDescLen,
+                          Tag::EncodedSecurityDesc, Tag::UnderlyingSymbol
+                      >
+                  >
+            >;
+
+            using QuoteStatusRequest = MessageV<Chars<'a'>,
+                  Tag::QuoteID, Required<Tag::Symbol>, Tag::SymbolSfx, Tag::SecurityID, Tag::IDSource, Tag::SecurityType,
+                  Tag::MaturityMonthYear, Tag::MaturityDay, Tag::PutOrCall, Tag::StrikePrice, Tag::OptAttribute,
+                  Tag::ContractMultiplier, Tag::CouponRate, Tag::SecurityExchange, Tag::Issuer, Tag::EncodedIssuerLen,
+                  Tag::EncodedIssuer, Tag::SecurityDesc, Tag::EncodedSecurityDescLen, Tag::EncodedSecurityDesc,
+                  Tag::Side, Tag::TradingSessionID
+            >;
+
+            using QuoteAcknowledgement = MessageV<Chars<'b'>,
+                  Tag::QuoteReqID, Tag::QuoteID, Required<Tag::QuoteAckStatus>, Tag::QuoteRejectReason, Tag::QuoteResponseLevel,
+                  Tag::TradingSessionID, Tag::Text,
+                  RepeatingGroup<
+                      Tag::NoQuoteSets,
+                      Tag::QuoteSetID, Tag::UnderlyingSymbol, Tag::UnderlyingSymbolSfx, Tag::UnderlyingSecurityID, Tag::UnderlyingIDSource,
+                      Tag::UnderlyingSecurityType, Tag::UnderlyingMaturityMonthYear, Tag::UnderlyingMaturityDay, Tag::UnderlyingPutOrCall,
+                      Tag::UnderlyingStrikePrice, Tag::UnderlyingOptAttribute, Tag::UnderlyingContractMultiplier, Tag::UnderlyingCouponRate,
+                      Tag::UnderlyingSecurityExchange, Tag::UnderlyingIssuer, Tag::EncodedUnderlyingIssuerLen, Tag::EncodedUnderlyingIssuer,
+                      Tag::UnderlyingSecurityDesc, Tag::EncodedUnderlyingSecurityDescLen, Tag::EncodedUnderlyingSecurityDesc, Tag::TotQuoteEntries,
+                      RepeatingGroup<
+                          Tag::NoQuoteEntries,
+                          Tag::QuoteEntryID, Tag::Symbol, Tag::SymbolSfx, Tag::SecurityID, Tag::IDSource, Tag::SecurityType,
+                          Tag::MaturityMonthYear, Tag::MaturityDay, Tag::PutOrCall, Tag::StrikePrice, Tag::OptAttribute,
+                          Tag::ContractMultiplier, Tag::CouponRate, Tag::SecurityExchange, Tag::Issuer, Tag::EncodedIssuerLen,
+                          Tag::EncodedIssuer, Tag::SecurityDesc, Tag::EncodedSecurityDescLen, Tag::EncodedSecurityDesc, Tag::QuoteEntryRejectReason
+                      >
+                  >
+            >;
+
+            using SecurityDefinitionRequest = MessageV<Chars<'c'>,
+                  Required<Tag::SecurityReqID>, Required<Tag::SecurityRequestType>, Tag::Symbol, Tag::SymbolSfx, Tag::SecurityID, Tag::IDSource,
+                  Tag::SecurityType, Tag::MaturityMonthYear, Tag::MaturityDay, Tag::PutOrCall, Tag::StrikePrice, Tag::OptAttribute, Tag::ContractMultiplier,
+                  Tag::CouponRate, Tag::SecurityExchange, Tag::Issuer, Tag::EncodedIssuerLen, Tag::EncodedIssuer, Tag::SecurityDesc,
+                  Tag::EncodedSecurityDescLen, Tag::EncodedSecurityDesc, Tag::Currency, Tag::Text, Tag::EncodedTextLen, Tag::EncodedText,
+                  Tag::TradingSessionID,
+                  RepeatingGroup<
+                      Tag::NoRelatedSym,
+                      Tag::UnderlyingSymbol, Tag::UnderlyingSymbolSfx, Tag::UnderlyingSecurityID, Tag::UnderlyingIDSource, Tag::UnderlyingSecurityType,
+                      Tag::UnderlyingMaturityMonthYear, Tag::UnderlyingMaturityDay, Tag::UnderlyingPutOrCall, Tag::UnderlyingStrikePrice,
+                      Tag::UnderlyingOptAttribute, Tag::UnderlyingContractMultiplier, Tag::UnderlyingCouponRate, Tag::UnderlyingSecurityExchange,
+                      Tag::UnderlyingIssuer, Tag::EncodedUnderlyingIssuerLen, Tag::EncodedUnderlyingIssuer, Tag::UnderlyingSecurityDesc,
+                      Tag::EncodedUnderlyingSecurityDescLen, Tag::EncodedUnderlyingSecurityDesc, Tag::RatioQty, Tag::Side, Tag::UnderlyingCurrency
+                  >
+            >;
+
+            using SecurityDefinition = MessageV<Chars<'d'>,
+                  Required<Tag::SecurityReqID>, Required<Tag::SecurityResponseID>, Tag::SecurityResponseType, Required<Tag::TotalNumSecurities>,
+                  Tag::Symbol, Tag::SymbolSfx, Tag::SecurityID, Tag::IDSource, Tag::SecurityType, Tag::MaturityMonthYear, Tag::MaturityDay,
+                  Tag::PutOrCall, Tag::StrikePrice, Tag::OptAttribute, Tag::ContractMultiplier, Tag::CouponRate, Tag::SecurityExchange,
+                  Tag::Issuer, Tag::EncodedIssuerLen, Tag::EncodedIssuer, Tag::SecurityDesc, Tag::EncodedSecurityDescLen, Tag::EncodedSecurityDesc,
+                  Tag::Currency, Tag::TradingSessionID, Tag::Text, Tag::EncodedTextLen, Tag::EncodedText,
+                  RepeatingGroup<
+                      Tag::NoRelatedSym,
+                      Tag::UnderlyingSymbol, Tag::UnderlyingSymbolSfx, Tag::UnderlyingSecurityID, Tag::UnderlyingIDSource, Tag::UnderlyingSecurityType,
+                      Tag::UnderlyingMaturityMonthYear, Tag::UnderlyingMaturityDay, Tag::UnderlyingPutOrCall, Tag::UnderlyingStrikePrice,
+                      Tag::UnderlyingOptAttribute, Tag::UnderlyingContractMultiplier, Tag::UnderlyingCouponRate, Tag::UnderlyingSecurityExchange,
+                      Tag::UnderlyingIssuer, Tag::EncodedUnderlyingIssuerLen, Tag::EncodedUnderlyingIssuer, Tag::UnderlyingSecurityDesc,
+                      Tag::EncodedUnderlyingSecurityDescLen, Tag::EncodedUnderlyingSecurityDesc, Tag::RatioQty, Tag::Side, Tag::UnderlyingCurrency
+                  >
+            >;
+
+            using SecurityStatusRequest = MessageV<Chars<'e'>,
+                Required<Tag::SecurityStatusReqID>, Required<Tag::Symbol>, Tag::SymbolSfx, Tag::SecurityID, Tag::IDSource, Tag::SecurityType,
+                Tag::MaturityMonthYear, Tag::MaturityDay, Tag::PutOrCall, Tag::StrikePrice, Tag::OptAttribute, Tag::ContractMultiplier,
+                Tag::CouponRate, Tag::SecurityExchange, Tag::Issuer, Tag::EncodedIssuerLen, Tag::EncodedIssuer, Tag::SecurityDesc,
+                Tag::EncodedSecurityDescLen, Tag::EncodedSecurityDesc, Tag::Currency, Required<Tag::SubscriptionRequestType>, Tag::TradingSessionID
+            >;
+
+            using SecurityStatus = MessageV<Chars<'f'>,
+                  Tag::SecurityStatusReqID, Required<Tag::Symbol>, Tag::SymbolSfx, Tag::SecurityID, Tag::IDSource, Tag::SecurityType,
+                  Tag::MaturityMonthYear, Tag::MaturityDay, Tag::PutOrCall, Tag::StrikePrice, Tag::OptAttribute, Tag::ContractMultiplier,
+                  Tag::CouponRate, Tag::SecurityExchange, Tag::Issuer, Tag::EncodedIssuerLen, Tag::EncodedIssuer, Tag::SecurityDesc,
+                  Tag::EncodedSecurityDescLen, Tag::EncodedSecurityDesc, Tag::Currency, Tag::TradingSessionID, Tag::UnsolicitedIndicator,
+                  Tag::SecurityTradingStatus, Tag::FinancialStatus, Tag::CorporateAction, Tag::HaltReasonChar, Tag::InViewOfCommon,
+                  Tag::DueToRelated, Tag::BuyVolume, Tag::SellVolume, Tag::HighPx, Tag::LowPx, Tag::LastPx, Tag::TransactTime, Tag::Adjustment
+            >;
+
+            using TradingSessionStatusRequest = MessageV<Chars<'g'>,
+                  Required<Tag::TradSesReqID>, Tag::TradingSessionID, Tag::TradSesMethod, Tag::TradSesMode, Required<Tag::SubscriptionRequestType>
+            >;
+
+            using TradingSessionStatus = MessageV<Chars<'h'>,
+                  Tag::TradSesReqID, Required<Tag::TradingSessionID>, Tag::TradSesMethod, Tag::TradSesMode, Tag::UnsolicitedIndicator,
+                  Required<Tag::TradSesStatus>, Tag::TradSesStartTime, Tag::TradSesOpenTime, Tag::TradSesPreCloseTime, Tag::TradSesCloseTime,
+                  Tag::TradSesEndTime, Tag::TotalVolumeTraded, Tag::Text, Tag::EncodedTextLen, Tag::EncodedText
+            >;
+
+            using MassQuote = MessageV<Chars<'i'>,
+                  Tag::QuoteReqID, Required<Tag::QuoteID>, Tag::QuoteResponseLevel, Tag::DefBidSize, Tag::DefOfferSize,
+                  Required<
+                      RepeatingGroup<
+                          Tag::NoQuoteSets, Required<Tag::QuoteSetID>, Required<Tag::UnderlyingSymbol>, Tag::UnderlyingSymbolSfx, Tag::UnderlyingSecurityID,
+                          Tag::UnderlyingIDSource, Tag::UnderlyingSecurityType, Tag::UnderlyingMaturityMonthYear, Tag::UnderlyingMaturityDay, Tag::UnderlyingPutOrCall,
+                          Tag::UnderlyingStrikePrice, Tag::UnderlyingOptAttribute, Tag::UnderlyingContractMultiplier, Tag::UnderlyingCouponRate,
+                          Tag::UnderlyingSecurityExchange, Tag::UnderlyingIssuer, Tag::EncodedUnderlyingIssuerLen, Tag::EncodedUnderlyingIssuer,
+                          Tag::UnderlyingSecurityDesc, Tag::EncodedUnderlyingSecurityDescLen, Tag::EncodedUnderlyingSecurityDesc, Tag::QuoteSetValidUntilTime,
+                          Required<Tag::TotQuoteEntries>,
+                          Required<
+                              RepeatingGroup<
+                                  Tag::NoQuoteEntries, Required<Tag::QuoteEntryID>, Tag::Symbol, Tag::SymbolSfx, Tag::SecurityID, Tag::IDSource, Tag::SecurityType,
+                                  Tag::MaturityMonthYear, Tag::MaturityDay, Tag::PutOrCall, Tag::StrikePrice, Tag::OptAttribute, Tag::ContractMultiplier,
+                                  Tag::CouponRate, Tag::SecurityExchange, Tag::Issuer, Tag::EncodedIssuerLen, Tag::EncodedIssuer, Tag::SecurityDesc,
+                                  Tag::EncodedSecurityDescLen, Tag::EncodedSecurityDesc, Tag::BidPx, Tag::OfferPx, Tag::BidSize, Tag::OfferSize, Tag::ValidUntilTime,
+                                  Tag::BidSpotRate, Tag::OfferSpotRate, Tag::BidForwardPoints, Tag::OfferForwardPoints, Tag::TransactTime, Tag::TradingSessionID,
+                                  Tag::FutSettDate, Tag::OrdType, Tag::FutSettDate2, Tag::OrderQty2, Tag::Currency
+                              >
+                          >
+                      >
+                  >
+            >;
+
+            using BusinessMessageReject = MessageV<Chars<'j'>,
+                  Tag::RefSeqNum, Required<Tag::RefMsgType>, Tag::BusinessRejectRefID, Required<Tag::BusinessRejectReason>, Tag::Text, Tag::EncodedTextLen, Tag::EncodedText
+            >;
+
+            using BidRequest = MessageV<Chars<'k'>,
+                  Tag::BidID, Required<Tag::ClientBidID>, Required<Tag::BidRequestTransType>, Tag::ListName, Required<Tag::TotalNumSecurities>, Required<Tag::BidType>,
+                  Tag::NumTickets, Tag::Currency, Tag::SideValue1, Tag::SideValue2, RepeatingGroup<Tag::NoBidDescriptors, Tag::BidDescriptorType, Tag::BidDescriptor,
+                  Tag::SideValueInd, Tag::LiquidityValue, Tag::LiquidityNumSecurities, Tag::LiquidityPctLow, Tag::LiquidityPctHigh, Tag::EFPTrackingError, Tag::FairValue,
+                  Tag::OutsideIndexPct, Tag::ValueOfFutures>, RepeatingGroup<Tag::NoBidComponents, Tag::ListID, Tag::Side, Tag::TradingSessionID, Tag::NetGrossInd,
+                  Tag::SettlmntTyp, Tag::FutSettDate, Tag::Account>, Tag::LiquidityIndType, Tag::WtAverageLiquidity, Tag::ExchangeForPhysical, Tag::OutMainCntryUIndex,
+                  Tag::CrossPercent, Tag::ProgRptReqs, Tag::ProgPeriodInterval, Tag::IncTaxInd, Tag::ForexReq, Tag::NumBidders, Tag::TradeDate, Required<Tag::TradeType>,
+                  Required<Tag::BasisPxType>, Tag::StrikeTime, Tag::Text, Tag::EncodedTextLen, Tag::EncodedText
+            >;
+
+            using BidResponse = MessageV<Chars<'l'>,
+                  Tag::BidID, Tag::ClientBidID,
+                  Required<
+                      RepeatingGroup<
+                          Tag::NoBidComponents,
+                          Required<Tag::Commission>, Required<Tag::CommType>, Tag::ListID, Tag::Country, Tag::Side, Tag::Price, Tag::PriceType,
+                          Tag::FairValue, Tag::NetGrossInd, Tag::SettlmntTyp, Tag::FutSettDate, Tag::TradingSessionID, Tag::Text, Tag::EncodedTextLen, Tag::EncodedText
+                      >
+                  >
+            >;
+
+            using ListStrikePrice = MessageV<Chars<'m'>,
+                  Required<Tag::ListID>, Required<Tag::TotNoStrikes>,
+                  Required<
+                      RepeatingGroup<
+                          Tag::NoStrikes,
+                          Required<Tag::Symbol>, Tag::SymbolSfx, Tag::SecurityID, Tag::IDSource, Tag::SecurityType, Tag::MaturityMonthYear, Tag::MaturityDay,
+                          Tag::PutOrCall, Tag::StrikePrice, Tag::OptAttribute, Tag::ContractMultiplier, Tag::CouponRate, Tag::SecurityExchange, Tag::Issuer,
+                          Tag::EncodedIssuerLen, Tag::EncodedIssuer, Tag::SecurityDesc, Tag::EncodedSecurityDescLen, Tag::EncodedSecurityDesc,
+                          Tag::PrevClosePx, Tag::ClOrdID, Tag::Side, Required<Tag::Price>, Tag::Currency, Tag::Text, Tag::EncodedTextLen, Tag::EncodedText
+                      >
+                  >
+            >;
+
         } // namespace Message
 
         using Header = MessageBase<
@@ -387,11 +554,37 @@ namespace Fix
             struct Application
             {
                 using IndicationOfIntereset = Message::IndicationOfInterest;
+                using Advertisement = Message::Advertisement;
+                using ExecutionReport = Message::ExecutionReport;
+                using OrderCancelReject = Message::OrderCancelReject;
+                using News = Message::News;
+                using Email = Message::Email;
                 using NewOrderSingle = Message::NewOrderSingle;
+                using NewOrderList = Message::NewOrderList;
+                using OrderCancelRequest = Message::OrderCancelRequest;
+                using OrderCancelReplaceRequest = Message::OrderCancelReplaceRequest;
+                using OrderStatusRequest = Message::OrderStatusRequest;
+                using Allocation = Message::Allocation;
+                using ListCancelRequest = Message::ListCancelRequest;
+                using ListExecute = Message::ListExecute;
+                using ListStatusRequest = Message::ListStatusRequest;
+                using ListStatus = Message::ListStatus;
+                using AllocationInstructionAck = Message::AllocationInstructionAck;
+                using DontKnowTrade = Message::DontKnowTrade;
+                using QuoteRequest = Message::QuoteRequest;
                 using Quote = Message::Quote;
+                using SettlementInstructions = Message::SettlementInstructions;
                 using MarketDataRequest = Message::MarketDataRequest;
                 using MarketDataSnapshot = Message::MarketDataSnapshot;
                 using MarketDataIncrementalRefresh = Message::MarketDataIncrementalRefresh;
+                using MarketDataRequestReject = Message::MarketDataRequestReject;
+                using QuoteCancel = Message::QuoteCancel;
+                using QuoteStatusRequest = Message::QuoteStatusRequest;
+                using MassQuote = Message::MassQuote;
+                using BusinessMessageReject = Message::BusinessMessageReject;
+                using BidRequest = Message::BidRequest;
+                using BidResponse = Message::BidResponse;
+                using ListStrikePrice = Message::ListStrikePrice;
             };
         };
 
