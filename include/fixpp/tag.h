@@ -125,7 +125,7 @@ namespace Fix
         {
             auto time = value.time();
             char buffer[32];
-            strftime(buffer, sizeof buffer, "%Y%m%d-%H%M%S", std::gmtime(&time)); 
+            strftime(buffer, sizeof buffer, "%Y%m%d-%H:%M:%S", std::gmtime(&time)); 
             os << buffer;
             return os;
         }
