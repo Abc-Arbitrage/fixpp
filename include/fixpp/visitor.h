@@ -247,6 +247,14 @@ namespace Fix
                   > : std::true_type
             { };
 
+            template<typename T, typename = void> struct HasDictionary : std::false_type { };
+            template<typename T>
+            struct HasDictionary<
+                    T,
+                    void_t<typename T::Dictionary>
+                  > : std::true_type
+            { };
+
             template<typename T, typename = void> struct HasValidateChecksum : std::false_type { };
             template<typename T>
             struct HasValidateChecksum<
@@ -373,40 +381,26 @@ namespace Fix
         template<typename Visitor, typename Rules, typename Context>
         void visitMessage(Context& context, Visitor& visitor, Rules rules)
         {
-            do
+
+            using Dictionary = typename Rules::Dictionary;
+            using Version = typename Dictionary::Version;
+
+            auto status = visitDictionary<Dictionary>(context, visitor, rules);
+
+            if (status == VisitStatus::VersionMismatch)
             {
-                auto status = visitDictionary<Fix::v42::Spec::Dictionary>(context, visitor, rules);
-                if (status == VisitStatus::Ok)
-                    return;
-                else if (status == VisitStatus::NotFound)
-                    break;
-
-                status = visitDictionary<Fix::v43::Spec::Dictionary>(context, visitor, rules);
-                if (status == VisitStatus::Ok)
-                    return;
-                else if (status == VisitStatus::NotFound)
-                    break;
-
-                status = visitDictionary<Fix::v44::Spec::Dictionary>(context, visitor, rules);
-                if (status == VisitStatus::Ok)
-                    return;
-                else if (status == VisitStatus::NotFound)
-                    break;
-
-                // Every version we tried did not match, the version is thus unknown
                 std::string versionStr(context.version.first, context.version.second);
-                context.setError(ErrorKind::InvalidVersion, "Got invalid FIX version '%s'", versionStr.c_str());
-                return;
 
-            } while (false);
+                context.setError(ErrorKind::InvalidVersion, "FIX version mismatched, expected '%s', got '%s'",
+                        Version::Str, versionStr.c_str());
+            }
+            else if (status == VisitStatus::NotFound)
+            {
+                std::string versionStr(context.version.first, context.version.second);
+                std::string msgTypeStr(context.msgType.first, context.msgType.second);
 
-            // If we end up here, it means that we've hit a NotFound branch above, which in turn means
-            // that we matched a version but could not find the right message
-
-            std::string versionStr(context.version.first, context.version.second);
-            std::string msgTypeStr(context.msgType.first, context.msgType.second);
-
-            context.setError(ErrorKind::UnknownMessage, "Unknown MsgType(%s) for FIX version %s", msgTypeStr.c_str(), versionStr.c_str());
+                context.setError(ErrorKind::UnknownMessage, "Unknown MsgType(%s) for FIX version %s", msgTypeStr.c_str(), versionStr.c_str());
+            }
         }
 
         template<size_t Index, typename Field, typename Visitor>
@@ -1138,6 +1132,7 @@ namespace Fix
     struct DefaultRules : public VisitRules
     {
         using Overrides = OverrideSet<>;
+        using Dictionary = Fix::v42::Spec::Dictionary;
 
         static constexpr bool ValidateChecksum = true;
         static constexpr bool ValidateLength = true;
@@ -1187,6 +1182,7 @@ namespace Fix
         static_assert(impl::rules::IsStaticVisitor<Visitor>::value,
                 "Visitor must fulfill StaticVisitor requirement and must expose an inner type ResultType");
         static_assert(impl::rules::HasOverrides<Rules>::value, "Visit rules must provide an Overrides typedef");
+        static_assert(impl::rules::HasDictionary<Rules>::value, "Visit rules must provide a Dictionary typedef");
         static_assert(impl::rules::HasValidateChecksum<Rules>::value, "Visit rules must provide a static ValidateChecksum boolean");
         static_assert(impl::rules::HasValidateLength<Rules>::value, "Visit rules must provide a static ValidateLength boolean");
         static_assert(impl::rules::HasStrictMode<Rules>::value, "Visit rules must provide a static StrictMode boolean");

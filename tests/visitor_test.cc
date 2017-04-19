@@ -8,6 +8,18 @@
 #include <fixpp/versions/v44.h>
 #include <fixpp/visitor.h>
 
+template<typename Dict>
+struct DefaultTestRules : public Fix::VisitRules
+{
+    using Overrides = OverrideSet<>;
+    using Dictionary = Dict;
+
+    static constexpr bool ValidateChecksum = true;
+    static constexpr bool ValidateLength = true;
+
+    static constexpr bool StrictMode = false;
+};
+
 namespace should_visit_logon_frame
 {
     struct Visitor : public Fix::StaticVisitor<void>
@@ -23,6 +35,8 @@ namespace should_visit_logon_frame
             ASSERT_TRUE(false);
         }
     };
+
+    using VisitRules = DefaultTestRules<Fix::v42::Spec::Dictionary>;
 
 } // namespace should_visit_logon_frame
 
@@ -57,6 +71,8 @@ namespace should_try_get_fields_after_parsing
             ASSERT_TRUE(false);
         }
     };
+
+    using VisitRules = DefaultTestRules<Fix::v42::Spec::Dictionary>;
 
 } // namespace should_try_get_fields_after_parsing
 
@@ -98,6 +114,8 @@ namespace should_be_able_to_return_value_in_visitor
         }
     };
 
+    using VisitRules = DefaultTestRules<Fix::v42::Spec::Dictionary>;
+
 } // namespace should_be_able_to_return_value_in_visitor
 
 namespace should_visit_repeating_group_in_logon_frame
@@ -122,6 +140,8 @@ namespace should_visit_repeating_group_in_logon_frame
         }
     };
 
+    using VisitRules = DefaultTestRules<Fix::v42::Spec::Dictionary>;
+
 } // namespace should_visit_repeating_group_in_logon_frame
 
 namespace should_visit_custom_message
@@ -135,6 +155,8 @@ namespace should_visit_custom_message
         using Overrides = OverrideSet<
             Override<Fix::v42::Message::Logon, As<MyMessage>>
         >;
+
+        using Dictionary = Fix::v42::Spec::Dictionary;
 
         static constexpr bool ValidateChecksum = false;
         static constexpr bool ValidateLength = false;
@@ -156,6 +178,7 @@ namespace should_visit_custom_message
             ASSERT_TRUE(false);
         }
     };
+
 };
 
 namespace should_visit_incremental_refresh_frame
@@ -197,6 +220,8 @@ namespace should_visit_incremental_refresh_frame
             ASSERT_TRUE(false);
         }
     };
+
+    using VisitRules = DefaultTestRules<Fix::v42::Spec::Dictionary>;
 };
 
 namespace should_visit_custom_snapshot_frame
@@ -217,6 +242,8 @@ namespace should_visit_custom_snapshot_frame
         using Overrides = OverrideSet<
             Override<Fix::v44::Message::MarketDataSnapshot, As<Snapshot>>
         >;
+
+        using Dictionary = Fix::v44::Spec::Dictionary;
 
         static constexpr bool ValidateChecksum = false;
         static constexpr bool ValidateLength = false;
@@ -287,6 +314,8 @@ namespace should_visit_nested_repeating_groups
             ASSERT_TRUE(false);
         }
     };
+
+    using VisitRules = DefaultTestRules<Fix::v44::Spec::Dictionary>;
 }
 
 namespace should_visit_unknown_tags_in_non_strict_mode
@@ -294,6 +323,7 @@ namespace should_visit_unknown_tags_in_non_strict_mode
     struct VisitRules : public Fix::VisitRules
     {
         using Overrides = OverrideSet<>;
+        using Dictionary = Fix::v44::Spec::Dictionary;
 
         static constexpr bool ValidateChecksum = false;
         static constexpr bool ValidateLength = false;
@@ -349,6 +379,7 @@ namespace should_visit_unknown_tags_in_non_strict_mode
 struct AssertVisitRules : public Fix::VisitRules
 {
     using Overrides = OverrideSet<>;
+    using Dictionary = Fix::v42::Spec::Dictionary;
 
     static constexpr bool ValidateChecksum = false;
     static constexpr bool ValidateLength = false;
@@ -364,7 +395,7 @@ struct AssertVisitor : public Fix::StaticVisitor<void>
     }
 };
 
-template<typename Visitor>
+template<typename Visitor, typename Rules>
 Fix::VisitError<typename Visitor::ResultType> doVisit(const char* frame, Visitor visitor)
 {
     return Fix::visit(frame, std::strlen(frame), visitor);
@@ -379,14 +410,14 @@ Fix::VisitError<typename Visitor::ResultType> doVisit(const char* frame, Visitor
 TEST(visitor_test, should_visit_logon_frame)
 {
     const char* frame = "8=FIX.4.2|9=84|35=A|34=1|49=ABC|52=20120309-16:54:02|56=TT_ORDER|96=12345678|98=0|108=60|141=Y|10=248";
-    auto err = doVisit(frame, should_visit_logon_frame::Visitor());
+    auto err = doVisit(frame, should_visit_logon_frame::Visitor(), should_visit_logon_frame::VisitRules());
     ASSERT_TRUE(err.isOk());
 }
 
 TEST(visitor_test, should_visit_repeating_group_in_logon_frame)
 {
     const char* frame = "8=FIX.4.2|9=84|35=A|34=1|49=ABC|52=20120309-16:54:02|56=TT_ORDER|96=12345678|384=2|372=TEST|385=C|372=TEST|10=248";
-    auto err = doVisit(frame, should_visit_repeating_group_in_logon_frame::Visitor());
+    auto err = doVisit(frame, should_visit_repeating_group_in_logon_frame::Visitor(), should_visit_repeating_group_in_logon_frame::VisitRules());
     ASSERT_TRUE(err.isOk());
 }
 
@@ -406,7 +437,7 @@ TEST(visitor_test, should_visit_incremental_refresh_frame)
                         "279=0|55=CHF/JPY|269=1|278=0453665277|270=00104.856000|271=001000000.00|15=CHF|"
                         "10=213";
 
-    auto err = doVisit(frame, should_visit_incremental_refresh_frame::Visitor());
+    auto err = doVisit(frame, should_visit_incremental_refresh_frame::Visitor(), should_visit_incremental_refresh_frame::VisitRules());
     ASSERT_TRUE(err.isOk());
 }
 
@@ -436,7 +467,7 @@ TEST(visitor_test, should_visit_nested_repeating_groups)
                             "269=0|271=500000|272=20170103|299=02z00000hdi:A|"
                             "269=1|271=500000|272=20170103|299=02z00000hdi:A|"
                         "10=213";
-    auto err = doVisit(frame, should_visit_nested_repeating_groups::Visitor());
+    auto err = doVisit(frame, should_visit_nested_repeating_groups::Visitor(), should_visit_nested_repeating_groups::VisitRules());
     ASSERT_TRUE(err.isOk());
 }
 
@@ -488,7 +519,7 @@ TEST(visitor_test, should_try_get_fields_after_parsing)
 {
     const char* frame = "8=FIX.4.2|9=84|35=A|34=1|49=ABC|52=20120309-16:54:02|56=TT_ORDER|96=12345678|384=2|372=TEST|385=C|372=TEST|10=248";
 
-    auto err = doVisit(frame, should_try_get_fields_after_parsing::Visitor());
+    auto err = doVisit(frame, should_try_get_fields_after_parsing::Visitor(), should_try_get_fields_after_parsing::VisitRules());
     ASSERT_TRUE(err.isOk());
 }
 
@@ -496,7 +527,7 @@ TEST(visitor_test, should_be_able_to_return_value_in_visitor)
 {
     const char* frame = "8=FIX.4.2|9=84|35=A|34=1|49=ABC|52=20120309-16:54:02|56=TT_ORDER|96=12345678|384=2|372=TEST|385=C|372=TEST|10=248";
 
-    auto err = doVisit(frame, should_be_able_to_return_value_in_visitor::Visitor());
+    auto err = doVisit(frame, should_be_able_to_return_value_in_visitor::Visitor(), should_be_able_to_return_value_in_visitor::VisitRules());
     ASSERT_EQ(err.unwrapOr(0), 10);
 }
 

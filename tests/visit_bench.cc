@@ -18,6 +18,7 @@ struct MyVisitRules : public Fix::VisitRules
     using Overrides = OverrideSet<
         Override<Fix::v42::Message::Quote, As<MyQuote>>
     >;
+    using Dictionary = Fix::v42::Spec::Dictionary;
 
     static constexpr bool ValidateChecksum = false;
     static constexpr bool ValidateLength = false;
