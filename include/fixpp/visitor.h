@@ -12,15 +12,12 @@
 #include <type_traits>
 #include <algorithm>
 
-#include <fixpp/versions/v42.h>
-#include <fixpp/versions/v43.h>
-#include <fixpp/versions/v44.h>
-
 #include <fixpp/tag.h>
 #include <fixpp/utils/cursor.h>
 #include <fixpp/utils/result.h>
 #include <fixpp/utils/soh.h>
 #include <fixpp/meta.h>
+#include <fixpp/dsl.h>
 #include <fixpp/dsl/details/unwrap.h>
 #include <fixpp/dsl/details/flatten.h>
 #include <fixpp/dsl/details/lexical_cast.h>
@@ -1129,17 +1126,6 @@ namespace Fix
         using ResultType = T;
     };
 
-    struct DefaultRules : public VisitRules
-    {
-        using Overrides = OverrideSet<>;
-        using Dictionary = Fix::v42::Spec::Dictionary;
-
-        static constexpr bool ValidateChecksum = true;
-        static constexpr bool ValidateLength = true;
-
-        static constexpr bool StrictMode = false;
-    };
-
     template<typename Visitor, typename Rules, typename Context>
     void visitMessage(Context& context, Visitor& visitor, Rules rules)
     {
@@ -1198,12 +1184,6 @@ namespace Fix
         visitMessage(context, visitor, rules);
 
         return context.toVisitError();
-    }
-
-    template<typename Visitor>
-    auto visit(const char* frame, size_t size, Visitor& visitor) -> VisitError<typename Visitor::ResultType>
-    {
-        return visit(frame, size, visitor, DefaultRules {});
     }
 
     template<typename Tag>

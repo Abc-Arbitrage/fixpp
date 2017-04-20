@@ -1,10 +1,9 @@
 #include <chrono>
 #include <fstream>
 
-#pragma warning(disable:4503)
-
 #define SOH_CHARACTER '|'
 
+#include <fixpp/versions/v42.h>
 #include <fixpp/visitor.h>
 #include <fixpp/dsl.h>
 
