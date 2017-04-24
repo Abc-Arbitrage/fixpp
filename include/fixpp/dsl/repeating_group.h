@@ -6,14 +6,10 @@
 
 #pragma once
 
-#include <tuple>
 #include <vector>
 #include <sstream>
 
 #include <fixpp/dsl/field.h>
-#include <fixpp/dsl/component_block.h>
-#include <fixpp/dsl/details/unwrap.h>
-#include <fixpp/dsl/details/flatten.h>
 
 namespace Fix
 {
@@ -40,17 +36,18 @@ namespace Fix
     // Specialization of a Field for a repeating group.
     // Stores values inside a std::vector
 
-    template <class TTag>
-    using DelayedFieldInstantiation = Field<TTag>;
+	template<typename Group> struct InstanceGroup;
 
-    template <class TTag>
-    using DelayedFieldRefInstantiation = FieldRef<TTag>;
+	template<typename GroupTag, typename... Tags>
+	struct InstanceGroup<RepeatingGroup<GroupTag, Tags...>> : public MessageBase<Field, Tags...>
+	{
+	};
 
     template<typename GroupTag, typename... Tags>
     struct Field<RepeatingGroup<GroupTag, Tags...>>
     {
         using Tag = GroupTag;
-        using GroupType = MessageBase<DelayedFieldInstantiation, Tags...>;
+		using GroupType = InstanceGroup<RepeatingGroup<GroupTag, Tags...>>;
 
         using Type = std::vector<GroupType>;
 
@@ -111,12 +108,19 @@ namespace Fix
     // Specialization of a FieldRef for a repeating group.
     // Represents a "view" on a repeating group
 
+	template<typename Group> struct InstanceGroupRef;
+
+	template<typename GroupTag, typename... Tags>
+	struct InstanceGroupRef<RepeatingGroup<GroupTag, Tags...>> : public MessageBase<FieldRef, Tags...>
+	{
+	};
+
     template<typename GroupTag, typename... Tags>
     struct FieldRef<RepeatingGroup<GroupTag, Tags...>>
     {
         using Tag = GroupTag;
 
-        using GroupType = MessageBase<DelayedFieldRefInstantiation, Tags...>;
+		using GroupType = InstanceGroupRef<RepeatingGroup<GroupTag, Tags...>>;
         using Values = std::vector<GroupType>;
 
         constexpr unsigned tag() const
@@ -158,7 +162,7 @@ namespace Fix
     template<typename GroupTag, typename... Tags>
     struct Group<RepeatingGroup<GroupTag, Tags...>>
     {
-        using Instance = MessageBase<Field, Tags...>;
+		using Instance = InstanceGroup<RepeatingGroup<GroupTag, Tags...>>;
         using FieldType = Field<RepeatingGroup<GroupTag, Tags...>>;
 
         Group(FieldType& field)
@@ -168,7 +172,7 @@ namespace Fix
 
         Instance instance() const
         {
-            return { };
+            return {};
         }
 
         void add(const Instance& instance)

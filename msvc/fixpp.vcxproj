@@ -26,11 +26,17 @@
     <ClInclude Include="..\include\fixpp\streambuf.h" />
     <ClInclude Include="..\include\fixpp\tag.h" />
     <ClInclude Include="..\include\fixpp\utils\cursor.h" />
+    <ClInclude Include="..\include\fixpp\utils\result.h" />
+    <ClInclude Include="..\include\fixpp\utils\soh.h" />
     <ClInclude Include="..\include\fixpp\versions\base.h" />
     <ClInclude Include="..\include\fixpp\versions\v42.h" />
+    <ClInclude Include="..\include\fixpp\versions\v43\component_blocks.h" />
+    <ClInclude Include="..\include\fixpp\versions\v43\messages.h" />
+    <ClInclude Include="..\include\fixpp\versions\v43\spec.h" />
     <ClInclude Include="..\include\fixpp\versions\v44.h" />
     <ClInclude Include="..\include\fixpp\versions\v44\component_blocks.h" />
     <ClInclude Include="..\include\fixpp\versions\v44\messages.h" />
+    <ClInclude Include="..\include\fixpp\versions\v44\spec.h" />
     <ClInclude Include="..\include\fixpp\visitor.h" />
     <ClInclude Include="..\include\fixpp\writer.h" />
   </ItemGroup>

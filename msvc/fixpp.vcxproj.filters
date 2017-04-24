@@ -55,6 +55,18 @@
     <ClInclude Include="..\include\fixpp\versions\v44\messages.h">
       <Filter>versions\v44</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\fixpp\versions\v43\component_blocks.h" />
+    <ClInclude Include="..\include\fixpp\versions\v43\messages.h" />
+    <ClInclude Include="..\include\fixpp\versions\v43\spec.h" />
+    <ClInclude Include="..\include\fixpp\versions\v44\spec.h">
+      <Filter>versions\v44</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\fixpp\utils\result.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\fixpp\utils\soh.h">
+      <Filter>utils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="dsl">
