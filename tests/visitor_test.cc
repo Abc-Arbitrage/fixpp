@@ -378,9 +378,12 @@ namespace should_convert_from_ref
 {
     struct Visitor : public Fix::StaticVisitor<void>
     {
-        void operator()(const Fix::v42::Header::Ref&, const Fix::v42::Message::MarketDataIncrementalRefresh::Ref& message)
+        void operator()(const Fix::v42::Header::Ref& headerRef, const Fix::v42::Message::MarketDataIncrementalRefresh::Ref& message)
         {
             using namespace Fix;
+
+            auto header = fromRef(headerRef);
+            ASSERT_EQ(Fix::get<Tag::TargetCompID>(header), "MDABC");
 
             auto refresh = fromRef(message);
 

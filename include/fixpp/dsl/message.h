@@ -100,6 +100,8 @@ namespace Fix
 
 	template<char ...> struct Chars { };
 
+    using Empty = Chars<>;
+
 	// ------------------------------------------------
 	// MessageRef
 	// ------------------------------------------------
@@ -117,6 +119,11 @@ namespace Fix
 
 		using MsgTypeChars = Chars<MsgTypeChar...>;
 	};
+
+    template<typename... Tags>
+    struct MessageRef<Empty, Tags...> : public MessageBase<FieldRef, Tags...>
+    {
+    };
 
 	// ------------------------------------------------
 	// MessageT
@@ -140,6 +147,11 @@ namespace Fix
 
 	template<char... MsgTypeChar, typename... Tags>
 	constexpr const char MessageRef<Chars<MsgTypeChar...>, Tags...>::MsgType[];
+
+    template<typename... Tags>
+    struct MessageT<Empty, Tags...> : public MessageBase<Field, Tags...>
+    {
+    };
 
 	// ------------------------------------------------
 	// VersionnedMessage

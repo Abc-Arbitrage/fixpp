@@ -37,11 +37,6 @@ inline constexpr uint64_t getAsciiStringAsIntConst(const char* str, size_t size)
 
 inline uint64_t getAsciiStringAsInt(const char* str, size_t size)
 {
-#if 0
-    uint64_t value;
-    std::memcpy(&value, str, size);
-    return value;
-#endif
     return getAsciiStringAsIntConst(str, size);
 }
 
@@ -83,6 +78,8 @@ inline uint64_t getAsciiStringAsInt(const char* str, size_t size)
         };                                                                      \
         template<typename Chars, typename... Tags>                              \
         using MessageV = VersionnedMessage<Version, Chars, Tags...>;            \
+        template<typename... Tags>                                              \
+        using StandardMessage = VersionnedMessage<Version, Empty, Tags...>;     \
     }                                                                           \
     namespace name                                                              \
 
