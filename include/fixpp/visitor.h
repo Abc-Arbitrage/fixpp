@@ -712,7 +712,7 @@ namespace Fix
         };
 
         template<typename VersionT, typename Chars, typename... Tags>
-        struct TagSet<VersionnedMessage<VersionT, Chars, Tags...>> : public TagSet<Tags...>
+        struct TagSet<VersionnedMessageRef<VersionT, Chars, Tags...>> : public TagSet<Tags...>
         {
         };
 
@@ -883,7 +883,7 @@ namespace Fix
 
                 do
                 {
-                    typename Field::RefType groupRef;
+                    typename Field::GroupType groupRef;
 
                     for (;;)
                     {

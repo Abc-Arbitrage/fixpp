@@ -37,9 +37,12 @@ inline constexpr uint64_t getAsciiStringAsIntConst(const char* str, size_t size)
 
 inline uint64_t getAsciiStringAsInt(const char* str, size_t size)
 {
+#if 0
     uint64_t value;
     std::memcpy(&value, str, size);
     return value;
+#endif
+    return getAsciiStringAsIntConst(str, size);
 }
 
 #define FIX_BEGIN_VERSION_NAMESPACE(name, string)                               \

@@ -43,15 +43,18 @@ namespace Fix
     template <class TTag>
     using DelayedFieldInstantiation = Field<TTag>;
 
+    template <class TTag>
+    using DelayedFieldRefInstantiation = FieldRef<TTag>;
+
     template<typename GroupTag, typename... Tags>
     struct Field<RepeatingGroup<GroupTag, Tags...>>
     {
         using Tag = GroupTag;
+        using GroupType = MessageBase<DelayedFieldInstantiation, Tags...>;
 
-        using Fields = typename details::flatten::tuple::Flatten<DelayedFieldInstantiation, Tags...>::Result;
-        using Type = std::vector<Fields>;
+        using Type = std::vector<GroupType>;
 
-        static constexpr size_t TotalTags = std::tuple_size<Fields>::value;
+        static constexpr size_t TotalTags = GroupType::TotalTags;
 
         Field() = default;
         Field(const Field& other) = default;
@@ -82,12 +85,12 @@ namespace Fix
             val_.reserve(size);
         }
 
-        void push_back(const Fields& values)
+        void push_back(const GroupType& values)
         {
             val_.push_back(values);
         }
 
-        void push_back(Fields&& values)
+        void push_back(GroupType&& values)
         {
             val_.push_back(std::move(values));
         }
@@ -102,17 +105,6 @@ namespace Fix
     };
 
     // ------------------------------------------------
-    // GroupRef
-    // ------------------------------------------------
-
-    template<typename Group> struct GroupRef;
-
-    template<typename GroupTag, typename... Tags>
-    struct GroupRef<RepeatingGroup<GroupTag, Tags...>> : public MessageBase<FieldRef, Tags...>
-    {
-    };
-
-    // ------------------------------------------------
     // FieldRef
     // ------------------------------------------------
 
@@ -124,8 +116,8 @@ namespace Fix
     {
         using Tag = GroupTag;
 
-        using RefType = GroupRef<RepeatingGroup<GroupTag, Tags...>>;
-        using Values = std::vector<RefType>;
+        using GroupType = MessageBase<DelayedFieldRefInstantiation, Tags...>;
+        using Values = std::vector<GroupType>;
 
         constexpr unsigned tag() const
         {
@@ -146,6 +138,11 @@ namespace Fix
         Values get() const
         {
             return values;
+        }
+
+        size_t size() const
+        {
+            return values.size();
         }
 
     private:
@@ -177,13 +174,13 @@ namespace Fix
         void add(const Instance& instance)
         {
             checkRequiredFields(instance);
-            field.push_back(instance.values);
+            field.push_back(instance);
         }
 
         void add(Instance&& instance)
         {
             checkRequiredFields(instance);
-            field.push_back(std::move(instance.values));
+            field.push_back(std::move(instance));
         }
 
         size_t size() const

@@ -54,7 +54,7 @@ namespace details
         template<typename Tuple, size_t... Index>
         static void doWriteGroupFields(std::ostream& os, const Tuple& tuple, meta::index_sequence<Index...>)
         {
-            int dummy[] = { 0, ((void) doWriteField(os, std::get<Index>(tuple)), 0)... };
+            int dummy[] = { 0, ((void) doWriteField(os, std::get<Index>(tuple.values)), 0)... };
             (void) dummy;
         }
 

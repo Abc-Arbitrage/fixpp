@@ -92,7 +92,6 @@ namespace Fix
 		std::unordered_map<int, View> unparsed;
 	};
 
-
 	// ------------------------------------------------
 	// Chars
 	// ------------------------------------------------
@@ -149,10 +148,128 @@ namespace Fix
 	// A Message that knows its FIX version
 
 	template<typename VersionT, typename Chars, typename... Tags>
-	struct VersionnedMessage : public MessageT<Chars, Tags...>
+	struct VersionnedMessageRef : public MessageRef<Chars, Tags...>
 	{
 		using Version = VersionT;
 	};
+
+	template<typename VersionT, typename Chars, typename... Tags>
+	struct VersionnedMessage : public MessageT<Chars, Tags...>
+	{
+        using Ref = VersionnedMessageRef<VersionT, Chars, Tags...>;
+        using Version = VersionT;
+	};
+
+    namespace details
+    {
+        template<typename Message>
+        struct FromRef;
+
+        template<typename VersionT, typename Chars, typename... Tags>
+        struct FromRef<VersionnedMessageRef<VersionT, Chars, Tags...>>
+        {
+            using Message = VersionnedMessage<VersionT, Chars, Tags...>;
+            using Ref = VersionnedMessageRef<VersionT, Chars, Tags...>;
+
+            template<typename FieldRef, typename = void>
+            struct FieldRefCast
+            {
+                template<typename Field>
+                static void cast(const FieldRef& src, Field& dst)
+                {
+                    dst.set(src.get());
+                }
+            };
+
+            template<typename... GroupTags>
+            struct FieldRefCast<FieldRef<RepeatingGroup<GroupTags...>>, void>
+            {
+                template<typename FieldRef, typename Field>
+                static void cast(const FieldRef& src, Field& dst)
+                {
+                    const auto& srcInstances = src.get();
+                    auto& dstInstances = dst.get();
+                    dstInstances.resize(src.size());
+
+                    for (size_t i = 0; i < srcInstances.size(); ++i)
+                    {
+                        copyFields(srcInstances[i], dstInstances[i]);
+                    }
+                }
+
+                template<typename FieldRef, typename Field>
+                static void copyFields(const FieldRef& src, Field& dst)
+                {
+                    copyInstanceFields(src, dst, meta::make_index_sequence<FieldRef::TotalTags>());
+                }
+
+                template<typename FieldRef, typename Field, size_t ... Indexes>
+                static void copyInstanceFields(const FieldRef& src, Field& dst, meta::index_sequence<Indexes...>)
+                {
+                    int dummy[] = {0, ((void) copyInstanceFieldAt<Indexes>(src, dst), 0)...};
+                    (void) dummy;
+                }
+
+                template<size_t Index, typename FieldRef, typename Field>
+                static void copyInstanceFieldAt(const FieldRef& src, Field& dst)
+                {
+                    if (src.allBits.test(Index))
+                    {
+                        const auto& srcField = std::get<Index>(src.values);
+                        auto& dstField = std::get<Index>(dst.values);
+                        copyInstanceField(srcField, dstField);
+                    }
+                }
+
+                template<typename FieldRef, typename Field>
+                static void copyInstanceField(const FieldRef& src, Field& dst)
+                {
+                    FieldRefCast<FieldRef>::cast(src, dst);
+                }
+            };
+
+            static Message fromRef(const Ref& ref)
+            {
+                Message message;
+                copyFields(ref, message, meta::make_index_sequence<Ref::TotalTags>());
+                return message;
+            }
+
+            template<size_t... Indexes>
+            static void copyFields(const Ref& ref, Message& message, meta::index_sequence<Indexes...>)
+            {
+                int dummy[] = {0, ((void) copyFieldAt<Indexes>(ref, message), 0)...};
+                (void) dummy;
+            }
+
+            template<size_t Index>
+            static void copyFieldAt(const Ref& ref, Message& message)
+            {
+                if (ref.allBits.test(Index))
+                {
+                    const auto& srcField = std::get<Index>(ref.values);
+                    auto& dstField = std::get<Index>(message.values);
+
+                    copyField(srcField, dstField);
+                }
+            }
+
+            template<typename FieldRef, typename Field>
+            static void copyField(const FieldRef& src, Field& dst)
+            {
+                FieldRefCast<FieldRef>::cast(src, dst);
+            }
+        };
+
+    };
+
+    template<typename VersionT, typename Chars, typename... Tags>
+    VersionnedMessage<VersionT, Chars, Tags...> fromRef(const VersionnedMessageRef<VersionT, Chars, Tags...>& ref)
+    {
+        using Ref = VersionnedMessageRef<VersionT, Chars, Tags...>;
+        return details::FromRef<Ref>::fromRef(ref);
+    }
+
 
 	// ------------------------------------------------
 	// operations
@@ -188,21 +305,16 @@ namespace Fix
     }
 
     template<typename Tag, typename Message>
-    typename std::enable_if<
-                details::IsValidTag<Message, Tag>::value, typename Tag::Type::UnderlyingType
-             >::type
-    get(const Message& message)
-    {
+    decltype(auto)
+    get(const Message& message, typename std::enable_if<details::IsValidTag<Message, Tag>::value, void>::type * = nullptr)
+     {
         static constexpr size_t Index = meta::typelist::ops::IndexOf<typename Message::TagsList, Tag>::value;
         return std::get<Index>(message.values).get();
     }
 
     template<typename Tag, typename Message>
-    typename std::enable_if<
-                details::IsValidGroup<Message, Tag>::value,
-                std::vector<typename details::GroupTraits<Message, Tag>::Ref>
-            >::type
-    get(const Message& message)
+    decltype(auto)
+    get(const Message& message, typename std::enable_if<details::IsValidGroup<Message, Tag>::value, void>::type * = nullptr)
     {
         using GroupT = typename details::GroupTraits<Message, Tag>::Type;
 

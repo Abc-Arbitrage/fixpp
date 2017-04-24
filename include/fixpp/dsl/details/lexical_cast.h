@@ -6,7 +6,13 @@ namespace Fix
 {
     namespace details
     {
-        template<typename T> struct LexicalCast;
+        template<typename T> struct LexicalCast
+        {
+            static typename T::UnderlyingType cast(const char*, size_t)
+            {
+                return {};
+            }
+        };
 
         template<>
         struct LexicalCast<Type::Boolean>

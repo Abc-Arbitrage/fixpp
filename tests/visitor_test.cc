@@ -1,7 +1,5 @@
 #include "gtest/gtest.h"
 
-#pragma warning(disable:4503)
-
 #define SOH_CHARACTER '|'
 
 #include <fixpp/versions/v42.h>
@@ -376,6 +374,51 @@ namespace should_visit_unknown_tags_in_non_strict_mode
     };
 };
 
+namespace should_convert_from_ref
+{
+    struct Visitor : public Fix::StaticVisitor<void>
+    {
+        void operator()(const Fix::v42::Header::Ref&, const Fix::v42::Message::MarketDataIncrementalRefresh::Ref& message)
+        {
+            using namespace Fix;
+
+            auto refresh = fromRef(message);
+
+            ASSERT_EQ(Fix::get<Tag::MDReqID>(refresh), "1364");
+
+            auto mdEntries = Fix::get<Tag::NoMDEntries>(refresh);
+            ASSERT_EQ(mdEntries.size(), 4);
+
+            auto entry0 = mdEntries[0];
+            ASSERT_EQ(Fix::get<Tag::MDUpdateAction>(entry0), '2');
+            ASSERT_EQ(Fix::get<Tag::Symbol>(entry0), "CHF/JPY");
+            ASSERT_EQ(Fix::get<Tag::MDEntryType>(entry0), '0');
+
+            auto entry1 = mdEntries[1];
+            ASSERT_EQ(Fix::get<Tag::MDUpdateAction>(entry1), '0');
+            ASSERT_EQ(Fix::get<Tag::Symbol>(entry1), "CHF/JPY");
+            ASSERT_EQ(Fix::get<Tag::MDEntryType>(entry1), '0');
+
+            auto entry2 = mdEntries[2];
+            ASSERT_EQ(Fix::get<Tag::MDUpdateAction>(entry2), '2');
+            ASSERT_EQ(Fix::get<Tag::Symbol>(entry2), "CHF/JPY");
+            ASSERT_EQ(Fix::get<Tag::MDEntryType>(entry2), '1');
+
+            auto entry3 = mdEntries[3];
+            ASSERT_EQ(Fix::get<Tag::MDUpdateAction>(entry3), '0');
+            ASSERT_EQ(Fix::get<Tag::Symbol>(entry3), "CHF/JPY");
+            ASSERT_EQ(Fix::get<Tag::MDEntryType>(entry3), '1');
+        }
+
+        template<typename HeaderT, typename MessageT> void operator()(HeaderT, MessageT)
+        {
+            ASSERT_TRUE(false);
+        }
+    };
+
+    using VisitRules = DefaultTestRules<Fix::v42::Spec::Dictionary>;
+};
+
 struct AssertVisitRules : public Fix::VisitRules
 {
     using Overrides = OverrideSet<>;
@@ -552,4 +595,17 @@ TEST(visitor_test, should_visit_tag)
     Fix::visitTag<Fix::Tag::OnBehalfOfCompID>(frame, std::strlen(frame))
         .then([&](const std::string&) { ASSERT_TRUE(false); })
         .otherwise([&](const Fix::ErrorKind& e) { ASSERT_EQ(e.type(), Fix::ErrorKind::UnknownTag); });
+}
+
+TEST(visitor_test, should_convert_from_ref)
+{
+    const char* frame = "8=FIX.4.2|9=407|35=X|34=002565204|52=20160908-08:42:10.359|49=Prov|56=MDABC|262=1364|268=4|"
+                        "279=2|55=CHF/JPY|269=0|278=0453665272|270=00104.840000|271=001000000.00|15=CHF|"
+                        "279=0|55=CHF/JPY|269=0|278=0453665276|270=00104.841000|271=001000000.00|15=CHF|"
+                        "279=2|55=CHF/JPY|269=1|278=0453665273|270=00104.855000|271=001000000.00|15=CHF|"
+                        "279=0|55=CHF/JPY|269=1|278=0453665277|270=00104.856000|271=001000000.00|15=CHF|"
+                        "10=213";
+
+    auto err = doVisit(frame, should_convert_from_ref::Visitor(), should_convert_from_ref::VisitRules());
+    ASSERT_TRUE(err.isOk());
 }

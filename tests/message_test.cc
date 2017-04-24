@@ -76,11 +76,11 @@ TEST(message_test, should_create_repeating_group)
     const auto& groupValues = repeatingGroup.get();
     ASSERT_EQ(groupValues.size(), 2);
 
-    ASSERT_EQ(std::get<0>(groupValues[0]).get(), "TEST");
-    ASSERT_EQ(std::get<1>(groupValues[0]).get(), 'S');
+    ASSERT_EQ(std::get<0>(groupValues[0].values).get(), "TEST");
+    ASSERT_EQ(std::get<1>(groupValues[0].values).get(), 'S');
 
-    ASSERT_EQ(std::get<0>(groupValues[1]).get(), "MD");
-    ASSERT_EQ(std::get<1>(groupValues[1]).get(), 'S');
+    ASSERT_EQ(std::get<0>(groupValues[1].values).get(), "MD");
+    ASSERT_EQ(std::get<1>(groupValues[1].values).get(), 'S');
 }
 
 TEST(message_test, should_throw_when_missing_fields_in_repeating_group)

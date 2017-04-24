@@ -75,8 +75,6 @@ namespace Fix
         {
             using Type = typename FilterGroup<Message, Tag>::Type;
             static constexpr size_t Length = FilterGroup<Message, Tag>::Length;
-
-            using Ref = GroupRef<Type>;
         };
 
         template<typename Tag> struct IsRequired : std::false_type { };
