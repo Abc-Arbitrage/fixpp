@@ -1,6 +1,6 @@
 #pragma once
 
-#include <cstring>
+#include <cmath>
 
 namespace Fix
 {
@@ -40,8 +40,20 @@ namespace Fix
         {
             static int cast(const char* offset, size_t /*size*/)
             {
-                char *end;
-                return strtol(offset, &end, 10);
+                int x = 0;
+                bool neg = false;
+                if (*offset == '-') {
+                    neg = true;
+                    ++offset;
+                }
+                while (*offset >= '0' && *offset <= '9') {
+                    x = (x*10) + (*offset - '0');
+                    ++offset;
+                }
+                if (neg) {
+                    x = -x;
+                }
+                return x;
             }
         };
 
@@ -50,8 +62,31 @@ namespace Fix
         {
             static double cast(const char* offset, size_t /*size*/)
             {
-                char *end;
-                return strtod(offset, &end);
+                double r = 0.0;
+                bool neg = false;
+                if (*offset == '-') {
+                    neg = true;
+                    ++offset;
+                }
+                while (*offset >= '0' && *offset <= '9') {
+                    r = (r*10.0) + (*offset - '0');
+                    ++offset;
+                }
+                if (*offset == '.') {
+                    double f = 0.0;
+                    int n = 0;
+                    ++offset;
+                    while (*offset >= '0' && *offset <= '9') {
+                        f = (f*10.0) + (*offset - '0');
+                        ++offset;
+                        ++n;
+                    }
+                    r += f / std::pow(10.0, n);
+                }
+                if (neg) {
+                    r = -r;
+                }
+                return r;
             }
         };
 
