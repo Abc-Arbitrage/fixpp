@@ -590,7 +590,7 @@ namespace Fix
             {
                 using Version = Fix::v42::Version;
                 using Header = Fix::v42::Header;
-                
+
                 using Messages = typename meta::typelist::make<
                     Message::Heartbeat, Message::TestRequest, Message::ResendRequest, Message::Reject, Message::SequenceReset,
                     Message::Logout, Message::Logon, Message::MarketDataIncrementalRefresh, Message::Quote,
