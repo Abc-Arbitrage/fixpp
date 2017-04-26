@@ -23,6 +23,7 @@ struct VisitRules : public Fix::VisitRules
     static constexpr bool ValidateChecksum = false;
     static constexpr bool ValidateLength = false;
     static constexpr bool StrictMode = false;
+    static constexpr bool SkipUnknownTags = false;
 };
 
 struct Visitor : public Fix::StaticVisitor<void>

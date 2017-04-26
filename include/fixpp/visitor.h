@@ -276,6 +276,14 @@ namespace Fix
                   > : std::true_type
             { };
 
+            template<typename T, typename = void> struct HasSkipUnknownTags : std::false_type { };
+            template<typename T>
+            struct HasSkipUnknownTags<
+                    T,
+                    void_t<decltype(&T::SkipUnknownTags)>
+                  > : std::true_type
+            { };
+
             template<typename T, typename = void> struct IsStaticVisitor : std::false_type { };
             template<typename T>
             struct IsStaticVisitor<
@@ -748,7 +756,7 @@ namespace Fix
             using Field = FieldRef<TagT>;
 
             template<typename TagSet>
-            void parse(Field& field, ParsingContext& context, TagSet& tagSet, bool /* strict */)
+            void parse(Field& field, ParsingContext& context, TagSet& tagSet, bool /* strict */, bool /* skipUnknown */)
             {
                 auto& cursor = context.cursor;
                 // @Todo: In Strict mode, validate the type of the Tag
@@ -778,7 +786,7 @@ namespace Fix
 
             template<typename TagSet>
             void operator()(Field& field,
-                            ParsingContext& context, TagSet&, bool)
+                            ParsingContext& context, TagSet&, bool, bool)
             {
                 static constexpr auto Tag = Field::Tag::Id;
                 auto& cursor = context.cursor;
@@ -803,10 +811,10 @@ namespace Fix
 
             template<typename Field, typename TagSet>
             void operator()(Field& field,
-                            ParsingContext& context, TagSet& outerSet, bool strict)
+                            ParsingContext& context, TagSet& outerSet, bool strict, bool skipUnknown)
             {
                 FieldParser<Field> parser;
-                parser.parse(field, context, outerSet, strict);
+                parser.parse(field, context, outerSet, strict, skipUnknown);
             }
         };
 
@@ -832,10 +840,11 @@ namespace Fix
 
             struct Visitor
             {
-                Visitor(ParsingContext& context, GroupSet& groupSet, bool strict)
+                Visitor(ParsingContext& context, GroupSet& groupSet, bool strict, bool skipUnknown)
                     : context(context)
                     , groupSet(groupSet)
                     , strict(strict)
+                    , skipUnknown(skipUnknown)
                     , recursive(0)
                 { }
 
@@ -845,7 +854,7 @@ namespace Fix
                     using GroupVisitor = FieldGroupVisitor<Field>;
 
                     GroupVisitor visitor;
-                    visitor(field, context, groupSet, strict);
+                    visitor(field, context, groupSet, strict, skipUnknown);
 
                     recursive = GroupVisitor::Recursive;
                 }
@@ -857,10 +866,11 @@ namespace Fix
                 ParsingContext& context;
                 GroupSet& groupSet;
                 bool strict;
+                bool skipUnknown;
             };
 
             template<typename TagSet>
-            void parse(Field& field, ParsingContext& context, TagSet& tagSet, bool strict)
+            void parse(Field& field, ParsingContext& context, TagSet& tagSet, bool strict, bool skipUnknown)
             {
                 auto& cursor = context.cursor;
 
@@ -908,13 +918,13 @@ namespace Fix
                                 StreamCursor::Token valueToken(cursor);
                                 TRY_MATCH_UNTIL(SOH, "Expected value after tag %d, got EOF", tag);
 
-                                if (!strict)
+                                if (!skipUnknown && !strict)
                                 {
                                     groupRef.unparsed.insert(std::make_pair(tag, valueToken.view()));
                                     TRY_ADVANCE("Got early EOF after tag %d value", tag);
                                     continue;
                                 }
-                                else
+                                else if (strict)
                                 {
                                     context.setError(ErrorKind::UnknownTag, "Encountered unknown tag %d in RepeatingGroup %d", tag, GroupTag::Id);
                                     return;
@@ -936,7 +946,7 @@ namespace Fix
 
                         groupSet.set(tag);
 
-                        Visitor visitor(context, groupSet, strict);
+                        Visitor visitor(context, groupSet, strict, skipUnknown);
 
                         // Invariant: here visitField should ALWAYS return true as we are checking if the tag
                         // is valid prior to the call
@@ -964,9 +974,10 @@ namespace Fix
         template<typename Message>
         struct FieldVisitor
         {
-            FieldVisitor(ParsingContext& context, bool strict)
+            FieldVisitor(ParsingContext& context, bool strict, bool skipUnknown)
                 : context(context)
                 , strict(strict)
+                , skipUnknown(skipUnknown)
             { }
 
             template<typename Field>
@@ -975,12 +986,13 @@ namespace Fix
                 TagSet<Message> tags;
 
                 FieldParser<Field> parser;
-                parser.parse(field, context, tags, strict);
+                parser.parse(field, context, tags, strict, skipUnknown);
             }
 
         private:
             ParsingContext& context;
             bool strict;
+            bool skipUnknown;
         };
 
         // ------------------------------------------------
@@ -1029,11 +1041,11 @@ namespace Fix
 
                     if (state == State::InHeader)
                     {
-                        FieldVisitor<Header> headerVisitor(context, Rules::StrictMode);
+                        FieldVisitor<Header> headerVisitor(context, Rules::StrictMode, Rules::SkipUnknownTags);
                         if (visitField(header, tag, headerVisitor))
                             continue;
 
-                        FieldVisitor<Message> messageVisitor(context, Rules::StrictMode);
+                        FieldVisitor<Message> messageVisitor(context, Rules::StrictMode, Rules::SkipUnknownTags);
                         if (visitField(message, tag, messageVisitor))
                         {
                             state = State::InMessage;
@@ -1042,7 +1054,7 @@ namespace Fix
                     }
                     else if (state == State::InMessage)
                     {
-                        FieldVisitor<Message> messageVisitor(context, Rules::StrictMode);
+                        FieldVisitor<Message> messageVisitor(context, Rules::StrictMode, Rules::SkipUnknownTags);
                         if (visitField(message, tag, messageVisitor))
                             continue;
                     }
@@ -1061,14 +1073,14 @@ namespace Fix
                         StreamCursor::Token valueToken(cursor);
                         TRY_MATCH_UNTIL(SOH, "Expected value after tag %d, got EOF", tag);
 
-                        if (!Rules::StrictMode)
+                        if (!Rules::SkipUnknownTags && !Rules::StrictMode)
                         {
                             if (state == State::InHeader)
                                 header.unparsed.insert(std::make_pair(tag, valueToken.view()));
                             else
                                 message.unparsed.insert(std::make_pair(tag, valueToken.view()));
                         }
-                        else
+                        else if (Rules::StrictMode)
                         {
                             context.setError(ErrorKind::UnknownTag, "Encountered unknown tag %d", tag);
                             break;
@@ -1155,7 +1167,22 @@ namespace Fix
         impl::visitMessage(context, messageVisitor, rules);
     }
 
-    //
+    template<typename Rules>
+    static void checkRules()
+    {
+        static_assert(std::is_base_of<VisitRules, Rules>::value, "Visit rules must inherit from VisitRules");
+
+        static_assert(impl::rules::HasOverrides<Rules>::value, "Visit rules must provide an Overrides typedef");
+        static_assert(impl::rules::HasDictionary<Rules>::value, "Visit rules must provide a Dictionary typedef");
+        static_assert(impl::rules::HasValidateChecksum<Rules>::value, "Visit rules must provide a static ValidateChecksum boolean");
+        static_assert(impl::rules::HasValidateLength<Rules>::value, "Visit rules must provide a static ValidateLength boolean");
+        static_assert(impl::rules::HasStrictMode<Rules>::value, "Visit rules must provide a static StrictMode boolean");
+        static_assert(impl::rules::HasSkipUnknownTags<Rules>::value, "Visit rules must provide a static SkipUnknownTags boolean");
+
+        impl::rules::OverridesValidator<typename Rules::Overrides> validator {};
+    }
+
+
     // Note that the Visitor is passed by lvalue-reference, which means that is currently
     // not possible to pass an rvalue like a lambda or a bind-expression as a Visitor.
     // @Investigate a way to make it possible as it will be useful with polymorphic lambdas
@@ -1163,17 +1190,9 @@ namespace Fix
     template<typename Visitor, typename Rules>
     auto visit(const char* frame, size_t size, Visitor& visitor, Rules rules) -> VisitError<typename Visitor::ResultType>
     {
-        static_assert(std::is_base_of<VisitRules, Rules>::value, "Visit rules must inherit from VisitRules");
-
         static_assert(impl::rules::IsStaticVisitor<Visitor>::value,
                 "Visitor must fulfill StaticVisitor requirement and must expose an inner type ResultType");
-        static_assert(impl::rules::HasOverrides<Rules>::value, "Visit rules must provide an Overrides typedef");
-        static_assert(impl::rules::HasDictionary<Rules>::value, "Visit rules must provide a Dictionary typedef");
-        static_assert(impl::rules::HasValidateChecksum<Rules>::value, "Visit rules must provide a static ValidateChecksum boolean");
-        static_assert(impl::rules::HasValidateLength<Rules>::value, "Visit rules must provide a static ValidateLength boolean");
-        static_assert(impl::rules::HasStrictMode<Rules>::value, "Visit rules must provide a static StrictMode boolean");
-
-        impl::rules::OverridesValidator<typename Rules::Overrides> validator {};
+        checkRules<Rules>();
 
         RawStreamBuf<> streambuf(const_cast<char *>(frame), size);
         StreamCursor cursor(&streambuf);

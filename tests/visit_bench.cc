@@ -23,12 +23,27 @@ struct MyVisitRules : public Fix::VisitRules
     static constexpr bool ValidateChecksum = false;
     static constexpr bool ValidateLength = false;
     static constexpr bool StrictMode = false;
+    static constexpr bool SkipUnknownTags = false;
 };
 
 struct MyVisitor : public Fix::StaticVisitor<void>
 {
     void operator()(const Fix::v42::Header::Ref&, const MyQuote::Ref&)
     {
+    }
+
+    template<typename HeaderT, typename MessageT> void operator()(HeaderT, MessageT)
+    {
+    }
+};
+
+struct GetVisitor : public Fix::StaticVisitor<void>
+{
+    void operator()(const Fix::v42::Header::Ref&, const MyQuote::Ref& quote)
+    {
+        benchmark::DoNotOptimize(Fix::get<MyTag1>(quote));
+        benchmark::DoNotOptimize(Fix::get<MyTag2>(quote));
+        benchmark::DoNotOptimize(Fix::get<Fix::Tag::BidPx>(quote));
     }
 
     template<typename HeaderT, typename MessageT> void operator()(HeaderT, MessageT)
@@ -52,6 +67,23 @@ static void VisitCustomQuoteBenchmark(benchmark::State& state)
         });
     }
 
+}
+
+static void VisitCustomQuoteAndGetTagsBenchmark(benchmark::State& state)
+{
+    const char *frame = "8=FIX.4.2|9=0225|35=S|49=FIXPROV|56=TRGT|34=1579321|52=20161230-11:05:36.052|115=TRGT|142=MRS|55=ZAR/JPY|60=20161230-11:05:36.052|63=0|64=20170105|117=d20052s3866|131=1276|132=8.525|133=8.547|134=1000000|135=1000000|303=2|537=1|11325=0|10=087|";
+
+    const size_t size = std::strlen(frame);
+
+    GetVisitor visitor;
+
+    while (state.KeepRunning())
+    {
+        Fix::visit(frame, size, visitor, MyVisitRules()).otherwise([&](const Fix::ErrorKind& e) {
+            auto errStr = e.asString();
+            state.SkipWithError(errStr.c_str());
+        });
+    }
 }
 
 static void VisitTagViewBenchmark(benchmark::State& state)
@@ -85,6 +117,7 @@ static void VisitTagBenchmark(benchmark::State& state)
 }
 
 BENCHMARK(VisitCustomQuoteBenchmark);
+BENCHMARK(VisitCustomQuoteAndGetTagsBenchmark);
 BENCHMARK(VisitTagViewBenchmark);
 BENCHMARK(VisitTagBenchmark);
 

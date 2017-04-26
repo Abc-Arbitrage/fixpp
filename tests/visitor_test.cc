@@ -14,8 +14,8 @@ struct DefaultTestRules : public Fix::VisitRules
 
     static constexpr bool ValidateChecksum = true;
     static constexpr bool ValidateLength = true;
-
     static constexpr bool StrictMode = false;
+    static constexpr bool SkipUnknownTags = false;
 };
 
 namespace should_visit_logon_frame
@@ -159,6 +159,7 @@ namespace should_visit_custom_message
         static constexpr bool ValidateChecksum = false;
         static constexpr bool ValidateLength = false;
         static constexpr bool StrictMode = false;
+        static constexpr bool SkipUnknownTags = false;
     };
 
     struct Visitor : public Fix::StaticVisitor<void>
@@ -246,6 +247,7 @@ namespace should_visit_custom_snapshot_frame
         static constexpr bool ValidateChecksum = false;
         static constexpr bool ValidateLength = false;
         static constexpr bool StrictMode = false;
+        static constexpr bool SkipUnknownTags = false;
     };
 
     struct Visitor : public Fix::StaticVisitor<void>
@@ -326,6 +328,7 @@ namespace should_visit_unknown_tags_in_non_strict_mode
         static constexpr bool ValidateChecksum = false;
         static constexpr bool ValidateLength = false;
         static constexpr bool StrictMode = false;
+        static constexpr bool SkipUnknownTags = false;
     };
 
     struct Visitor : public Fix::StaticVisitor<void>
@@ -430,6 +433,7 @@ struct AssertVisitRules : public Fix::VisitRules
     static constexpr bool ValidateChecksum = false;
     static constexpr bool ValidateLength = false;
     static constexpr bool StrictMode = true;
+    static constexpr bool SkipUnknownTags = false;
 };
 
 struct AssertVisitor : public Fix::StaticVisitor<void>
