@@ -367,11 +367,15 @@ namespace should_visit_unknown_tags_in_non_strict_mode
         template<typename Message>
         void checkUnparsed(const Message& message, int tag, const char* value)
         {
-            auto it = message.unparsed.find(tag);
+            auto it = std::find_if(
+                std::begin(message.unparsed), std::end(message.unparsed),
+                [=](const typename Message::Unparsed& unparsed) { return unparsed.tag == tag; }
+            );
+
             ASSERT_NE(it, message.unparsed.end());
 
-            auto val = it->second;
-            std::string str(val.first, val.second);
+            auto view = it->view;
+            std::string str(view.first, view.second);
             ASSERT_EQ(str, value);
         }
     };

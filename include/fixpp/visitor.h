@@ -920,7 +920,7 @@ namespace Fix
 
                                 if (!skipUnknown && !strict)
                                 {
-                                    groupRef.unparsed.insert(std::make_pair(tag, valueToken.view()));
+                                    groupRef.unparsed.emplace_back(tag, valueToken.view());
                                     TRY_ADVANCE("Got early EOF after tag %d value", tag);
                                     continue;
                                 }
@@ -1076,9 +1076,9 @@ namespace Fix
                         if (!Rules::SkipUnknownTags && !Rules::StrictMode)
                         {
                             if (state == State::InHeader)
-                                header.unparsed.insert(std::make_pair(tag, valueToken.view()));
+                                header.unparsed.emplace_back(tag, valueToken.view());
                             else
-                                message.unparsed.insert(std::make_pair(tag, valueToken.view()));
+                                message.unparsed.emplace_back(tag, valueToken.view());
                         }
                         else if (Rules::StrictMode)
                         {
