@@ -10,11 +10,14 @@
 #include <sstream>
 
 #include <fixpp/dsl/field.h>
+#include <fixpp/utils/SmallVector.h>
 
 namespace Fix
 {
 
     template<template<typename> class FieldT, typename... Tags> struct MessageBase;
+
+    template<size_t Size> struct SizeHint { };
 
     // ------------------------------------------------
     // RepeatingGroup
@@ -22,8 +25,8 @@ namespace Fix
 
     // A FIX repeating group
 
-    template<typename GroupTag, typename... Tags>
-    struct RepeatingGroup
+    template<typename GroupTag, typename SizeHint, typename... Tags>
+    struct SmallRepeatingGroup
     {
         using Type = GroupTag;
     };
@@ -34,22 +37,22 @@ namespace Fix
     // ------------------------------------------------
 
     // Specialization of a Field for a repeating group.
-    // Stores values inside a std::vector
+    // Stores values inside a SmallVector
 
 	template<typename Group> struct InstanceGroup;
 
-	template<typename GroupTag, typename... Tags>
-	struct InstanceGroup<RepeatingGroup<GroupTag, Tags...>> : public MessageBase<Field, Tags...>
+	template<typename GroupTag, typename SizeHint, typename... Tags>
+	struct InstanceGroup<SmallRepeatingGroup<GroupTag, SizeHint, Tags...>> : public MessageBase<Field, Tags...>
 	{
 	};
 
-    template<typename GroupTag, typename... Tags>
-    struct Field<RepeatingGroup<GroupTag, Tags...>>
+    template<typename GroupTag, size_t Size, typename... Tags>
+    struct Field<SmallRepeatingGroup<GroupTag, SizeHint<Size>, Tags...>>
     {
         using Tag = GroupTag;
-		using GroupType = InstanceGroup<RepeatingGroup<GroupTag, Tags...>>;
+		using GroupType = InstanceGroup<SmallRepeatingGroup<GroupTag, SizeHint<Size>, Tags...>>;
 
-        using Type = std::vector<GroupType>;
+        using Type = llvm::SmallVector<GroupType, Size>;
 
         static constexpr size_t TotalTags = GroupType::TotalTags;
 
@@ -110,18 +113,18 @@ namespace Fix
 
 	template<typename Group> struct InstanceGroupRef;
 
-	template<typename GroupTag, typename... Tags>
-	struct InstanceGroupRef<RepeatingGroup<GroupTag, Tags...>> : public MessageBase<FieldRef, Tags...>
+	template<typename GroupTag, typename SizeHint, typename... Tags>
+	struct InstanceGroupRef<SmallRepeatingGroup<GroupTag, SizeHint, Tags...>> : public MessageBase<FieldRef, Tags...>
 	{
 	};
 
-    template<typename GroupTag, typename... Tags>
-    struct FieldRef<RepeatingGroup<GroupTag, Tags...>>
+    template<typename GroupTag, size_t Size, typename... Tags>
+    struct FieldRef<SmallRepeatingGroup<GroupTag, SizeHint<Size>, Tags...>>
     {
         using Tag = GroupTag;
 
-		using GroupType = InstanceGroupRef<RepeatingGroup<GroupTag, Tags...>>;
-        using Values = std::vector<GroupType>;
+		using GroupType = InstanceGroupRef<SmallRepeatingGroup<GroupTag, SizeHint<Size>, Tags...>>;
+        using Values = llvm::SmallVector<GroupType, Size>;
 
         constexpr unsigned tag() const
         {
@@ -159,11 +162,11 @@ namespace Fix
 
     template<typename RepeatingGroup> struct Group;
 
-    template<typename GroupTag, typename... Tags>
-    struct Group<RepeatingGroup<GroupTag, Tags...>>
+    template<typename GroupTag, typename SizeHint, typename... Tags>
+    struct Group<SmallRepeatingGroup<GroupTag, SizeHint, Tags...>>
     {
-		using Instance = InstanceGroup<RepeatingGroup<GroupTag, Tags...>>;
-        using FieldType = Field<RepeatingGroup<GroupTag, Tags...>>;
+		using Instance = InstanceGroup<SmallRepeatingGroup<GroupTag, SizeHint, Tags...>>;
+        using FieldType = Field<SmallRepeatingGroup<GroupTag, SizeHint, Tags...>>;
 
         Group(FieldType& field)
             : field(field)
@@ -206,5 +209,8 @@ namespace Fix
 
         FieldType& field;
     };
+
+    template<typename GroupTag, typename... Tags>
+    using RepeatingGroup = SmallRepeatingGroup<GroupTag, SizeHint<10>, Tags...>;
 
 } // namespace Fix

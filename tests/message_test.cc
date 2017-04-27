@@ -67,7 +67,7 @@ TEST(message_test, should_create_repeating_group)
     // Let's now check that values have been written in the message itself
     auto& values = logon.values;
 
-    // NoMsgTypes RepeatinGroup if the 6th field in the Logon message
+    // NoMsgTypes RepeatinGroup is the 7th field in the Logon message
     auto& repeatingGroup = std::get<6>(values);
 
     ASSERT_FALSE(repeatingGroup.empty());

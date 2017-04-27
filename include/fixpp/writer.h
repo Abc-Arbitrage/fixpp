@@ -31,8 +31,8 @@ namespace details
         }
     };
 
-    template<typename GroupTag, typename... Tags>
-    struct FieldWriter<Field<RepeatingGroup<GroupTag, Tags...>>>
+    template<typename GroupTag, typename SizeHint, typename... Tags>
+    struct FieldWriter<Field<SmallRepeatingGroup<GroupTag, SizeHint, Tags...>>>
     {
         template<typename FieldT>
         static std::ostream& write(std::ostream& os, const FieldT& field)
@@ -41,7 +41,7 @@ namespace details
 
             static constexpr size_t GroupSize = FieldT::TotalTags;
 
-            auto group = field.get();
+            const auto& group = field.get();
             for (const auto& instance: group)
             {
                 doWriteGroupFields(os, instance, meta::make_index_sequence<GroupSize>{});

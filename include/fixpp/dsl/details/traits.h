@@ -2,7 +2,7 @@
 
 namespace Fix
 {
-    template<typename GroupTag, typename...> struct RepeatingGroup;
+    template<typename GroupTag, typename SizeHint, typename...> struct SmallRepeatingGroup;
     template<typename Group> struct GroupRef;
     template<typename T> struct Required;
 
@@ -45,8 +45,8 @@ namespace Fix
                 static constexpr bool value = false;
             };
 
-            template<typename GroupTag, typename... Tags>
-            struct IsGroupOf<RepeatingGroup<GroupTag, Tags...>>
+            template<typename GroupTag, typename SizeHint, typename... Tags>
+            struct IsGroupOf<SmallRepeatingGroup<GroupTag, SizeHint, Tags...>>
             {
                 static constexpr bool value =
                     std::is_same<GroupTag, Tag>::value;

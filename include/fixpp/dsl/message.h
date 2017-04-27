@@ -38,14 +38,14 @@ namespace Fix
 			static constexpr int Result = Tag::Id > CurrentMax ? Tag::Id : CurrentMax;
 		};
 
-		template<typename GroupTag, typename... Tags, int CurrentMax>
-		struct Max<RepeatingGroup<GroupTag, Tags...>, CurrentMax>
+		template<typename GroupTag, typename SizeHint, typename... Tags, int CurrentMax>
+		struct Max<SmallRepeatingGroup<GroupTag, SizeHint, Tags...>, CurrentMax>
 		{
 			static constexpr int Result = GroupTag::Id > CurrentMax ? GroupTag::Id : CurrentMax;
 		};
 
-		template<typename GroupTag, typename... Tags, int CurrentMax>
-		struct Max<Required<RepeatingGroup<GroupTag, Tags...>>, CurrentMax>
+		template<typename GroupTag, typename SizeHint, typename... Tags, int CurrentMax>
+		struct Max<Required<SmallRepeatingGroup<GroupTag, SizeHint, Tags...>>, CurrentMax>
 		{
 			static constexpr int Result = GroupTag::Id > CurrentMax ? GroupTag::Id : CurrentMax;
 		};
@@ -193,8 +193,8 @@ namespace Fix
                 }
             };
 
-            template<typename... GroupTags>
-            struct FieldRefCast<FieldRef<RepeatingGroup<GroupTags...>>, void>
+            template<typename GroupTag, typename SizeHint, typename... GroupTags>
+            struct FieldRefCast<FieldRef<SmallRepeatingGroup<GroupTag, SizeHint, GroupTags...>>, void>
             {
                 template<typename FieldRef, typename Field>
                 static void cast(const FieldRef& src, Field& dst)

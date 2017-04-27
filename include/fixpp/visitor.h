@@ -604,14 +604,14 @@ namespace Fix
                 static constexpr int Value = Tag::Id;
             };
 
-            template<typename GroupTag, typename... Tags>
-            struct IndexOf<RepeatingGroup<GroupTag, Tags...>>
+            template<typename GroupTag, typename SizeHint, typename... Tags>
+            struct IndexOf<SmallRepeatingGroup<GroupTag, SizeHint, Tags...>>
             {
                 static constexpr int Value = GroupTag::Id;
             };
 
-            template<typename GroupTag, typename... Tags>
-            struct IndexOf<Required<RepeatingGroup<GroupTag, Tags...>>>
+            template<typename GroupTag, typename SizeHint, typename... Tags>
+            struct IndexOf<Required<SmallRepeatingGroup<GroupTag, SizeHint, Tags...>>>
             {
                 static constexpr int Value = GroupTag::Id;
             };
@@ -724,8 +724,8 @@ namespace Fix
         {
         };
 
-        template<typename GroupTag, typename... Tags>
-        struct TagSet<RepeatingGroup<GroupTag, Tags...>> : public TagSet<Tags...>
+        template<typename GroupTag, typename SizeHint, typename... Tags>
+        struct TagSet<SmallRepeatingGroup<GroupTag, SizeHint, Tags...>> : public TagSet<Tags...>
         {
         };
 
@@ -804,8 +804,8 @@ namespace Fix
         // Recursive RepeatingGroup parsing
         //
 
-        template<typename GroupTag, typename... Tags>
-        struct FieldGroupVisitor<FieldRef<RepeatingGroup<GroupTag, Tags...>>>
+        template<typename GroupTag, typename SizeHint, typename... Tags>
+        struct FieldGroupVisitor<FieldRef<SmallRepeatingGroup<GroupTag, SizeHint, Tags...>>>
         {
             static constexpr bool Recursive = true;
 
@@ -822,10 +822,10 @@ namespace Fix
         // Specialization of our parser for a RepeatingGroup
         // 
 
-        template<typename GroupTag, typename... Tags>
-        struct FieldParser<FieldRef<RepeatingGroup<GroupTag, Tags...>>>
+        template<typename GroupTag, typename SizeHint, typename... Tags>
+        struct FieldParser<FieldRef<SmallRepeatingGroup<GroupTag, SizeHint, Tags...>>>
         {
-            using Field = FieldRef<RepeatingGroup<GroupTag, Tags...>>;
+            using Field = FieldRef<SmallRepeatingGroup<GroupTag, SizeHint, Tags...>>;
 
             //
             // A GroupSet is a bitset of valid tags inside a RepeatingGroup
