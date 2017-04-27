@@ -58,7 +58,10 @@ namespace Fix
 
         Field() = default;
         Field(const Field& other) = default;
+        Field& operator=(const Field& other) = default;
+
         Field(Field&& other) = default;
+        Field& operator=(Field&& other) = default;
 
         constexpr unsigned tag() const
         {
