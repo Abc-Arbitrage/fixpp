@@ -16,7 +16,7 @@
 #include <fixpp/streambuf.h>
 #include <fixpp/utils/soh.h>
 
-namespace Fix {
+namespace Fixpp {
 
 namespace details
 {
@@ -154,4 +154,4 @@ struct Writer
     }
 };
 
-} // namespace Fix
+} // namespace Fixpp

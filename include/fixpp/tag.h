@@ -11,7 +11,7 @@
 #include <ctime>
 #include <tuple>
 
-namespace Fix
+namespace Fixpp
 {
     namespace Type
     {
@@ -689,5 +689,5 @@ namespace Fix
 
     } // namespace Tag
 
-} // namespace Fix
+} // namespace Fixpp
 

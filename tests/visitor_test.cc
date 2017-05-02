@@ -7,7 +7,7 @@
 #include <fixpp/visitor.h>
 
 template<typename Dict>
-struct DefaultTestRules : public Fix::VisitRules
+struct DefaultTestRules : public Fixpp::VisitRules
 {
     using Overrides = OverrideSet<>;
     using Dictionary = Dict;
@@ -20,12 +20,12 @@ struct DefaultTestRules : public Fix::VisitRules
 
 namespace should_visit_logon_frame
 {
-    struct Visitor : public Fix::StaticVisitor<void>
+    struct Visitor : public Fixpp::StaticVisitor<void>
     {
-        void operator()(const Fix::v42::Header::Ref& header, const Fix::v42::Message::Logon::Ref& logon)
+        void operator()(const Fixpp::v42::Header::Ref& header, const Fixpp::v42::Message::Logon::Ref& logon)
         {
-            ASSERT_EQ(Fix::get<Fix::Tag::SenderCompID>(header), "ABC");
-            ASSERT_EQ(Fix::get<Fix::Tag::HeartBtInt>(logon), 60);
+            ASSERT_EQ(Fixpp::get<Fixpp::Tag::SenderCompID>(header), "ABC");
+            ASSERT_EQ(Fixpp::get<Fixpp::Tag::HeartBtInt>(logon), 60);
         }
 
         template<typename HeaderT, typename MessageT> void operator()(HeaderT, MessageT)
@@ -34,33 +34,33 @@ namespace should_visit_logon_frame
         }
     };
 
-    using VisitRules = DefaultTestRules<Fix::v42::Spec::Dictionary>;
+    using VisitRules = DefaultTestRules<Fixpp::v42::Spec::Dictionary>;
 
 } // namespace should_visit_logon_frame
 
 namespace should_try_get_fields_after_parsing
 {
-    struct Visitor : public Fix::StaticVisitor<void>
+    struct Visitor : public Fixpp::StaticVisitor<void>
     {
-        void operator()(const Fix::v42::Header::Ref& header, const Fix::v42::Message::Logon::Ref& logon)
+        void operator()(const Fixpp::v42::Header::Ref& header, const Fixpp::v42::Message::Logon::Ref& logon)
         {
             std::string senderCompId;
-            ASSERT_TRUE(Fix::tryGet<Fix::Tag::SenderCompID>(header, senderCompId));
+            ASSERT_TRUE(Fixpp::tryGet<Fixpp::Tag::SenderCompID>(header, senderCompId));
             ASSERT_EQ(senderCompId, "ABC");
 
-            auto msgTypes = Fix::get<Fix::Tag::NoMsgTypes>(logon);
+            auto msgTypes = Fixpp::get<Fixpp::Tag::NoMsgTypes>(logon);
             ASSERT_EQ(msgTypes.size(), 2);
 
             std::string refMsgType;
             char msgDirection;
 
-            ASSERT_TRUE(Fix::tryGet<Fix::Tag::RefMsgType>(msgTypes[0], refMsgType));
+            ASSERT_TRUE(Fixpp::tryGet<Fixpp::Tag::RefMsgType>(msgTypes[0], refMsgType));
             ASSERT_EQ(refMsgType, "TEST");
 
-            ASSERT_TRUE(Fix::tryGet<Fix::Tag::MsgDirection>(msgTypes[0], msgDirection));
+            ASSERT_TRUE(Fixpp::tryGet<Fixpp::Tag::MsgDirection>(msgTypes[0], msgDirection));
             ASSERT_EQ(msgDirection, 'C');
 
-            ASSERT_TRUE(Fix::tryGet<Fix::Tag::RefMsgType>(msgTypes[1], refMsgType));
+            ASSERT_TRUE(Fixpp::tryGet<Fixpp::Tag::RefMsgType>(msgTypes[1], refMsgType));
             ASSERT_EQ(refMsgType, "TEST");
         }
 
@@ -70,39 +70,39 @@ namespace should_try_get_fields_after_parsing
         }
     };
 
-    using VisitRules = DefaultTestRules<Fix::v42::Spec::Dictionary>;
+    using VisitRules = DefaultTestRules<Fixpp::v42::Spec::Dictionary>;
 
 } // namespace should_try_get_fields_after_parsing
 
 namespace should_be_able_to_return_value_in_visitor
 {
-    struct Visitor : public Fix::StaticVisitor<int>
+    struct Visitor : public Fixpp::StaticVisitor<int>
     {
-        int operator()(const Fix::v42::Header::Ref& header, const Fix::v42::Message::Logon::Ref& logon)
+        int operator()(const Fixpp::v42::Header::Ref& header, const Fixpp::v42::Message::Logon::Ref& logon)
         {
             doAssert(header, logon);
             return 10;
         }
 
-        void doAssert(const Fix::v42::Header::Ref& header, const Fix::v42::Message::Logon::Ref& logon)
+        void doAssert(const Fixpp::v42::Header::Ref& header, const Fixpp::v42::Message::Logon::Ref& logon)
         {
             std::string senderCompId;
-            ASSERT_TRUE(Fix::tryGet<Fix::Tag::SenderCompID>(header, senderCompId));
+            ASSERT_TRUE(Fixpp::tryGet<Fixpp::Tag::SenderCompID>(header, senderCompId));
             ASSERT_EQ(senderCompId, "ABC");
 
-            auto msgTypes = Fix::get<Fix::Tag::NoMsgTypes>(logon);
+            auto msgTypes = Fixpp::get<Fixpp::Tag::NoMsgTypes>(logon);
             ASSERT_EQ(msgTypes.size(), 2);
 
             std::string refMsgType;
             char msgDirection;
 
-            ASSERT_TRUE(Fix::tryGet<Fix::Tag::RefMsgType>(msgTypes[0], refMsgType));
+            ASSERT_TRUE(Fixpp::tryGet<Fixpp::Tag::RefMsgType>(msgTypes[0], refMsgType));
             ASSERT_EQ(refMsgType, "TEST");
 
-            ASSERT_TRUE(Fix::tryGet<Fix::Tag::MsgDirection>(msgTypes[0], msgDirection));
+            ASSERT_TRUE(Fixpp::tryGet<Fixpp::Tag::MsgDirection>(msgTypes[0], msgDirection));
             ASSERT_EQ(msgDirection, 'C');
 
-            ASSERT_TRUE(Fix::tryGet<Fix::Tag::RefMsgType>(msgTypes[1], refMsgType));
+            ASSERT_TRUE(Fixpp::tryGet<Fixpp::Tag::RefMsgType>(msgTypes[1], refMsgType));
             ASSERT_EQ(refMsgType, "TEST");
         }
 
@@ -112,24 +112,24 @@ namespace should_be_able_to_return_value_in_visitor
         }
     };
 
-    using VisitRules = DefaultTestRules<Fix::v42::Spec::Dictionary>;
+    using VisitRules = DefaultTestRules<Fixpp::v42::Spec::Dictionary>;
 
 } // namespace should_be_able_to_return_value_in_visitor
 
 namespace should_visit_repeating_group_in_logon_frame
 {
 
-    struct Visitor : public Fix::StaticVisitor<void>
+    struct Visitor : public Fixpp::StaticVisitor<void>
     {
-        void operator()(const Fix::v42::Header::Ref&, const Fix::v42::Message::Logon::Ref& logon)
+        void operator()(const Fixpp::v42::Header::Ref&, const Fixpp::v42::Message::Logon::Ref& logon)
         {
-            auto msgTypes = Fix::get<Fix::Tag::NoMsgTypes>(logon);
+            auto msgTypes = Fixpp::get<Fixpp::Tag::NoMsgTypes>(logon);
             ASSERT_EQ(msgTypes.size(), 2);
 
-            ASSERT_EQ(Fix::get<Fix::Tag::RefMsgType>(msgTypes[0]), "TEST");
-            ASSERT_EQ(Fix::get<Fix::Tag::MsgDirection>(msgTypes[0]), 'C');
+            ASSERT_EQ(Fixpp::get<Fixpp::Tag::RefMsgType>(msgTypes[0]), "TEST");
+            ASSERT_EQ(Fixpp::get<Fixpp::Tag::MsgDirection>(msgTypes[0]), 'C');
 
-            ASSERT_EQ(Fix::get<Fix::Tag::RefMsgType>(msgTypes[1]), "TEST");
+            ASSERT_EQ(Fixpp::get<Fixpp::Tag::RefMsgType>(msgTypes[1]), "TEST");
         }
 
         template<typename HeaderT, typename MessageT> void operator()(HeaderT, MessageT)
@@ -138,23 +138,23 @@ namespace should_visit_repeating_group_in_logon_frame
         }
     };
 
-    using VisitRules = DefaultTestRules<Fix::v42::Spec::Dictionary>;
+    using VisitRules = DefaultTestRules<Fixpp::v42::Spec::Dictionary>;
 
 } // namespace should_visit_repeating_group_in_logon_frame
 
 namespace should_visit_custom_message
 {
 
-    using MyTag = Fix::TagT<2154, Fix::Type::Int>;
-    using MyMessage = Fix::ExtendedMessage<Fix::v42::Message::Logon, Fix::Required<MyTag>>;
+    using MyTag = Fixpp::TagT<2154, Fixpp::Type::Int>;
+    using MyMessage = Fixpp::ExtendedMessage<Fixpp::v42::Message::Logon, Fixpp::Required<MyTag>>;
 
-    struct MyVisitRules : public Fix::VisitRules
+    struct MyVisitRules : public Fixpp::VisitRules
     {
         using Overrides = OverrideSet<
-            Override<Fix::v42::Message::Logon, As<MyMessage>>
+            Override<Fixpp::v42::Message::Logon, As<MyMessage>>
         >;
 
-        using Dictionary = Fix::v42::Spec::Dictionary;
+        using Dictionary = Fixpp::v42::Spec::Dictionary;
 
         static constexpr bool ValidateChecksum = false;
         static constexpr bool ValidateLength = false;
@@ -162,14 +162,14 @@ namespace should_visit_custom_message
         static constexpr bool SkipUnknownTags = false;
     };
 
-    struct Visitor : public Fix::StaticVisitor<void>
+    struct Visitor : public Fixpp::StaticVisitor<void>
     {
-        void operator()(const Fix::v42::Header::Ref& header, const MyMessage::Ref& message)
+        void operator()(const Fixpp::v42::Header::Ref& header, const MyMessage::Ref& message)
         {
-            ASSERT_EQ(Fix::get<Fix::Tag::SenderCompID>(header), "ABC");
-            ASSERT_EQ(Fix::get<Fix::Tag::HeartBtInt>(message), 60);
+            ASSERT_EQ(Fixpp::get<Fixpp::Tag::SenderCompID>(header), "ABC");
+            ASSERT_EQ(Fixpp::get<Fixpp::Tag::HeartBtInt>(message), 60);
 
-            ASSERT_EQ(Fix::get<MyTag>(message), 1212);
+            ASSERT_EQ(Fixpp::get<MyTag>(message), 1212);
         }
 
         template<typename HeaderT, typename MessageT> void operator()(HeaderT, MessageT)
@@ -182,36 +182,36 @@ namespace should_visit_custom_message
 
 namespace should_visit_incremental_refresh_frame
 {
-    struct Visitor : public Fix::StaticVisitor<void>
+    struct Visitor : public Fixpp::StaticVisitor<void>
     {
-        void operator()(const Fix::v42::Header::Ref&, const Fix::v42::Message::MarketDataIncrementalRefresh::Ref& message)
+        void operator()(const Fixpp::v42::Header::Ref&, const Fixpp::v42::Message::MarketDataIncrementalRefresh::Ref& message)
         {
-            using namespace Fix;
+            using namespace Fixpp;
 
-            ASSERT_EQ(Fix::get<Tag::MDReqID>(message), "1364");
+            ASSERT_EQ(Fixpp::get<Tag::MDReqID>(message), "1364");
 
-            auto mdEntries = Fix::get<Tag::NoMDEntries>(message);
+            auto mdEntries = Fixpp::get<Tag::NoMDEntries>(message);
             ASSERT_EQ(mdEntries.size(), 4);
 
             auto entry0 = mdEntries[0];
-            ASSERT_EQ(Fix::get<Tag::MDUpdateAction>(entry0), '2');
-            ASSERT_EQ(Fix::get<Tag::Symbol>(entry0), "CHF/JPY");
-            ASSERT_EQ(Fix::get<Tag::MDEntryType>(entry0), '0');
+            ASSERT_EQ(Fixpp::get<Tag::MDUpdateAction>(entry0), '2');
+            ASSERT_EQ(Fixpp::get<Tag::Symbol>(entry0), "CHF/JPY");
+            ASSERT_EQ(Fixpp::get<Tag::MDEntryType>(entry0), '0');
 
             auto entry1 = mdEntries[1];
-            ASSERT_EQ(Fix::get<Tag::MDUpdateAction>(entry1), '0');
-            ASSERT_EQ(Fix::get<Tag::Symbol>(entry1), "CHF/JPY");
-            ASSERT_EQ(Fix::get<Tag::MDEntryType>(entry1), '0');
+            ASSERT_EQ(Fixpp::get<Tag::MDUpdateAction>(entry1), '0');
+            ASSERT_EQ(Fixpp::get<Tag::Symbol>(entry1), "CHF/JPY");
+            ASSERT_EQ(Fixpp::get<Tag::MDEntryType>(entry1), '0');
 
             auto entry2 = mdEntries[2];
-            ASSERT_EQ(Fix::get<Tag::MDUpdateAction>(entry2), '2');
-            ASSERT_EQ(Fix::get<Tag::Symbol>(entry2), "CHF/JPY");
-            ASSERT_EQ(Fix::get<Tag::MDEntryType>(entry2), '1');
+            ASSERT_EQ(Fixpp::get<Tag::MDUpdateAction>(entry2), '2');
+            ASSERT_EQ(Fixpp::get<Tag::Symbol>(entry2), "CHF/JPY");
+            ASSERT_EQ(Fixpp::get<Tag::MDEntryType>(entry2), '1');
 
             auto entry3 = mdEntries[3];
-            ASSERT_EQ(Fix::get<Tag::MDUpdateAction>(entry3), '0');
-            ASSERT_EQ(Fix::get<Tag::Symbol>(entry3), "CHF/JPY");
-            ASSERT_EQ(Fix::get<Tag::MDEntryType>(entry3), '1');
+            ASSERT_EQ(Fixpp::get<Tag::MDUpdateAction>(entry3), '0');
+            ASSERT_EQ(Fixpp::get<Tag::Symbol>(entry3), "CHF/JPY");
+            ASSERT_EQ(Fixpp::get<Tag::MDEntryType>(entry3), '1');
         }
 
         template<typename HeaderT, typename MessageT> void operator()(HeaderT, MessageT)
@@ -220,29 +220,29 @@ namespace should_visit_incremental_refresh_frame
         }
     };
 
-    using VisitRules = DefaultTestRules<Fix::v42::Spec::Dictionary>;
+    using VisitRules = DefaultTestRules<Fixpp::v42::Spec::Dictionary>;
 };
 
 namespace should_visit_custom_snapshot_frame
 {
-    using MyTag = Fix::TagT<9063, Fix::Type::String>;
+    using MyTag = Fixpp::TagT<9063, Fixpp::Type::String>;
 
-    struct SnapshotMessageOverwrite : public Fix::MessageOverwrite<Fix::v44::Message::MarketDataSnapshot>
+    struct SnapshotMessageOverwrite : public Fixpp::MessageOverwrite<Fixpp::v44::Message::MarketDataSnapshot>
     {
         using Changes = ChangeSet<
-            ExtendGroup<Fix::Tag::NoMDEntries, MyTag>
+            ExtendGroup<Fixpp::Tag::NoMDEntries, MyTag>
         >;
     };
 
     using Snapshot = SnapshotMessageOverwrite::Changes::Apply;
 
-    struct VisitRules : public Fix::VisitRules
+    struct VisitRules : public Fixpp::VisitRules
     {
         using Overrides = OverrideSet<
-            Override<Fix::v44::Message::MarketDataSnapshot, As<Snapshot>>
+            Override<Fixpp::v44::Message::MarketDataSnapshot, As<Snapshot>>
         >;
 
-        using Dictionary = Fix::v44::Spec::Dictionary;
+        using Dictionary = Fixpp::v44::Spec::Dictionary;
 
         static constexpr bool ValidateChecksum = false;
         static constexpr bool ValidateLength = false;
@@ -250,29 +250,29 @@ namespace should_visit_custom_snapshot_frame
         static constexpr bool SkipUnknownTags = false;
     };
 
-    struct Visitor : public Fix::StaticVisitor<void>
+    struct Visitor : public Fixpp::StaticVisitor<void>
     {
-        void operator()(const Fix::v44::Header::Ref&, const Snapshot::Ref& message)
+        void operator()(const Fixpp::v44::Header::Ref&, const Snapshot::Ref& message)
         {
-            using namespace Fix;
+            using namespace Fixpp;
 
-            ASSERT_EQ(Fix::get<Tag::Symbol>(message), "AUD/CAD");
-            ASSERT_EQ(Fix::get<Tag::MDReqID>(message), "1709");
+            ASSERT_EQ(Fixpp::get<Tag::Symbol>(message), "AUD/CAD");
+            ASSERT_EQ(Fixpp::get<Tag::MDReqID>(message), "1709");
 
-            auto mdEntries = Fix::get<Tag::NoMDEntries>(message);
+            auto mdEntries = Fixpp::get<Tag::NoMDEntries>(message);
             ASSERT_EQ(mdEntries.size(), 2);
 
             auto entry0 = mdEntries[0];
-            ASSERT_EQ(Fix::get<Tag::MDEntryType>(entry0), '0');
-            //ASSERT_EQ(Fix::get<Tag::MDEntrySize>(entry0), 500000);
-            ASSERT_EQ(Fix::get<Tag::QuoteEntryID>(entry0), "02z00000hdi:A");
-            ASSERT_EQ(Fix::get<MyTag>(entry0), "MP");
+            ASSERT_EQ(Fixpp::get<Tag::MDEntryType>(entry0), '0');
+            ASSERT_EQ(Fixpp::get<Tag::MDEntrySize>(entry0), 500000);
+            ASSERT_EQ(Fixpp::get<Tag::QuoteEntryID>(entry0), "02z00000hdi:A");
+            ASSERT_EQ(Fixpp::get<MyTag>(entry0), "MP");
 
             auto entry1 = mdEntries[1];
-            ASSERT_EQ(Fix::get<Tag::MDEntryType>(entry1), '1');
-            //ASSERT_EQ(Fix::get<Tag::MDEntrySize>(entry1), 500000);
-            ASSERT_EQ(Fix::get<Tag::QuoteEntryID>(entry1), "02z00000hdi:A");
-            ASSERT_EQ(Fix::get<MyTag>(entry1), "TP");
+            ASSERT_EQ(Fixpp::get<Tag::MDEntryType>(entry1), '1');
+            ASSERT_EQ(Fixpp::get<Tag::MDEntrySize>(entry1), 500000);
+            ASSERT_EQ(Fixpp::get<Tag::QuoteEntryID>(entry1), "02z00000hdi:A");
+            ASSERT_EQ(Fixpp::get<MyTag>(entry1), "TP");
         }
 
         template<typename HeaderT, typename MessageT> void operator()(HeaderT, MessageT)
@@ -284,29 +284,29 @@ namespace should_visit_custom_snapshot_frame
 
 namespace should_visit_nested_repeating_groups
 {
-    struct Visitor : public Fix::StaticVisitor<void>
+    struct Visitor : public Fixpp::StaticVisitor<void>
     {
-        void operator()(const Fix::v44::Header::Ref&, const Fix::v44::Message::MarketDataSnapshot::Ref& message)
+        void operator()(const Fixpp::v44::Header::Ref&, const Fixpp::v44::Message::MarketDataSnapshot::Ref& message)
         {
-            using namespace Fix;
+            using namespace Fixpp;
 
-            auto underlyings = Fix::get<Tag::NoUnderlyings>(message);
+            auto underlyings = Fixpp::get<Tag::NoUnderlyings>(message);
             ASSERT_EQ(underlyings.size(), 1);
 
             auto underlying0 = underlyings[0];
-            auto underlyingSecurityAltIDs = Fix::get<Tag::NoUnderlyingSecurityAltID>(underlying0);
+            auto underlyingSecurityAltIDs = Fixpp::get<Tag::NoUnderlyingSecurityAltID>(underlying0);
             ASSERT_EQ(underlyingSecurityAltIDs.size(), 1);
 
-            ASSERT_EQ(Fix::get<Tag::UnderlyingSecurityAltID>(underlyingSecurityAltIDs[0]), "TESTID");
-            ASSERT_EQ(Fix::get<Tag::UnderlyingSecurityAltIDSource>(underlyingSecurityAltIDs[0]), "TESTSOURCE");
+            ASSERT_EQ(Fixpp::get<Tag::UnderlyingSecurityAltID>(underlyingSecurityAltIDs[0]), "TESTID");
+            ASSERT_EQ(Fixpp::get<Tag::UnderlyingSecurityAltIDSource>(underlyingSecurityAltIDs[0]), "TESTSOURCE");
 
-            ASSERT_EQ(Fix::get<Tag::UnderlyingProduct>(underlying0), 1);
+            ASSERT_EQ(Fixpp::get<Tag::UnderlyingProduct>(underlying0), 1);
 
-            auto mdEntries = Fix::get<Tag::NoMDEntries>(message);
+            auto mdEntries = Fixpp::get<Tag::NoMDEntries>(message);
             ASSERT_EQ(mdEntries.size(), 2);
 
-            ASSERT_EQ(Fix::get<Tag::MDEntryType>(mdEntries[0]), '0');
-            ASSERT_EQ(Fix::get<Tag::MDEntryType>(mdEntries[1]), '1');
+            ASSERT_EQ(Fixpp::get<Tag::MDEntryType>(mdEntries[0]), '0');
+            ASSERT_EQ(Fixpp::get<Tag::MDEntryType>(mdEntries[1]), '1');
         }
 
         template<typename HeaderT, typename MessageT> void operator()(HeaderT, MessageT)
@@ -315,15 +315,15 @@ namespace should_visit_nested_repeating_groups
         }
     };
 
-    using VisitRules = DefaultTestRules<Fix::v44::Spec::Dictionary>;
+    using VisitRules = DefaultTestRules<Fixpp::v44::Spec::Dictionary>;
 }
 
 namespace should_visit_unknown_tags_in_non_strict_mode
 {
-    struct VisitRules : public Fix::VisitRules
+    struct VisitRules : public Fixpp::VisitRules
     {
         using Overrides = OverrideSet<>;
-        using Dictionary = Fix::v44::Spec::Dictionary;
+        using Dictionary = Fixpp::v44::Spec::Dictionary;
 
         static constexpr bool ValidateChecksum = false;
         static constexpr bool ValidateLength = false;
@@ -331,27 +331,27 @@ namespace should_visit_unknown_tags_in_non_strict_mode
         static constexpr bool SkipUnknownTags = false;
     };
 
-    struct Visitor : public Fix::StaticVisitor<void>
+    struct Visitor : public Fixpp::StaticVisitor<void>
     {
-        void operator()(const Fix::v44::Header::Ref&, const Fix::v44::Message::MarketDataSnapshot::Ref& message)
+        void operator()(const Fixpp::v44::Header::Ref&, const Fixpp::v44::Message::MarketDataSnapshot::Ref& message)
         {
-            using namespace Fix;
+            using namespace Fixpp;
             ASSERT_EQ(message.unparsed.size(), 1);
             checkUnparsed(message, 10721, "CUSTOM1");
 
-            auto underlyings = Fix::get<Tag::NoUnderlyings>(message);
+            auto underlyings = Fixpp::get<Tag::NoUnderlyings>(message);
             auto underlying0 = underlyings[0];
 
             ASSERT_EQ(underlying0.unparsed.size(), 1);
             checkUnparsed(underlying0, 10541, "CUSTOM2");
 
-            auto underlyingSecurityAltIDs = Fix::get<Tag::NoUnderlyingSecurityAltID>(underlying0);
+            auto underlyingSecurityAltIDs = Fixpp::get<Tag::NoUnderlyingSecurityAltID>(underlying0);
             auto underlyingSecurityAltID0 = underlyingSecurityAltIDs[0];
             ASSERT_EQ(underlyingSecurityAltID0.unparsed.size(), 2);
             checkUnparsed(underlyingSecurityAltID0, 10872, "CUSTOM3");
             checkUnparsed(underlyingSecurityAltID0, 10873, "CUSTOM4");
 
-            auto mdEntries = Fix::get<Tag::NoMDEntries>(message);
+            auto mdEntries = Fixpp::get<Tag::NoMDEntries>(message);
             ASSERT_EQ(mdEntries[0].unparsed.size(), 1);
             checkUnparsed(mdEntries[0], 10331, "CUSTOM5");
 
@@ -383,41 +383,41 @@ namespace should_visit_unknown_tags_in_non_strict_mode
 
 namespace should_convert_from_ref
 {
-    struct Visitor : public Fix::StaticVisitor<void>
+    struct Visitor : public Fixpp::StaticVisitor<void>
     {
-        void operator()(const Fix::v42::Header::Ref& headerRef, const Fix::v42::Message::MarketDataIncrementalRefresh::Ref& message)
+        void operator()(const Fixpp::v42::Header::Ref& headerRef, const Fixpp::v42::Message::MarketDataIncrementalRefresh::Ref& message)
         {
-            using namespace Fix;
+            using namespace Fixpp;
 
             auto header = fromRef(headerRef);
-            ASSERT_EQ(Fix::get<Tag::TargetCompID>(header), "MDABC");
+            ASSERT_EQ(Fixpp::get<Tag::TargetCompID>(header), "MDABC");
 
             auto refresh = fromRef(message);
 
-            ASSERT_EQ(Fix::get<Tag::MDReqID>(refresh), "1364");
+            ASSERT_EQ(Fixpp::get<Tag::MDReqID>(refresh), "1364");
 
-            auto mdEntries = Fix::get<Tag::NoMDEntries>(refresh);
+            auto mdEntries = Fixpp::get<Tag::NoMDEntries>(refresh);
             ASSERT_EQ(mdEntries.size(), 4);
 
             auto entry0 = mdEntries[0];
-            ASSERT_EQ(Fix::get<Tag::MDUpdateAction>(entry0), '2');
-            ASSERT_EQ(Fix::get<Tag::Symbol>(entry0), "CHF/JPY");
-            ASSERT_EQ(Fix::get<Tag::MDEntryType>(entry0), '0');
+            ASSERT_EQ(Fixpp::get<Tag::MDUpdateAction>(entry0), '2');
+            ASSERT_EQ(Fixpp::get<Tag::Symbol>(entry0), "CHF/JPY");
+            ASSERT_EQ(Fixpp::get<Tag::MDEntryType>(entry0), '0');
 
             auto entry1 = mdEntries[1];
-            ASSERT_EQ(Fix::get<Tag::MDUpdateAction>(entry1), '0');
-            ASSERT_EQ(Fix::get<Tag::Symbol>(entry1), "CHF/JPY");
-            ASSERT_EQ(Fix::get<Tag::MDEntryType>(entry1), '0');
+            ASSERT_EQ(Fixpp::get<Tag::MDUpdateAction>(entry1), '0');
+            ASSERT_EQ(Fixpp::get<Tag::Symbol>(entry1), "CHF/JPY");
+            ASSERT_EQ(Fixpp::get<Tag::MDEntryType>(entry1), '0');
 
             auto entry2 = mdEntries[2];
-            ASSERT_EQ(Fix::get<Tag::MDUpdateAction>(entry2), '2');
-            ASSERT_EQ(Fix::get<Tag::Symbol>(entry2), "CHF/JPY");
-            ASSERT_EQ(Fix::get<Tag::MDEntryType>(entry2), '1');
+            ASSERT_EQ(Fixpp::get<Tag::MDUpdateAction>(entry2), '2');
+            ASSERT_EQ(Fixpp::get<Tag::Symbol>(entry2), "CHF/JPY");
+            ASSERT_EQ(Fixpp::get<Tag::MDEntryType>(entry2), '1');
 
             auto entry3 = mdEntries[3];
-            ASSERT_EQ(Fix::get<Tag::MDUpdateAction>(entry3), '0');
-            ASSERT_EQ(Fix::get<Tag::Symbol>(entry3), "CHF/JPY");
-            ASSERT_EQ(Fix::get<Tag::MDEntryType>(entry3), '1');
+            ASSERT_EQ(Fixpp::get<Tag::MDUpdateAction>(entry3), '0');
+            ASSERT_EQ(Fixpp::get<Tag::Symbol>(entry3), "CHF/JPY");
+            ASSERT_EQ(Fixpp::get<Tag::MDEntryType>(entry3), '1');
         }
 
         template<typename HeaderT, typename MessageT> void operator()(HeaderT, MessageT)
@@ -426,13 +426,13 @@ namespace should_convert_from_ref
         }
     };
 
-    using VisitRules = DefaultTestRules<Fix::v42::Spec::Dictionary>;
+    using VisitRules = DefaultTestRules<Fixpp::v42::Spec::Dictionary>;
 };
 
-struct AssertVisitRules : public Fix::VisitRules
+struct AssertVisitRules : public Fixpp::VisitRules
 {
     using Overrides = OverrideSet<>;
-    using Dictionary = Fix::v42::Spec::Dictionary;
+    using Dictionary = Fixpp::v42::Spec::Dictionary;
 
     static constexpr bool ValidateChecksum = false;
     static constexpr bool ValidateLength = false;
@@ -440,7 +440,7 @@ struct AssertVisitRules : public Fix::VisitRules
     static constexpr bool SkipUnknownTags = false;
 };
 
-struct AssertVisitor : public Fix::StaticVisitor<void>
+struct AssertVisitor : public Fixpp::StaticVisitor<void>
 {
     template<typename Header, typename Message>
     void operator()(Header, Message)
@@ -450,15 +450,15 @@ struct AssertVisitor : public Fix::StaticVisitor<void>
 };
 
 template<typename Visitor, typename Rules>
-Fix::VisitError<typename Visitor::ResultType> doVisit(const char* frame, Visitor visitor)
+Fixpp::VisitError<typename Visitor::ResultType> doVisit(const char* frame, Visitor visitor)
 {
-    return Fix::visit(frame, std::strlen(frame), visitor);
+    return Fixpp::visit(frame, std::strlen(frame), visitor);
 }
 
 template<typename Visitor, typename Rules>
-Fix::VisitError<typename Visitor::ResultType> doVisit(const char* frame, Visitor visitor, Rules rules)
+Fixpp::VisitError<typename Visitor::ResultType> doVisit(const char* frame, Visitor visitor, Rules rules)
 {
-    return Fix::visit(frame, std::strlen(frame), visitor, rules);
+    return Fixpp::visit(frame, std::strlen(frame), visitor, rules);
 }
 
 TEST(visitor_test, should_visit_logon_frame)
@@ -554,7 +554,7 @@ TEST(visitor_test, should_stop_when_encountering_invalid_fix_version)
     ASSERT_FALSE(error.isOk());
 
     auto errorKind = error.unwrapErr();
-    ASSERT_EQ(errorKind.type(), Fix::ErrorKind::InvalidVersion);
+    ASSERT_EQ(errorKind.type(), Fixpp::ErrorKind::InvalidVersion);
 }
 
 TEST(visitor_test, should_stop_in_strict_mode_when_encountering_an_unknown_tag)
@@ -565,7 +565,7 @@ TEST(visitor_test, should_stop_in_strict_mode_when_encountering_an_unknown_tag)
     ASSERT_FALSE(error.isOk());
 
     auto errorKind = error.unwrapErr();
-    ASSERT_EQ(errorKind.type(), Fix::ErrorKind::UnknownTag);
+    ASSERT_EQ(errorKind.type(), Fixpp::ErrorKind::UnknownTag);
     ASSERT_EQ(errorKind.asString(), "Encountered unknown tag 221");
 }
 
@@ -589,23 +589,23 @@ TEST(visitor_test, should_visit_tag)
 {
     const char* frame = "8=FIX.4.2|9=84|35=A|34=1|49=ABC|52=20120309-16:54:02|56=TT_ORDER|96=12345678|384=2|372=TEST|385=C|372=TEST|10=248|";
 
-    auto assertFalse = [&](const Fix::ErrorKind&) { ASSERT_TRUE(false); };
+    auto assertFalse = [&](const Fixpp::ErrorKind&) { ASSERT_TRUE(false); };
 
-    Fix::visitTag<Fix::Tag::MsgType>(frame, std::strlen(frame))
+    Fixpp::visitTag<Fixpp::Tag::MsgType>(frame, std::strlen(frame))
       .then([&](const std::string& msgType) { ASSERT_EQ(msgType, "A"); })
       .otherwise(assertFalse);
 
-    Fix::visitTag<Fix::Tag::RefMsgType>(frame, std::strlen(frame))
+    Fixpp::visitTag<Fixpp::Tag::RefMsgType>(frame, std::strlen(frame))
         .then([&](const std::string& ref) { ASSERT_EQ(ref, "TEST"); })
         .otherwise(assertFalse);
 
-    Fix::visitTag<Fix::Tag::BodyLength>(frame, std::strlen(frame))
+    Fixpp::visitTag<Fixpp::Tag::BodyLength>(frame, std::strlen(frame))
         .then([&](int length) { ASSERT_EQ(length, 84); })
         .otherwise(assertFalse);
 
-    Fix::visitTag<Fix::Tag::OnBehalfOfCompID>(frame, std::strlen(frame))
+    Fixpp::visitTag<Fixpp::Tag::OnBehalfOfCompID>(frame, std::strlen(frame))
         .then([&](const std::string&) { ASSERT_TRUE(false); })
-        .otherwise([&](const Fix::ErrorKind& e) { ASSERT_EQ(e.type(), Fix::ErrorKind::UnknownTag); });
+        .otherwise([&](const Fixpp::ErrorKind& e) { ASSERT_EQ(e.type(), Fixpp::ErrorKind::UnknownTag); });
 }
 
 TEST(visitor_test, should_convert_from_ref)

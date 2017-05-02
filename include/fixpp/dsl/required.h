@@ -6,7 +6,7 @@
 
 #pragma once
 
-namespace Fix
+namespace Fixpp
 {
 
     // ------------------------------------------------
@@ -20,4 +20,4 @@ namespace Fix
     {
     };
 
-} // namespace Fix
+} // namespace Fixpp

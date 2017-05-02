@@ -6,8 +6,6 @@
 #include <fixpp/writer.h>
 #include <fixpp/versions/v42.h>
 
-using namespace Fix;
-
 std::string makeId(size_t index)
 {
     char idBuffer[20];
@@ -20,7 +18,7 @@ std::string makeId(size_t index)
 static void CreateNewOrderSingleBenchmark(benchmark::State& state)
 {
     while (state.KeepRunning())
-        Fix::v42::Message::NewOrderSingle orderSingle;
+        Fixpp::v42::Message::NewOrderSingle orderSingle;
 }
 
 BENCHMARK(CreateNewOrderSingleBenchmark);
@@ -48,23 +46,23 @@ static void SetFieldsNewOrderSingleBenchmark(benchmark::State& state)
     std::uniform_int_distribution<> intDis(1, 10000);
     std::uniform_real_distribution<> realDis(1.0, 500.0);
 
-    Fix::v42::Message::NewOrderSingle orderSingle;
+    Fixpp::v42::Message::NewOrderSingle orderSingle;
 
-    Fix::set<Tag::Symbol>(orderSingle, "BHP");
-    Fix::set<Tag::Side>(orderSingle, '1');
-    Fix::set<Tag::HandlInst>(orderSingle, '1');
+    Fixpp::set<Fixpp::Tag::Symbol>(orderSingle, "BHP");
+    Fixpp::set<Fixpp::Tag::Side>(orderSingle, '1');
+    Fixpp::set<Fixpp::Tag::HandlInst>(orderSingle, '1');
 
-    Fix::set<Tag::OrdType>(orderSingle, '2');
-    Fix::set<Tag::TimeInForce>(orderSingle, '4');
-    Fix::set<Tag::TransactTime>(orderSingle, t);
+    Fixpp::set<Fixpp::Tag::OrdType>(orderSingle, '2');
+    Fixpp::set<Fixpp::Tag::TimeInForce>(orderSingle, '4');
+    Fixpp::set<Fixpp::Tag::TransactTime>(orderSingle, t);
 
     while (state.KeepRunning())
     {
         auto id = makeId(i++);
-        Fix::set<Tag::ClOrdID>(orderSingle, id + "-50000");
+        Fixpp::set<Fixpp::Tag::ClOrdID>(orderSingle, id + "-50000");
 
-        Fix::set<Tag::OrderQty>(orderSingle, intDis(gen));
-        Fix::set<Tag::Price>(orderSingle, realDis(gen));
+        Fixpp::set<Fixpp::Tag::OrderQty>(orderSingle, intDis(gen));
+        Fixpp::set<Fixpp::Tag::Price>(orderSingle, realDis(gen));
     }
 }
 
@@ -77,34 +75,34 @@ static void WriteNewOrderSingleBenchmark(benchmark::State& state)
 
     std::uniform_int_distribution<> intDis(1, 10000);
     std::uniform_real_distribution<> realDis(1.0, 500.0);
-    Fix::v42::Message::NewOrderSingle orderSingle;
+    Fixpp::v42::Message::NewOrderSingle orderSingle;
 
     std::time_t t = std::time(nullptr);
 
-    Fix::set<Tag::Symbol>(orderSingle, "BHP");
-    Fix::set<Tag::Side>(orderSingle, '1');
-    Fix::set<Tag::HandlInst>(orderSingle, '1');
+    Fixpp::set<Fixpp::Tag::Symbol>(orderSingle, "BHP");
+    Fixpp::set<Fixpp::Tag::Side>(orderSingle, '1');
+    Fixpp::set<Fixpp::Tag::HandlInst>(orderSingle, '1');
 
-    Fix::set<Tag::OrdType>(orderSingle, '2');
-    Fix::set<Tag::TimeInForce>(orderSingle, '4');
-    Fix::set<Tag::TransactTime>(orderSingle, t);
+    Fixpp::set<Fixpp::Tag::OrdType>(orderSingle, '2');
+    Fixpp::set<Fixpp::Tag::TimeInForce>(orderSingle, '4');
+    Fixpp::set<Fixpp::Tag::TransactTime>(orderSingle, t);
 
-    Fix::v42::Header header;
-    Fix::set<Tag::SenderCompID>(header, "TEX_DLD");
-    Fix::set<Tag::TargetCompID>(header, "DLD_TEX");
-    Fix::set<Tag::SendingTime>(header, t);
+    Fixpp::v42::Header header;
+    Fixpp::set<Fixpp::Tag::SenderCompID>(header, "TEX_DLD");
+    Fixpp::set<Fixpp::Tag::TargetCompID>(header, "DLD_TEX");
+    Fixpp::set<Fixpp::Tag::SendingTime>(header, t);
 
     size_t i = 0;
 
-    Fix::Writer writer;
+    Fixpp::Writer writer;
 
     while (state.KeepRunning())
     {
-        Fix::set<Tag::OrderQty>(orderSingle, intDis(gen));
-        Fix::set<Tag::Price>(orderSingle, realDis(gen));
+        Fixpp::set<Fixpp::Tag::OrderQty>(orderSingle, intDis(gen));
+        Fixpp::set<Fixpp::Tag::Price>(orderSingle, realDis(gen));
 
         auto id = makeId(i++);
-        Fix::set<Tag::ClOrdID>(orderSingle, id + "-50000");
+        Fixpp::set<Fixpp::Tag::ClOrdID>(orderSingle, id + "-50000");
 
         writer.write(header, orderSingle);
     }

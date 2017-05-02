@@ -7,18 +7,16 @@
 #include <fixpp/versions/v42.h>
 #include <fixpp/visitor.h>
 
-using namespace Fix;
+using MyTag1 = Fixpp::TagT<11325, Fixpp::Type::Int>;
+using MyTag2 = Fixpp::TagT<537, Fixpp::Type::Int>;
+using MyQuote = Fixpp::ExtendedMessage<Fixpp::v42::Message::Quote, Fixpp::Tag::QuoteRequestType, Fixpp::Tag::SettlmntTyp, MyTag1, MyTag2>;
 
-using MyTag1 = Fix::TagT<11325, Fix::Type::Int>;
-using MyTag2 = Fix::TagT<537, Fix::Type::Int>;
-using MyQuote = Fix::ExtendedMessage<Fix::v42::Message::Quote, Fix::Tag::QuoteRequestType, Fix::Tag::SettlmntTyp, MyTag1, MyTag2>;
-
-struct MyVisitRules : public Fix::VisitRules
+struct MyVisitRules : public Fixpp::VisitRules
 {
     using Overrides = OverrideSet<
-        Override<Fix::v42::Message::Quote, As<MyQuote>>
+        Override<Fixpp::v42::Message::Quote, As<MyQuote>>
     >;
-    using Dictionary = Fix::v42::Spec::Dictionary;
+    using Dictionary = Fixpp::v42::Spec::Dictionary;
 
     static constexpr bool ValidateChecksum = false;
     static constexpr bool ValidateLength = false;
@@ -26,9 +24,9 @@ struct MyVisitRules : public Fix::VisitRules
     static constexpr bool SkipUnknownTags = false;
 };
 
-struct MyVisitor : public Fix::StaticVisitor<void>
+struct MyVisitor : public Fixpp::StaticVisitor<void>
 {
-    void operator()(const Fix::v42::Header::Ref&, const MyQuote::Ref&)
+    void operator()(const Fixpp::v42::Header::Ref&, const MyQuote::Ref&)
     {
     }
 
@@ -37,13 +35,13 @@ struct MyVisitor : public Fix::StaticVisitor<void>
     }
 };
 
-struct GetVisitor : public Fix::StaticVisitor<void>
+struct GetVisitor : public Fixpp::StaticVisitor<void>
 {
-    void operator()(const Fix::v42::Header::Ref&, const MyQuote::Ref& quote)
+    void operator()(const Fixpp::v42::Header::Ref&, const MyQuote::Ref& quote)
     {
-        benchmark::DoNotOptimize(Fix::get<MyTag1>(quote));
-        benchmark::DoNotOptimize(Fix::get<MyTag2>(quote));
-        benchmark::DoNotOptimize(Fix::get<Fix::Tag::BidPx>(quote));
+        benchmark::DoNotOptimize(Fixpp::get<MyTag1>(quote));
+        benchmark::DoNotOptimize(Fixpp::get<MyTag2>(quote));
+        benchmark::DoNotOptimize(Fixpp::get<Fixpp::Tag::BidPx>(quote));
     }
 
     template<typename HeaderT, typename MessageT> void operator()(HeaderT, MessageT)
@@ -61,7 +59,7 @@ static void VisitCustomQuoteBenchmark(benchmark::State& state)
 
     while (state.KeepRunning())
     {
-        Fix::visit(frame, size, visitor, MyVisitRules()).otherwise([&](const Fix::ErrorKind& e) {
+        Fixpp::visit(frame, size, visitor, MyVisitRules()).otherwise([&](const Fixpp::ErrorKind& e) {
             auto errStr = e.asString();
             state.SkipWithError(errStr.c_str());
         });
@@ -79,7 +77,7 @@ static void VisitCustomQuoteAndGetTagsBenchmark(benchmark::State& state)
 
     while (state.KeepRunning())
     {
-        Fix::visit(frame, size, visitor, MyVisitRules()).otherwise([&](const Fix::ErrorKind& e) {
+        Fixpp::visit(frame, size, visitor, MyVisitRules()).otherwise([&](const Fixpp::ErrorKind& e) {
             auto errStr = e.asString();
             state.SkipWithError(errStr.c_str());
         });
@@ -94,7 +92,7 @@ static void VisitTagViewBenchmark(benchmark::State& state)
 
     while (state.KeepRunning())
     {
-        Fix::visitTagView<Fix::Tag::MsgType>(frame, size).otherwise([&](const Fix::ErrorKind& e) {
+        Fixpp::visitTagView<Fixpp::Tag::MsgType>(frame, size).otherwise([&](const Fixpp::ErrorKind& e) {
             auto errStr = e.asString();
             state.SkipWithError(errStr.c_str());
         });
@@ -109,7 +107,7 @@ static void VisitTagBenchmark(benchmark::State& state)
 
     while (state.KeepRunning())
     {
-        Fix::visitTag<Fix::Tag::MsgType>(frame, size).otherwise([&](const Fix::ErrorKind& e) {
+        Fixpp::visitTag<Fixpp::Tag::MsgType>(frame, size).otherwise([&](const Fixpp::ErrorKind& e) {
             auto errStr = e.asString();
             state.SkipWithError(errStr.c_str());
         });

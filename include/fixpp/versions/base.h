@@ -8,6 +8,7 @@
 
 #include <cstring>
 #include <climits>
+#include <cstddef>
 
 /*
  * We are using a special trick to compare versions of a FIX Message.

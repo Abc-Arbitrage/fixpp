@@ -16,7 +16,7 @@
 #include <fixpp/dsl/details/flatten.h>
 #include <fixpp/utils/SmallVector.h>
 
-namespace Fix
+namespace Fixpp
 {
 
     // ------------------------------------------------
@@ -380,4 +380,4 @@ namespace Fix
         return Group<GroupT> (group);
     }
 
-} // namespace Fix
+} // namespace Fixpp

@@ -32,7 +32,7 @@
 
 #pragma once
 
-namespace Fix
+namespace Fixpp
 {
 
     namespace details
@@ -174,4 +174,4 @@ namespace Fix
 
     } // namespace details
 
-} // namespace Fix
+} // namespace Fixpp

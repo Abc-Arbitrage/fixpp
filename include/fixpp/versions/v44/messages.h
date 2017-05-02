@@ -10,7 +10,7 @@
 #include <fixpp/versions/v44/component_blocks.h>
 #include <fixpp/dsl.h>
 
-namespace Fix
+namespace Fixpp
 {
     FIX_BEGIN_VERSION_NAMESPACE(v44, "FIX.4.4")
     {
@@ -62,4 +62,4 @@ namespace Fix
     }
     FIX_END_VERSION_NAMESPACE
 
-} // namespace Fix
+} // namespace Fixpp

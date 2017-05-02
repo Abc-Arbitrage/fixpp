@@ -15,9 +15,9 @@
   #define SOH_CHARACTER '\x01'
 #endif
 
-namespace Fix
+namespace Fixpp
 {
 
     static constexpr const char SOH = SOH_CHARACTER;
 
-} // namespace Fix
+} // namespace Fixpp

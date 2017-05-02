@@ -12,7 +12,7 @@
 #include <fixpp/dsl/field.h>
 #include <fixpp/utils/SmallVector.h>
 
-namespace Fix
+namespace Fixpp
 {
 
     template<template<typename> class FieldT, typename... Tags> struct MessageBase;
@@ -216,4 +216,4 @@ namespace Fix
     template<typename GroupTag, typename... Tags>
     using RepeatingGroup = SmallRepeatingGroup<GroupTag, SizeHint<10>, Tags...>;
 
-} // namespace Fix
+} // namespace Fixpp

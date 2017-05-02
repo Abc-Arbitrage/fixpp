@@ -9,16 +9,16 @@
 
 size_t total = 0;
 
-using MyTag1 = Fix::TagT<11325, Fix::Type::Int>;
-using MyTag2 = Fix::TagT<537, Fix::Type::Int>;
-using MyQuote = Fix::ExtendedMessage<Fix::v42::Message::Quote, Fix::Tag::QuoteRequestType, Fix::Tag::SettlmntTyp, MyTag1, MyTag2>;
+using MyTag1 = Fixpp::TagT<11325, Fixpp::Type::Int>;
+using MyTag2 = Fixpp::TagT<537, Fixpp::Type::Int>;
+using MyQuote = Fixpp::ExtendedMessage<Fixpp::v42::Message::Quote, Fixpp::Tag::QuoteRequestType, Fixpp::Tag::SettlmntTyp, MyTag1, MyTag2>;
 
-struct VisitRules : public Fix::VisitRules
+struct VisitRules : public Fixpp::VisitRules
 {
     using Overrides = OverrideSet<
-        Override<Fix::v42::Message::Quote, As<MyQuote>>
+        Override<Fixpp::v42::Message::Quote, As<MyQuote>>
     >;
-    using Dictionary = Fix::v42::Spec::Dictionary;
+    using Dictionary = Fixpp::v42::Spec::Dictionary;
 
     static constexpr bool ValidateChecksum = false;
     static constexpr bool ValidateLength = false;
@@ -26,9 +26,9 @@ struct VisitRules : public Fix::VisitRules
     static constexpr bool SkipUnknownTags = false;
 };
 
-struct Visitor : public Fix::StaticVisitor<void>
+struct Visitor : public Fixpp::StaticVisitor<void>
 {
-    void operator()(const Fix::v42::Header::Ref&, const MyQuote::Ref&)
+    void operator()(const Fixpp::v42::Header::Ref&, const MyQuote::Ref&)
     {
         ++total;
     }
@@ -67,7 +67,7 @@ int main()
 
     for (const auto& frame: frames)
     {
-        Fix::visit(frame.c_str(), frame.size(), visitor, VisitRules());
+        Fixpp::visit(frame.c_str(), frame.size(), visitor, VisitRules());
     }
 
     auto end = std::chrono::system_clock::now();

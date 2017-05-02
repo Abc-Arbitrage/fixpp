@@ -10,7 +10,7 @@
 #include <fixpp/tag.h>
 #include <fixpp/dsl.h>
 
-namespace Fix
+namespace Fixpp
 {
     FIX_BEGIN_VERSION_NAMESPACE(v42, "FIX.4.2")
     {
@@ -539,7 +539,7 @@ namespace Fix
 
             struct Session
             {
-                using Header = Fix::v42::Header;
+                using Header = Fixpp::v42::Header;
 
                 using Heartbeat = Message::Heartbeat;
                 using TestRequest = Message::TestRequest;
@@ -588,8 +588,8 @@ namespace Fix
 
             struct Dictionary
             {
-                using Version = Fix::v42::Version;
-                using Header = Fix::v42::Header;
+                using Version = Fixpp::v42::Version;
+                using Header = Fixpp::v42::Header;
 
                 using Messages = typename meta::typelist::make<
                     Message::Heartbeat, Message::TestRequest, Message::ResendRequest, Message::Reject, Message::SequenceReset,
@@ -610,4 +610,4 @@ namespace Fix
     }
     FIX_END_VERSION_NAMESPACE
 
-} // namespace Fix
+} // namespace Fixpp

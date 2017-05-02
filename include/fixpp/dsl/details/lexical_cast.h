@@ -2,7 +2,7 @@
 
 #include <cmath>
 
-namespace Fix
+namespace Fixpp
 {
     namespace details
     {

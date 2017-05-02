@@ -6,7 +6,7 @@
 
 #pragma once
 
-namespace Fix
+namespace Fixpp
 {
     namespace v43
     {
@@ -14,7 +14,7 @@ namespace Fix
         {
             struct Session
             {
-                using Header = Fix::v43::Header;
+                using Header = Fixpp::v43::Header;
 
                 using Heartbeat = Message::Heartbeat;
                 using TestRequest = Message::TestRequest;
@@ -32,8 +32,8 @@ namespace Fix
 
             struct Dictionary
             {
-                using Version = Fix::v43::Version;
-                using Header = Fix::v43::Header;
+                using Version = Fixpp::v43::Version;
+                using Header = Fixpp::v43::Header;
                 
                 using Messages = typename meta::typelist::make<
                     Message::Heartbeat, Message::TestRequest, Message::ResendRequest, Message::Reject, Message::SequenceReset,
@@ -43,4 +43,4 @@ namespace Fix
 
         } // namespace Spec
     } // namespace v43
-} // namespace Fix
+} // namespace Fixpp

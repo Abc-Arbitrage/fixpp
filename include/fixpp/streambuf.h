@@ -84,7 +84,7 @@ private:
 };
 
 
-namespace Fix
+namespace Fixpp
 {
 
     template<typename Message, size_t N>
@@ -186,4 +186,4 @@ namespace Fix
     template<typename Message>
     using StreamBuf = StreamBufBase<Message, internal::SmallBufferSize>;
 
-} // namespace Fix
+} // namespace Fixpp

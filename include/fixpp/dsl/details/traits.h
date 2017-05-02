@@ -1,6 +1,6 @@
 #pragma once
 
-namespace Fix
+namespace Fixpp
 {
     template<typename GroupTag, typename SizeHint, typename...> struct SmallRepeatingGroup;
     template<typename Group> struct GroupRef;
@@ -82,4 +82,4 @@ namespace Fix
 
     } // namespace deatails
 
-} // namespace Fix
+} // namespace Fixpp

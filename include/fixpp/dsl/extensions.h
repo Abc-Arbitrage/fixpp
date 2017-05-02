@@ -6,7 +6,7 @@
 
 #pragma once
 
-namespace Fix
+namespace Fixpp
 {
 
     template<typename MessageT, typename... ExtensionTags> struct ExtendedMessage;
@@ -137,4 +137,4 @@ namespace Fix
     };
 
 
-} // namespace Fix
+} // namespace Fixpp

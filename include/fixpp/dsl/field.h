@@ -12,7 +12,7 @@
 #include <fixpp/meta.h>
 #include <fixpp/dsl/details/lexical_cast.h>
 
-namespace Fix
+namespace Fixpp
 {
  
     // ------------------------------------------------
@@ -129,4 +129,4 @@ namespace Fix
     };
 
 
-} // namespace Fix
+} // namespace Fixpp

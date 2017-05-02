@@ -22,7 +22,7 @@
 #include <fixpp/dsl/details/flatten.h>
 #include <fixpp/dsl/details/lexical_cast.h>
 
-namespace Fix
+namespace Fixpp
 {
 
     // @Todo use string_view when available
@@ -664,7 +664,7 @@ namespace Fix
             constexpr const_array<int, sizeof...(Tags)> IndexesImpl<meta::pack::Pack<Tags...>>::Sorted;
 
             template<typename... Tags>
-            struct MakeIndexes : public IndexesImpl<typename Fix::details::flatten::pack::Flatten<Tags...>::Result>
+            struct MakeIndexes : public IndexesImpl<typename Fixpp::details::flatten::pack::Flatten<Tags...>::Result>
             {
             };
         };
@@ -1073,14 +1073,14 @@ namespace Fix
                         StreamCursor::Token valueToken(cursor);
                         TRY_MATCH_UNTIL(SOH, "Expected value after tag %d, got EOF", tag);
 
-                        if (!Rules::SkipUnknownTags && !Rules::StrictMode)
+                        if (identity(!Rules::SkipUnknownTags && !Rules::StrictMode))
                         {
                             if (state == State::InHeader)
                                 header.unparsed.emplace_back(tag, valueToken.view());
                             else
                                 message.unparsed.emplace_back(tag, valueToken.view());
                         }
-                        else if (Rules::StrictMode)
+                        else if (identity(Rules::StrictMode))
                         {
                             context.setError(ErrorKind::UnknownTag, "Encountered unknown tag %d", tag);
                             break;
@@ -1258,4 +1258,4 @@ namespace Fix
 #undef TRY_MATCH_INT
 #undef TRY_MATCH_UNTIL
 
-} // namespace Fix
+} // namespace Fixpp

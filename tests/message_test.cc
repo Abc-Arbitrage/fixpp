@@ -1,16 +1,12 @@
 #include "gtest/gtest.h"
 
-#include <cstring>
-
-#pragma warning(disable:4503)
-
 #include <fixpp/versions/v42.h>
 #include <fixpp/versions/v44.h>
 
 TEST(message_test, should_bring_correct_version_with_message_type)
 {
-    constexpr const char* v1 = Fix::v42::Message::Heartbeat::Version::Str;
-    constexpr const char* v2 = Fix::v42::Message::Logon::Version::Str;
+    constexpr const char* v1 = Fixpp::v42::Message::Heartbeat::Version::Str;
+    constexpr const char* v2 = Fixpp::v42::Message::Logon::Version::Str;
 
     ASSERT_EQ(std::string(v1), std::string("FIX.4.2"));
     ASSERT_EQ(std::string(v2), std::string("FIX.4.2"));
@@ -18,47 +14,47 @@ TEST(message_test, should_bring_correct_version_with_message_type)
 
 TEST(message_test, should_compare_version)
 {
-    using v42 = Fix::v42::Version;
+    using v42 = Fixpp::v42::Version;
     ASSERT_TRUE(v42::equals("FIX.4.2", 7));
 }
 
 TEST(message_test, should_get_and_set_tags)
 {
-    Fix::v42::Message::Logon logon;
+    Fixpp::v42::Message::Logon logon;
 
-    using namespace Fix;
+    using namespace Fixpp;
 
-    Fix::set<Tag::EncryptMethod>(logon, 1);
-    ASSERT_EQ(Fix::get<Tag::EncryptMethod>(logon), 1);
+    Fixpp::set<Tag::EncryptMethod>(logon, 1);
+    ASSERT_EQ(Fixpp::get<Tag::EncryptMethod>(logon), 1);
 
-    Fix::set<Tag::HeartBtInt>(logon, 30);
-    ASSERT_EQ(Fix::get<Tag::HeartBtInt>(logon), 30);
+    Fixpp::set<Tag::HeartBtInt>(logon, 30);
+    ASSERT_EQ(Fixpp::get<Tag::HeartBtInt>(logon), 30);
 }
 
 TEST(message_test, should_create_repeating_group)
 {
-    Fix::v42::Message::Logon logon;
+    Fixpp::v42::Message::Logon logon;
 
-    using namespace Fix;
+    using namespace Fixpp;
 
     // First, we create a new group and add 2 instances
 
-    auto group = Fix::createGroup<Tag::NoMsgTypes>(logon, 2);
+    auto group = Fixpp::createGroup<Tag::NoMsgTypes>(logon, 2);
     auto instance = group.instance();
 
-    Fix::set<Tag::RefMsgType>(instance, "TEST");
-    Fix::set<Tag::MsgDirection>(instance, 'S');
+    Fixpp::set<Tag::RefMsgType>(instance, "TEST");
+    Fixpp::set<Tag::MsgDirection>(instance, 'S');
 
-    ASSERT_EQ(Fix::get<Tag::RefMsgType>(instance), "TEST");
-    ASSERT_EQ(Fix::get<Tag::MsgDirection>(instance), 'S');
+    ASSERT_EQ(Fixpp::get<Tag::RefMsgType>(instance), "TEST");
+    ASSERT_EQ(Fixpp::get<Tag::MsgDirection>(instance), 'S');
 
     group.add(instance);
 
-    Fix::set<Tag::RefMsgType>(instance, "MD");
-    Fix::set<Tag::MsgDirection>(instance, 'S');
+    Fixpp::set<Tag::RefMsgType>(instance, "MD");
+    Fixpp::set<Tag::MsgDirection>(instance, 'S');
 
-    ASSERT_EQ(Fix::get<Tag::RefMsgType>(instance), "MD");
-    ASSERT_EQ(Fix::get<Tag::MsgDirection>(instance), 'S');
+    ASSERT_EQ(Fixpp::get<Tag::RefMsgType>(instance), "MD");
+    ASSERT_EQ(Fixpp::get<Tag::MsgDirection>(instance), 'S');
 
     group.add(instance);
 
@@ -85,26 +81,26 @@ TEST(message_test, should_create_repeating_group)
 
 TEST(message_test, should_throw_when_missing_fields_in_repeating_group)
 {
-    using namespace Fix;
+    using namespace Fixpp;
 
-    Fix::v42::Message::MarketDataIncrementalRefresh refresh;
-    auto group = Fix::createGroup<Tag::NoMDEntries>(refresh, 1);
+    Fixpp::v42::Message::MarketDataIncrementalRefresh refresh;
+    auto group = Fixpp::createGroup<Tag::NoMDEntries>(refresh, 1);
     auto instance = group.instance();
 
-    Fix::set<Tag::MDEntryID>(instance, "TEST");
+    Fixpp::set<Tag::MDEntryID>(instance, "TEST");
     ASSERT_THROW(group.add(instance), std::runtime_error);
 
     auto instance2 = group.instance();
-    Fix::set<Tag::MDUpdateAction>(instance2, '0');
+    Fixpp::set<Tag::MDUpdateAction>(instance2, '0');
     ASSERT_NO_THROW(group.add(instance2));
 }
 
 TEST(message_test, should_extend_message_properly)
 {
-    using MyTag = Fix::TagT<2154, Fix::Type::Int>;
-    using MyMessage = Fix::ExtendedMessage<Fix::v42::Message::Logon, MyTag>;
+    using MyTag = Fixpp::TagT<2154, Fixpp::Type::Int>;
+    using MyMessage = Fixpp::ExtendedMessage<Fixpp::v42::Message::Logon, MyTag>;
 
-    static constexpr size_t LogonTags = Fix::v42::Message::Logon::TotalTags;
+    static constexpr size_t LogonTags = Fixpp::v42::Message::Logon::TotalTags;
     static constexpr size_t MyMessageTags = MyMessage::TotalTags;
 
     // MyMessage should have one more tag
@@ -119,7 +115,7 @@ TEST(message_test, should_extend_message_properly)
 
     // First tag of MymEssage should by first tag of Logon
     using FirstLogonTag =
-        meta::typelist::ops::First<Fix::v42::Message::Logon::TagsList>::Result;
+        meta::typelist::ops::First<Fixpp::v42::Message::Logon::TagsList>::Result;
     using FirstMyMessageTag =
         meta::typelist::ops::First<MyMessage::TagsList>::Result;
 
@@ -130,34 +126,34 @@ TEST(message_test, should_extend_message_properly)
 
 TEST(message_test, should_optionally_get)
 {
-    using namespace Fix;
+    using namespace Fixpp;
 
-    Fix::v42::Message::IndicationOfInterest ioi;
+    Fixpp::v42::Message::IndicationOfInterest ioi;
 
-    Fix::set<Tag::Symbol>(ioi, "MySymbol");
-    Fix::set<Tag::Price>(ioi, 10.5);
+    Fixpp::set<Tag::Symbol>(ioi, "MySymbol");
+    Fixpp::set<Tag::Price>(ioi, 10.5);
 
     std::string symbol;
     double price;
 
-    ASSERT_TRUE(Fix::tryGet<Tag::Symbol>(ioi, symbol));
+    ASSERT_TRUE(Fixpp::tryGet<Tag::Symbol>(ioi, symbol));
     ASSERT_EQ(symbol, "MySymbol");
 
-    ASSERT_TRUE(Fix::tryGet<Tag::Price>(ioi, price));
+    ASSERT_TRUE(Fixpp::tryGet<Tag::Price>(ioi, price));
     ASSERT_EQ(price, 10.5);
 
     std::string currency;
 
-    ASSERT_FALSE(Fix::tryGet<Tag::Currency>(ioi, currency));
+    ASSERT_FALSE(Fixpp::tryGet<Tag::Currency>(ioi, currency));
     ASSERT_EQ(currency, std::string());
 }
 
 TEST(message_test, should_overwrite_tags_in_message)
 {
-    using namespace Fix;
-    using MyTag = Fix::TagT<2154, Fix::Type::Int>;
+    using namespace Fixpp;
+    using MyTag = Fixpp::TagT<2154, Fixpp::Type::Int>;
 
-    struct LogonOverwrite : public Fix::MessageOverwrite<Fix::v42::Message::Logon>
+    struct LogonOverwrite : public Fixpp::MessageOverwrite<Fixpp::v42::Message::Logon>
     {
         using OverwriteHeartBtInt = ChangeType<Of<Tag::HeartBtInt>, To<Type::String>>;
         using HeartBtStr = typename OverwriteHeartBtInt::Type;
@@ -171,7 +167,7 @@ TEST(message_test, should_overwrite_tags_in_message)
     using MyMessage = LogonOverwrite::Changes::Apply;
     using HeartBtStr = LogonOverwrite::HeartBtStr;
 
-    static constexpr size_t LogonTags = Fix::v42::Message::Logon::TotalTags;
+    static constexpr size_t LogonTags = Fixpp::v42::Message::Logon::TotalTags;
     static constexpr size_t MyMessageTags = MyMessage::TotalTags;
 
     // MyMessage should have one more tag
@@ -179,9 +175,9 @@ TEST(message_test, should_overwrite_tags_in_message)
 
     MyMessage message;
 
-    Fix::set<HeartBtStr>(message, "30s");
-    ASSERT_EQ(Fix::get<HeartBtStr>(message), "30s");
+    Fixpp::set<HeartBtStr>(message, "30s");
+    ASSERT_EQ(Fixpp::get<HeartBtStr>(message), "30s");
 
-    Fix::set<MyTag>(message, 1212);
-    ASSERT_EQ(Fix::get<MyTag>(message), 1212);
+    Fixpp::set<MyTag>(message, 1212);
+    ASSERT_EQ(Fixpp::get<MyTag>(message), 1212);
 }

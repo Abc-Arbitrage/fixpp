@@ -9,7 +9,7 @@
 #include <fixpp/dsl/component_block.h>
 #include <fixpp/tag.h>
 
-namespace Fix
+namespace Fixpp
 {
     namespace v43
     {
@@ -64,4 +64,4 @@ namespace Fix
         } // namespace Component
 
     } // namesapce v43
-} // namespace Fix
+} // namespace Fixpp

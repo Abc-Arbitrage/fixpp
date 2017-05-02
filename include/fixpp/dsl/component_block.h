@@ -8,7 +8,7 @@
 
 #include <fixpp/meta.h>
 
-namespace Fix
+namespace Fixpp
 {
 
     template<typename... Tags>
@@ -16,4 +16,4 @@ namespace Fix
     {
     };
 
-} // namespace Fix
+} // namespace Fixpp
