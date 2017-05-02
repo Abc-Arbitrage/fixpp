@@ -10,38 +10,38 @@
 #include <fixpp/versions/v43.h>
 #include <fixpp/versions/v44.h>
 
-namespace Fix
+namespace Fixpp
 {
     template<typename Version>
     struct VersionTraits;
 
     template<>
-    struct VersionTraits<Fix::v42::Version>
+    struct VersionTraits<Fixpp::v42::Version>
     {
-        using Session = Fix::v42::Spec::Session;
-        using Application = Fix::v42::Spec::Application;
+        using Session = Fixpp::v42::Spec::Session;
+        using Application = Fixpp::v42::Spec::Application;
 
-        using Dictionary = Fix::v42::Spec::Dictionary;
-        using Header = Fix::v42::Header;
+        using Dictionary = Fixpp::v42::Spec::Dictionary;
+        using Header = Fixpp::v42::Header;
     };
 
     template<>
-    struct VersionTraits<Fix::v43::Version>
+    struct VersionTraits<Fixpp::v43::Version>
     {
-        using Session = Fix::v43::Spec::Session;
-        using Application = Fix::v43::Spec::Application;
+        using Session = Fixpp::v43::Spec::Session;
+        using Application = Fixpp::v43::Spec::Application;
 
-        using Dictionary = Fix::v43::Spec::Dictionary;
-        using Header = Fix::v43::Header;
+        using Dictionary = Fixpp::v43::Spec::Dictionary;
+        using Header = Fixpp::v43::Header;
     };
 
     template<>
-    struct VersionTraits<Fix::v44::Version>
+    struct VersionTraits<Fixpp::v44::Version>
     {
-        using Session = Fix::v44::Spec::Session;
-        using Application = Fix::v44::Spec::Application;
+        using Session = Fixpp::v44::Spec::Session;
+        using Application = Fixpp::v44::Spec::Application;
 
-        using Dictionary = Fix::v44::Spec::Dictionary;
-        using Header = Fix::v44::Header;
+        using Dictionary = Fixpp::v44::Spec::Dictionary;
+        using Header = Fixpp::v44::Header;
     };
 } // namespace Fix
