@@ -1006,6 +1006,8 @@ namespace Fixpp
             using ResultType = typename Visitor::ResultType;
             using Context = TypedParsingContext<ResultType>;
 
+            template<bool ...Bools> using BoolPack = meta::pack::ValuePack<bool, Bools...>;
+
             MessageVisitor(Context& context, Visitor& visitor)
                 : context(context)
                 , visitor(visitor)
@@ -1073,18 +1075,13 @@ namespace Fixpp
                         StreamCursor::Token valueToken(cursor);
                         TRY_MATCH_UNTIL(SOH, "Expected value after tag %d, got EOF", tag);
 
-                        if (identity(!Rules::SkipUnknownTags && !Rules::StrictMode))
-                        {
-                            if (state == State::InHeader)
-                                header.unparsed.emplace_back(tag, valueToken.view());
-                            else
-                                message.unparsed.emplace_back(tag, valueToken.view());
-                        }
-                        else if (identity(Rules::StrictMode))
-                        {
-                            context.setError(ErrorKind::UnknownTag, "Encountered unknown tag %d", tag);
-                            break;
-                        }
+                        if (state == State::InHeader)
+                            handleUnknownTag(valueToken, header, context, tag,
+                                    BoolPack<Rules::SkipUnknownTags, Rules::StrictMode>{});
+                        else
+                            handleUnknownTag(valueToken, message, context, tag,
+                                    BoolPack<Rules::SkipUnknownTags, Rules::StrictMode>{});
+
                     }
 
                     TRY_ADVANCE("Got early EOF");
@@ -1101,6 +1098,37 @@ namespace Fixpp
             }
 
         private:
+
+            // not(SkipUnknownTags) and not(StrictMode)
+            template<typename Message, typename Context>
+            void handleUnknownTag(const StreamCursor::Token& valueToken, Message& message, Context& /*context*/, int tag,
+                                  BoolPack<false, false>)
+            {
+                message.unparsed.emplace_back(tag, valueToken.view());
+            }
+
+            // SkipUnknownTags and StrictMode, SkipUnknownTags wins ?
+            template<typename Message, typename Context>
+            void handleUnknownTag(const StreamCursor::Token& /*valueToken*/, Message& /*message*/, Context& /*context*/, int /*tag*/,
+                                  BoolPack<true, true>)
+            {
+            }
+
+            // SkipUnknownTags and not(StrictMode)
+            template<typename Message, typename Context>
+            void handleUnknownTag(const StreamCursor::Token& /*valueToken*/, Message& /*message*/, Context& /*context*/, int /*tag*/,
+                                  BoolPack<true, false>)
+            {
+            }
+
+            // not(SkipUnknownTags) and StrictMode
+            template<typename Message, typename Context>
+            void handleUnknownTag(const StreamCursor::Token& /*valueToken*/, Message& /*message*/, Context& context, int tag,
+                                  BoolPack<false, true>)
+            {
+                context.setError(ErrorKind::UnknownTag, "Encountered unknown tag %d", tag);
+            }
+
             template<typename Header, typename Message>
             void callVisitor(const Header& header, const Message& message, std::true_type /* is_void */)
             {

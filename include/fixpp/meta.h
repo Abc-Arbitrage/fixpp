@@ -280,6 +280,11 @@ namespace meta
 
         } // namespace ops
 
+        template<typename T, T... Vals>
+        struct ValuePack
+        {
+        };
+
     } // namespace pack
 
     template <size_t... Ints>
