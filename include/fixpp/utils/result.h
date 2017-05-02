@@ -14,6 +14,8 @@
 #include <functional>
 #include <type_traits>
 
+namespace result {
+
 namespace types {
     template<typename T>
     struct Ok {
@@ -895,6 +897,8 @@ bool operator==(const Result<T, E>& lhs, types::Err<E> err) {
     if (!lhs.isErr()) return false;
 
     return lhs.storage().template get<E>() == err.val;
+}
+
 }
 
 #define TRY(...)                                                   \

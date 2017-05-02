@@ -67,7 +67,7 @@ namespace Fixpp
     };
 
     template<typename T>
-    using VisitError = Result<T, ErrorKind>;
+    using VisitError = result::Result<T, ErrorKind>;
 
     // ------------------------------------------------
     // Deferred
@@ -203,8 +203,8 @@ namespace Fixpp
         VisitError<T> toVisitError() const
         {
             if (hasError())
-                return Err(error.get());
-            return Ok(resultValue.get());
+                return result::Err(error.get());
+            return result::Ok(resultValue.get());
         }
 
         Deferred<T> resultValue;
@@ -224,8 +224,8 @@ namespace Fixpp
         VisitError<void> toVisitError() const
         {
             if (hasError())
-                return Err(error.get());
-            return Ok();
+                return result::Err(error.get());
+            return result::Ok();
         }
     };
 
