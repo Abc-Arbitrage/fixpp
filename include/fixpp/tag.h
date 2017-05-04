@@ -68,7 +68,7 @@ namespace Fixpp
         using Price = Float;
         using Qty = Float;
 
-        struct Int : public Base<int>
+        struct Int : public Base<int64_t>
         {
             using Base::Base;
         };
