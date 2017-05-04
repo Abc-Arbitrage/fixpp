@@ -11,6 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\include\fixpp\compiler\warning.h" />
     <ClInclude Include="..\include\fixpp\dsl.h" />
     <ClInclude Include="..\include\fixpp\dsl\component_block.h" />
     <ClInclude Include="..\include\fixpp\dsl\details\flatten.h" />

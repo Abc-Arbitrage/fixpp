@@ -1,3 +1,4 @@
+#include <fixpp/compiler/warning.h>
 #include "gtest/gtest.h"
 
 #define SOH_CHARACTER '|'
@@ -600,7 +601,7 @@ TEST(visitor_test, should_visit_tag)
         .otherwise(assertFalse);
 
     Fixpp::visitTag<Fixpp::Tag::BodyLength>(frame, std::strlen(frame))
-        .then([&](int length) { ASSERT_EQ(length, 84); })
+        .then([&](int64_t length) { ASSERT_EQ(length, 84); })
         .otherwise(assertFalse);
 
     Fixpp::visitTag<Fixpp::Tag::OnBehalfOfCompID>(frame, std::strlen(frame))

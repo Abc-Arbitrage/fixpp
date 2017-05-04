@@ -38,9 +38,9 @@ namespace Fixpp
         template<>
         struct LexicalCast<Type::Int>
         {
-            static int cast(const char* offset, size_t /*size*/)
+            static int64_t cast(const char* offset, size_t /*size*/)
             {
-                int x = 0;
+                int64_t x = 0;
                 bool neg = false;
                 if (*offset == '-') {
                     neg = true;

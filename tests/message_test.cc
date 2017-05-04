@@ -1,3 +1,4 @@
+#include <fixpp/compiler/warning.h>
 #include "gtest/gtest.h"
 
 #include <fixpp/versions/v42.h>

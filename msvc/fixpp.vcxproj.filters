@@ -67,6 +67,9 @@
     <ClInclude Include="..\include\fixpp\utils\soh.h">
       <Filter>utils</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\fixpp\compiler\warning.h">
+      <Filter>compiler</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="dsl">
@@ -83,6 +86,9 @@
     </Filter>
     <Filter Include="versions\v44">
       <UniqueIdentifier>{e33be17c-4803-47f3-b424-84689373822e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="compiler">
+      <UniqueIdentifier>{0475c813-dab1-4c54-9c8b-55de284450e4}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
