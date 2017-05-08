@@ -70,6 +70,10 @@
     <ClInclude Include="..\include\fixpp\compiler\warning.h">
       <Filter>compiler</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\fixpp\dsl\details\chars.h">
+      <Filter>dsl\details</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\fixpp\message_type.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="dsl">

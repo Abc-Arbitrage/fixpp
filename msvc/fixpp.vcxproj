@@ -14,6 +14,7 @@
     <ClInclude Include="..\include\fixpp\compiler\warning.h" />
     <ClInclude Include="..\include\fixpp\dsl.h" />
     <ClInclude Include="..\include\fixpp\dsl\component_block.h" />
+    <ClInclude Include="..\include\fixpp\dsl\details\chars.h" />
     <ClInclude Include="..\include\fixpp\dsl\details\flatten.h" />
     <ClInclude Include="..\include\fixpp\dsl\details\lexical_cast.h" />
     <ClInclude Include="..\include\fixpp\dsl\details\traits.h" />
@@ -23,6 +24,7 @@
     <ClInclude Include="..\include\fixpp\dsl\message.h" />
     <ClInclude Include="..\include\fixpp\dsl\repeating_group.h" />
     <ClInclude Include="..\include\fixpp\dsl\required.h" />
+    <ClInclude Include="..\include\fixpp\message_type.h" />
     <ClInclude Include="..\include\fixpp\meta.h" />
     <ClInclude Include="..\include\fixpp\streambuf.h" />
     <ClInclude Include="..\include\fixpp\tag.h" />
