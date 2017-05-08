@@ -215,6 +215,7 @@ namespace Fixpp
         using ValidUntilTime = TagT<62, Type::UTCTimestamp>;
         using SettlmntTyp = TagT<63, Type::Char>;
         using FutSettDate = TagT<64, Type::LocalMktDate>;
+        using SettlDate = FutSettDate; // FutSettDate renamed in FIX 4.4
         using SymbolSfx = TagT<65, Type::String>;
         using ListID = TagT<66, Type::String>;
         using ListSeqNo = TagT<67, Type::Int>;
@@ -649,6 +650,7 @@ namespace Fixpp
         using HopCompID = TagT<628, Type::String>;
         using HopSendingTime = TagT<629, Type::UTCTimestamp>;
         using HopRefID = TagT<630, Type::String>;
+        using QuoteRequestRejectReason = TagT<658, Type::String>;
         using ContractSettlMonth = TagT<667, Type::String>;
         using Pool = TagT<691, Type::String>;
         using NoUnderlyings = TagT<711, Type::Int>;
@@ -681,6 +683,11 @@ namespace Fixpp
         using NoUnderlyingStips = TagT<887, Type::Int>;
         using UnderlyingStipType = TagT<888, Type::String>;
         using UnderlyingStipValue = TagT<889, Type::String>;
+        using UserRequestID = TagT<923, Type::String>;
+        using UserRequestType = TagT<924, Type::Int>;
+        using NewPassword = TagT<925, Type::Int>;
+        using UserStatus = TagT<926, Type::Int>;
+        using UserStatusText = TagT<927, Type::String>;
         using UnderlyingStrikeCurrency = TagT<941, Type::String>;
         using LegStrikeCurrency = TagT<942, Type::String>;
         using StrikeCurrency = TagT<947, Type::String>;
@@ -690,4 +697,3 @@ namespace Fixpp
     } // namespace Tag
 
 } // namespace Fixpp
-
