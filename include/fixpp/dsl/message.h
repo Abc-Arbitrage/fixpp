@@ -302,73 +302,63 @@ namespace Fixpp
     }
 
     template<typename Tag, typename Message, typename Value>
-    typename std::enable_if<details::IsValidTag<Message, Tag>::value, void>::type
+    decltype(auto)
     set(Message& message, Value&& value)
     {
-        static_assert(details::IsValidTypeFor<Tag, Value>::value,
-                      "Invalid data type for given Tag");
+        using Index = details::TagIndex<typename Message::TagsList, Tag>;
+        using RequiredIndex = details::TagIndex<typename Message::RequiredList, Tag>;
 
-        static constexpr int TagIndex = meta::typelist::ops::IndexOf<typename Message::TagsList, Tag>::value;
-        static constexpr int RequiredBit = meta::typelist::ops::IndexOf<typename Message::RequiredList, Tag>::value;
+        static_assert(Index::Valid, "Invalid tag for given message");
+        static_assert(details::IsValidTypeFor<Tag, Value>::value, "Invalid data type for given Tag");
 
-        std::get<TagIndex>(message.values).set(std::forward<Value>(value));
+        std::get<Index::Value>(message.values).set(std::forward<Value>(value));
 
-        message.allBits.set(TagIndex);
+        message.allBits.set(Index::Value);
 
-        if (identity(RequiredBit) != -1)
-            message.requiredBits.set(static_cast<size_t>(RequiredBit));
+        if (identity(RequiredIndex::Valid))
+            message.requiredBits.set(static_cast<size_t>(RequiredIndex::Value));
     }
 
     template<typename Tag, typename Message>
     decltype(auto)
-    get(const Message& message, typename std::enable_if<details::IsValidTag<Message, Tag>::value, void>::type * = nullptr)
-     {
-        static constexpr size_t Index = meta::typelist::ops::IndexOf<typename Message::TagsList, Tag>::value;
-        return std::get<Index>(message.values).get();
-    }
-
-    template<typename Tag, typename Message>
-    decltype(auto)
-    get(const Message& message, typename std::enable_if<details::IsValidGroup<Message, Tag>::value, void>::type * = nullptr)
+    get(const Message& message)
     {
-        using GroupT = typename details::GroupTraits<Message, Tag>::Type;
+        using Index = details::TagIndex<typename Message::TagsList, Tag>;
+        static_assert(Index::Valid, "Invalid tag for given message");
 
-        static constexpr int Index = meta::typelist::ops::IndexOf<typename Message::TagsList, GroupT>::value;
-        return std::get<Index>(message.values).get();
+        return std::get<Index::Value>(message.values).get();
     }
 
     template<typename Tag, typename Message>
-    typename std::enable_if<
-                details::IsValidTag<Message, Tag>::value, bool
-             >::type
+    decltype(auto)
     tryGet(const Message& message, typename Tag::Type::UnderlyingType& value)
     {
-        static constexpr size_t Index = meta::typelist::ops::IndexOf<typename Message::TagsList, Tag>::value;
-        if (!message.allBits.test(Index))
+        using Index = details::TagIndex<typename Message::TagsList, Tag>;
+        static_assert(Index::Valid, "Invalid tag for given message");
+
+        if (!message.allBits.test(Index::Value))
             return false;
 
-        value = std::get<Index>(message.values).get();
+        value = std::get<Index::Value>(message.values).get();
         return true;
     }
 
     template<typename Tag, typename Message>
-    typename std::enable_if<
-        details::IsValidGroup<Message, Tag>::value,
-        Group<typename details::GroupTraits<Message, Tag>::Type>
-    >::type
+    decltype(auto)
     createGroup(Message& message, size_t size)
     {
-        using GroupT = typename details::GroupTraits<Message, Tag>::Type;
+        using GroupIndex = details::TagIndex<typename Message::TagsList, Tag>;
+        using RequiredIndex = details::TagIndex<typename Message::RequiredList, Tag>;
 
-        static constexpr int Index = meta::typelist::ops::IndexOf<typename Message::TagsList, GroupT>::value;
-        static constexpr int RequiredBit = meta::typelist::ops::IndexOf<typename Message::RequiredList, GroupT>::value;
+        static_assert(GroupIndex::Valid, "Invalid RepeatingGroup for given message");
 
-        if (identity(RequiredBit) != -1)
-            message.requiredBits.set(static_cast<size_t>(RequiredBit));
+        if (identity(RequiredIndex::Valid))
+            message.requiredBits.set(static_cast<size_t>(RequiredIndex::Value));
 
-        auto& group = std::get<Index>(message.values);
+        auto& group = std::get<GroupIndex::Value>(message.values);
         group.reserve(size);
-        return Group<GroupT> (group);
+
+        return makeGroup(group);
     }
 
 } // namespace Fixpp

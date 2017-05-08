@@ -85,11 +85,49 @@ namespace meta
                 {
                     using Result = Head;
                 };
+
+                // Used for Find so that we can use std::conditional which works on types
+                template<int I> struct Int
+                {
+                    static constexpr int Value = I;
+                };
+
+                template<int, typename, template<typename> class Pred>
+                struct Find;
+
+                template<int Index, template<typename> class Pred>
+                struct Find<Index, NullType, Pred>
+                {
+                    using ResultT = Int<-1>;
+                };
+
+                template<int Index, typename Head, typename Tail, template<typename> class Pred>
+                struct Find<Index, TypeList<Head, Tail>, Pred>
+                {
+                    using ResultT = typename std::conditional<
+                        Pred<Head>::value,
+                        Int<Index>,
+                        typename Find<Index + 1, Tail, Pred>::ResultT
+                    >::type;
+
+                    static constexpr int Result = ResultT::Value;
+                };
             }
 
             template<size_t Index, typename List>
             struct At : public impl::At<Index, 0, List>
             {
+            };
+
+            template<typename List, template<typename> class Pred>
+            struct Find : public impl::Find<0, List, Pred>
+            {
+            };
+
+            template<template<typename> class Pred>
+            struct Find<NullType, Pred>
+            {
+                static constexpr int Result = -1;
             };
 
             template<typename List>
@@ -115,6 +153,7 @@ namespace meta
                         typename Filter<Tail, Pred>::Result
                       >::type;
             };
+
 
             template<typename, template<typename> class Op> struct Map;
 

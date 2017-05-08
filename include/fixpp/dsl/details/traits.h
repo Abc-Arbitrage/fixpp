@@ -36,45 +36,25 @@ namespace Fixpp
             typename CleanV>
         struct IsValidTypeFor<Tag, Value, CleanV, true> : public std::true_type { };
 
-        template<typename Message, typename Tag>
-        struct FilterGroup
+        template<typename List, typename Tag>
+        struct TagIndex
         {
             template<typename TagT>
-            struct IsGroupOf
+            struct IsTag
             {
-                static constexpr bool value = false;
+                static constexpr bool value =
+                    std::is_same<TagT, Tag>::value;
             };
 
             template<typename GroupTag, typename SizeHint, typename... Tags>
-            struct IsGroupOf<SmallRepeatingGroup<GroupTag, SizeHint, Tags...>>
+            struct IsTag<SmallRepeatingGroup<GroupTag, SizeHint, Tags...>>
             {
                 static constexpr bool value =
                     std::is_same<GroupTag, Tag>::value;
             };
 
-            using List = typename meta::typelist::ops::Filter<
-                            typename Message::TagsList,
-                            IsGroupOf
-                         >::Result;
-
-            static constexpr size_t Length = meta::typelist::ops::Length<List>::value;
-            static_assert(Length <= 1, "Found more than one matching RepeatingGroup for Message");
-
-            using Type = typename meta::typelist::ops::At<0, List>::Result;
-        };
-
-        template<typename Message, typename Tag,
-                 int Size = FilterGroup<Message, Tag>::Length>
-        struct IsValidGroup : public std::true_type { };
-
-        template<typename Message, typename Tag>
-        struct IsValidGroup<Message, Tag, 0> : public std::false_type { };
-
-        template<typename Message, typename Tag>
-        struct GroupTraits
-        {
-            using Type = typename FilterGroup<Message, Tag>::Type;
-            static constexpr size_t Length = FilterGroup<Message, Tag>::Length;
+            static constexpr int Value = meta::typelist::ops::Find<List, IsTag>::Result;
+            static constexpr bool Valid = (Value != -1);
         };
 
         template<typename Tag> struct IsRequired : std::false_type { };

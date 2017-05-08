@@ -163,15 +163,15 @@ namespace Fixpp
     // Group
     // ------------------------------------------------
 
-    template<typename RepeatingGroup> struct Group;
+    template<typename RepeatingGroup> struct FieldGroup;
 
     template<typename GroupTag, typename SizeHint, typename... Tags>
-    struct Group<SmallRepeatingGroup<GroupTag, SizeHint, Tags...>>
+    struct FieldGroup<Field<SmallRepeatingGroup<GroupTag, SizeHint, Tags...>>>
     {
 		using Instance = InstanceGroup<SmallRepeatingGroup<GroupTag, SizeHint, Tags...>>;
         using FieldType = Field<SmallRepeatingGroup<GroupTag, SizeHint, Tags...>>;
 
-        Group(FieldType& field)
+        FieldGroup(FieldType& field)
             : field(field)
         {
         }
@@ -212,6 +212,12 @@ namespace Fixpp
 
         FieldType& field;
     };
+
+    template<typename GroupT>
+    FieldGroup<GroupT> makeGroup(GroupT& group)
+    {
+        return FieldGroup<GroupT>(group);
+    }
 
     template<typename GroupTag, typename... Tags>
     using RepeatingGroup = SmallRepeatingGroup<GroupTag, SizeHint<10>, Tags...>;
