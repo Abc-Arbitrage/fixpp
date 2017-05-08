@@ -23,6 +23,8 @@ namespace Fixpp
             struct Application
             {
                 using MarketDataSnapshot = Message::MarketDataSnapshot;
+                using UserRequest = Message::UserRequest;
+                using UserResponse = Message::UserResponse;
             };
 
             struct Dictionary
@@ -31,8 +33,11 @@ namespace Fixpp
                 using Header = Fixpp::v44::Header;
                 
                 using Messages = typename meta::typelist::make<
-                    Message::Heartbeat, Message::TestRequest,
-                    Message::MarketDataSnapshot
+                    Message::Heartbeat,
+                    Message::TestRequest,
+                    Message::MarketDataSnapshot,
+                    Message::UserRequest,
+                    Message::UserResponse
                 >::Result;
             };
 

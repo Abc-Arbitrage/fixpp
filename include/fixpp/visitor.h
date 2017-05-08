@@ -329,7 +329,9 @@ namespace Fixpp
             static bool visit(const Context& context, Visitor& visitor)
             {
                 auto msgType = context.msgType.first;
-                if (Message::MsgType[0] == msgType[0])
+                auto msgTypeSize = context.msgType.second;
+                if ((msgTypeSize == 1 && Message::MsgType[0] == msgType[0]) ||
+                    (msgTypeSize == 2 && Message::MsgType[0] == msgType[0] && Message::MsgType[1] == msgType[1]))
                 {
                     visitor(id<Header> { }, id<OverrideFor<Message, Overrides>> {});
                     return true;

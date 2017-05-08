@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <fixpp/message_type.h>
 #include <fixpp/versions/base.h>
 #include <fixpp/versions/v44/component_blocks.h>
 #include <fixpp/dsl.h>
@@ -21,7 +22,7 @@ namespace Fixpp
 
             using TestRequest = MessageV<Chars<'1'>, Required<Tag::TestReqID>>;
 
-            using MarketDataSnapshot = MessageV<Chars<'W'>,
+            using MarketDataSnapshot = MessageV<MessageType::MarketDataSnapshotFullRefresh,
                   Tag::MDReqID,
                   Component::Instrument,
                   RepeatingGroup<
@@ -46,6 +47,23 @@ namespace Fixpp
                   >>,
                   Tag::ApplQueueDepth, Tag::ApplQueueResolution
               >;
+
+            using UserRequest = MessageV<MessageType::UserRequest,
+                Required<Tag::UserRequestID>,
+                Required<Tag::Username>,
+                Tag::UserStatus,
+                Tag::UserStatusText
+            >;
+                        
+            using UserResponse = MessageV<MessageType::UserResponse,
+                Required<Tag::UserRequestID>,
+                Required<Tag::UserRequestType>,
+                Required<Tag::Username>,
+                Tag::Password,
+                Tag::NewPassword,
+                Tag::RawDataLength,
+                Tag::RawData
+            >;
 
         } // namespace Message
 

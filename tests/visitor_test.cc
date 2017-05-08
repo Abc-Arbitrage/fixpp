@@ -39,6 +39,27 @@ namespace should_visit_logon_frame
 
 } // namespace should_visit_logon_frame
 
+namespace should_visit_message_with_multiple_chars_message_type
+{
+    struct Visitor : public Fixpp::StaticVisitor<void>
+    {
+        void operator()(const Fixpp::v44::Header::Ref& /*header*/, const Fixpp::v44::Message::UserResponse::Ref& response)
+        {
+            ASSERT_EQ(Fixpp::get<Fixpp::Tag::UserRequestID>(response), "123");
+            ASSERT_EQ(Fixpp::get<Fixpp::Tag::UserRequestType>(response), 1);
+            ASSERT_EQ(Fixpp::get<Fixpp::Tag::Username>(response), "username");
+        }
+
+        template<typename HeaderT, typename MessageT> void operator()(HeaderT, MessageT)
+        {
+            ASSERT_TRUE(false);
+        }
+    };
+
+    using VisitRules = DefaultTestRules<Fixpp::v44::Spec::Dictionary>;
+
+} // namespace should_visit_logon_frame
+
 namespace should_try_get_fields_after_parsing
 {
     struct Visitor : public Fixpp::StaticVisitor<void>
@@ -619,5 +640,13 @@ TEST(visitor_test, should_convert_from_ref)
                         "10=213";
 
     auto err = doVisit(frame, should_convert_from_ref::Visitor(), should_convert_from_ref::VisitRules());
+    ASSERT_TRUE(err.isOk());
+}
+
+TEST(visitor_test, should_visit_message_with_multiple_chars_message_type)
+{
+    const char* frame = "8=FIX.4.4|9=84|35=BF|923=123|924=1|553=username|10=248";
+
+    auto err = doVisit(frame, should_visit_message_with_multiple_chars_message_type::Visitor(), should_visit_message_with_multiple_chars_message_type::VisitRules());
     ASSERT_TRUE(err.isOk());
 }
