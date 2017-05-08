@@ -11,6 +11,7 @@
 #include <bitset>
 
 #include <fixpp/meta.h>
+#include <fixpp/dsl/details/chars.h>
 #include <fixpp/dsl/details/unwrap.h>
 #include <fixpp/dsl/details/traits.h>
 #include <fixpp/dsl/details/flatten.h>
@@ -103,16 +104,6 @@ namespace Fixpp
 
         llvm::SmallVector<Unparsed, 10> unparsed;
     };
-
-    // ------------------------------------------------
-    // Chars
-    // ------------------------------------------------
-
-    // A parameter pack of char...
-
-    template<char ...> struct Chars { };
-
-    using Empty = Chars<>;
 
     // ------------------------------------------------
     // MessageRef
