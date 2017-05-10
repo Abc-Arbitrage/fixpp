@@ -117,10 +117,7 @@ namespace Fixpp
     template<char... MsgTypeChar, typename... Tags>
     struct MessageRef<Chars<MsgTypeChar...>, Tags...> : public MessageBase<FieldRef, Tags...>
     {
-        static constexpr const char MsgType[] = { MsgTypeChar... };
-        static constexpr size_t MsgTypeLen = sizeof...(MsgTypeChar);
-
-        using MsgTypeChars = Chars<MsgTypeChar...>;
+        using MsgType = Chars<MsgTypeChar...>;
     };
 
     template<typename... Tags>
@@ -139,17 +136,8 @@ namespace Fixpp
     template<char... MsgTypeChar, typename... Tags>
     struct MessageT<Chars<MsgTypeChar...>, Tags...> : public MessageBase<Field, Tags...>
     {
-        static constexpr const char MsgType[] = { MsgTypeChar... };
-        static constexpr size_t MsgTypeLen = sizeof...(MsgTypeChar);
-
-        using MsgTypeChars = Chars<MsgTypeChar...>;
+        using MsgType = Chars<MsgTypeChar...>;
     };
-
-    template<char... MsgTypeChar, typename... Tags>
-    constexpr const char MessageT<Chars<MsgTypeChar...>, Tags...>::MsgType[];
-
-    template<char... MsgTypeChar, typename... Tags>
-    constexpr const char MessageRef<Chars<MsgTypeChar...>, Tags...>::MsgType[];
 
     template<typename... Tags>
     struct MessageT<Empty, Tags...> : public MessageBase<Field, Tags...>

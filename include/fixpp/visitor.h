@@ -299,7 +299,7 @@ namespace Fixpp
             template<typename First, typename Second, typename... Rest>
             struct OverridesValidator<meta::map::Map<meta::map::Pair<First, Second>, Rest...>> : public OverridesValidator<meta::map::Map<Rest...>>
             {
-                static_assert(std::is_same<typename First::MsgTypeChars, typename Second::MsgTypeChars>::value,
+                static_assert(std::is_same<typename First::MsgType, typename Second::MsgType>::value,
                               "Invalid Override: MsgType must be the same");
             };
 
@@ -330,8 +330,7 @@ namespace Fixpp
             {
                 auto msgType = context.msgType.first;
                 auto msgTypeSize = context.msgType.second;
-                if ((msgTypeSize == 1 && Message::MsgType[0] == msgType[0]) ||
-                    (msgTypeSize == 2 && Message::MsgType[0] == msgType[0] && Message::MsgType[1] == msgType[1]))
+                if (Message::MsgType::equals(msgType, msgTypeSize))
                 {
                     visitor(id<Header> { }, id<OverrideFor<Message, Overrides>> {});
                     return true;

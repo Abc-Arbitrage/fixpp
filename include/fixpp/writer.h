@@ -116,7 +116,7 @@ struct Writer
             throw std::runtime_error("Missing values for header");
         }
 
-        writeRaw<Tag::MsgType>(os, Message::MsgType, Message::MsgTypeLen);
+        writeRaw<Tag::MsgType>(os, Message::MsgType::Value, Message::MsgType::Size);
         write(os, header.values, meta::make_index_sequence<Header::TotalTags>());
         write(os, message.values, meta::make_index_sequence<Message::TotalTags>());
 
