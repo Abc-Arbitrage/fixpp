@@ -673,7 +673,7 @@ struct Constructor<void, E> {
     static void move(Storage<void, E>&& src, Storage<void, E>& dst, ok_tag) {
     }
 
-    static void copy(const Storage<void, E>& src, Storage<void, E>& dst, ok_tag) {
+    static void copy(const Storage<void, E>& /*src*/, Storage<void, E>& /*dst*/, ok_tag) {
     }
 
     static void move(Storage<void, E>&& src, Storage<void, E>& dst, err_tag) {
