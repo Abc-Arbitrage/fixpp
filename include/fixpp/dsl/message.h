@@ -221,6 +221,7 @@ namespace Fixpp
                         const auto& srcField = std::get<Index>(src.values);
                         auto& dstField = std::get<Index>(dst.values);
                         copyInstanceField(srcField, dstField);
+                        dst.allBits.set(Index);
                     }
                 }
 
@@ -254,6 +255,7 @@ namespace Fixpp
                     auto& dstField = std::get<Index>(message.values);
 
                     copyField(srcField, dstField);
+                    message.allBits.set(Index);
                 }
             }
 
@@ -313,6 +315,9 @@ namespace Fixpp
     {
         using Index = details::TagIndex<typename Message::TagsList, Tag>;
         static_assert(Index::Valid, "Invalid tag for given message");
+
+        if (!message.allBits.test(Index::Value))
+            throw std::runtime_error("Bad tag access: tag is not present in message");
 
         return std::get<Index::Value>(message.values).get();
     }

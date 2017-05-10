@@ -27,6 +27,8 @@ namespace should_visit_logon_frame
         {
             ASSERT_EQ(Fixpp::get<Fixpp::Tag::SenderCompID>(header), "ABC");
             ASSERT_EQ(Fixpp::get<Fixpp::Tag::HeartBtInt>(logon), 60);
+
+            ASSERT_THROW(Fixpp::get<Fixpp::Tag::MaxMessageSize>(logon), std::runtime_error);
         }
 
         template<typename HeaderT, typename MessageT> void operator()(HeaderT, MessageT)

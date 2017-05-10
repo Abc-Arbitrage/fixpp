@@ -96,6 +96,16 @@ TEST(message_test, should_throw_when_missing_fields_in_repeating_group)
     ASSERT_NO_THROW(group.add(instance2));
 }
 
+TEST(message_test, should_throw_when_getting_not_present_tag)
+{
+    Fixpp::v42::Message::Logon logon;
+
+    Fixpp::set<Fixpp::Tag::EncryptMethod>(logon, 1);
+    Fixpp::set<Fixpp::Tag::HeartBtInt>(logon, 30);
+
+    ASSERT_THROW(Fixpp::get<Fixpp::Tag::ResetSeqNumFlag>(logon), std::runtime_error);
+}
+
 TEST(message_test, should_extend_message_properly)
 {
     using MyTag = Fixpp::TagT<2154, Fixpp::Type::Int>;
