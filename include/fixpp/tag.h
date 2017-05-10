@@ -653,6 +653,8 @@ namespace Fixpp
         using QuoteRequestRejectReason = TagT<658, Type::String>;
         using ContractSettlMonth = TagT<667, Type::String>;
         using Pool = TagT<691, Type::String>;
+        using QuoteRespID = TagT<693, Type::String>;
+        using QuoteRespType = TagT<694, Type::Int>;
         using NoUnderlyings = TagT<711, Type::Int>;
         using LegDatedDate = TagT<739, Type::LocalMktDate>;
         using LegPool = TagT<740, Type::String>;
