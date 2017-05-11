@@ -1,4 +1,3 @@
-#include <fixpp/compiler/warning.h>
 #include "gtest/gtest.h"
 
 #define SOH_CHARACTER '|'

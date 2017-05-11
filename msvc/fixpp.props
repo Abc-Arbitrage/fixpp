@@ -7,6 +7,11 @@
   <ItemDefinitionGroup>
     <ClCompile>
       <AdditionalIncludeDirectories>$(FixppRoot)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <!-- 
+        4503: 'identifier' : decorated name length exceeded, name was truncated
+        4268: 'identifier' : 'const' static/global data initialized with compiler generated default constructor fills the object with zeros
+      -->
+      <AdditionalOptions>/bigobj /wd4503 /wd4268 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
   </ItemDefinitionGroup>
 </Project>

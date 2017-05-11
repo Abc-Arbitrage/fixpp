@@ -1,10 +1,7 @@
-#include <fixpp/compiler/warning.h>
 #include "gtest/gtest.h"
 
 #include <vector>
 #include <unordered_map>
-
-#pragma warning(disable:4503)
 
 #define SOH_CHARACTER '|'
 
