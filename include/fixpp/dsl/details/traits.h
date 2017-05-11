@@ -57,6 +57,12 @@ namespace Fixpp
             static constexpr bool Valid = (Value != -1);
         };
 
+        template<typename List, typename Tag>
+        constexpr int TagIndex<List, Tag>::Value;
+
+        template<typename List, typename Tag>
+        constexpr bool TagIndex<List, Tag>::Valid;
+
         template<typename Tag> struct IsRequired : std::false_type { };
         template<typename Tag> struct IsRequired<Required<Tag>> : std::true_type { };
 
