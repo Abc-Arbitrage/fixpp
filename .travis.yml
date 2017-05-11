@@ -1,10 +1,6 @@
 language: cpp
 sudo: required
 dist: trusty
-script: mkdir build && cd build && cmake -DCMAKE_BUILD_TYPE=Release .. && make
-branches:
-  only:
-    - master
 addons:
   apt:
     sources:
@@ -13,8 +9,8 @@ addons:
       - llvm-toolchain-precise-3.6
     packages:
     # install toolchains
-      - gcc-5
       - g++-5
+      - g++-6
       - clang-3.6
 matrix:
   include:
@@ -26,6 +22,14 @@ matrix:
           packages:
             - g++-5
       env: COMPILER=g++-5
+    - compiler: gcc
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-6
+      env: COMPILER=g++-6
     - compiler: clang
       addons:
         apt:
@@ -44,3 +48,7 @@ matrix:
           packages:
             - clang-3.7
       env: COMPILER=clang++-3.7
+script: mkdir build && cd build && cmake -DCMAKE_CXX_COMPILER=$COMPILER -DCMAKE_BUILD_TYPE=Release .. && make
+branches:
+  only:
+    - master
