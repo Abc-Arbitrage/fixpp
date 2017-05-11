@@ -60,6 +60,10 @@ namespace Fixpp
     template<char... Cs>
     constexpr size_t Chars<Cs...>::Size;
 
+    template<> struct Chars<>
+    {
+    };
+
     using Empty = Chars<>;
 
 } // namespace Fixpp
