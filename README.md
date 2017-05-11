@@ -1,5 +1,7 @@
 # Fixpp
 
+[![Travis Build Status](https://travis-ci.org/Abc-Arbitrage/fixpp.svg?branch=master)](https://travis-ci.org/Abc-Arbitrage/fixpp)
+
 Fixpp is a modern C++ FIX parser distributed as a **header-only** library. Fixpp is entirely written in pure C++11 and uses last features of C++11 and C++14 like *variadic templates* or *using aliases*. Primary goal of fixpp is to provide an entire **type-safe** FIX frame parser (visitor) as well as a fully featured serializer.
 
 Fixpp does not aim to be a fully-featured FIX Engine able to connect and receive frames for FIX providers through a TCP or UDP connection. It does not handle any transport at all.
