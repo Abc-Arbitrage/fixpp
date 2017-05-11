@@ -494,8 +494,8 @@ TEST(visitor_test, should_parse_utc_timestamp)
     auto tm = time.tm();
     auto& tm_tm = tm.tm_tm;
 
-    ASSERT_EQ(tm_tm.tm_year, 2017);
-    ASSERT_EQ(tm_tm.tm_mon, 11);
+    ASSERT_EQ(tm_tm.tm_year, 117);
+    ASSERT_EQ(tm_tm.tm_mon, 10);
     ASSERT_EQ(tm_tm.tm_mday, 5);
     ASSERT_EQ(tm_tm.tm_hour, 14);
     ASSERT_EQ(tm_tm.tm_min, 9);

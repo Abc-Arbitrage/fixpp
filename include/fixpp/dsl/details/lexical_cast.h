@@ -152,8 +152,10 @@ namespace Fixpp
                 }
 
                 std::tm tm;
-                tm.tm_year = year;
-                tm.tm_mon = month;
+                // tm_year is year since 1900
+                tm.tm_year = year - 1900;
+                // tm_mon is 0-indexed
+                tm.tm_mon = month - 1;
                 tm.tm_mday = day;
                 tm.tm_hour = hour;
                 tm.tm_min = min;
