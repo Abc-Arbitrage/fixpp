@@ -28,3 +28,4 @@ configure_file(${CMAKE_SOURCE_DIR}/tests/data/fix42.log ${CMAKE_CURRENT_BINARY_D
 
 fixpp_bench(serialize_bench)
 fixpp_bench(visit_bench)
+fixpp_bench(misc_bench)

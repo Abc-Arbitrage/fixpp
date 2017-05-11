@@ -2,6 +2,9 @@
 
 #include <cmath>
 
+#include <fixpp/utils/cursor.h>
+#include <fixpp/utils/time.h>
+
 namespace Fixpp
 {
     namespace details
@@ -96,6 +99,67 @@ namespace Fixpp
             static std::string cast(const char* offset, size_t size)
             {
                 return std::string(offset, size);
+            }
+        };
+
+        template<>
+        struct LexicalCast<Type::UTCTimestamp>
+        {
+            static Type::UTCTimestamp::Time cast(const char* offset, size_t size)
+            {
+                RawStreamBuf<> buf(const_cast<char *>(offset), size);
+                StreamCursor cursor(&buf);
+
+                auto parseFragment = [&](size_t size, const char* error)
+                {
+                    int value;
+                    if (!match_int_fast_n(&value, cursor, size))
+                        throw std::runtime_error(error);
+
+                    return value;
+                };
+
+                int year = parseFragment(4, "Could not parse year from UTCTimestamp");
+                int month = parseFragment(2, "Could not parse month from UTCTimestamp");
+                int day = parseFragment(2, "Could not parse month from UTCTimestamp");
+
+
+                // Literal('-')
+                if (!cursor.advance(1))
+                    throw std::runtime_error("Could not parse hour from UTCTimestamp, expected '-' got EOF");
+
+                int hour = parseFragment(2, "Could not parse hours from UTCTimestamp");
+                //
+                // Literal(':')
+                if (!cursor.advance(1))
+                    throw std::runtime_error("Could not parse minutes from UTCTimestamp, expected ':' got EOF");
+
+                int min = parseFragment(2, "Could not parse minutes from UTCTimestamp");
+                //
+                // Literal(':')
+                if (!cursor.advance(1))
+                    throw std::runtime_error("Could not parse seconds from UTCTimestamp, expected ':' got EOF");
+
+                int sec = parseFragment(2, "Could not parse seconds from UTCTimestamp");
+
+                int msec = 0;
+
+                if (!cursor.eof())
+                {
+                    // Literal('.')
+                    cursor.advance(1);
+                    msec = parseFragment(3, "Could not parse milliseconds from UTCTimestamp");
+                }
+
+                std::tm tm;
+                tm.tm_year = year;
+                tm.tm_mon = month;
+                tm.tm_mday = day;
+                tm.tm_hour = hour;
+                tm.tm_min = min;
+                tm.tm_sec = sec;
+
+                return Type::UTCTimestamp::Time(tm, msec, mkgmtime(&tm));
             }
         };
 

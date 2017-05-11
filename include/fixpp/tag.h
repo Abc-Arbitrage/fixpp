@@ -95,23 +95,52 @@ namespace Fixpp
 
         struct UTCTimestamp
         {
+
+            struct Tm
+            {
+                Tm()
+                    : tm_tm()
+                    , tm_msec(0)
+                { }
+
+                Tm(const std::tm& tm, int msec)
+                    : tm_tm(tm)
+                    , tm_msec(msec)
+                { }
+
+                std::tm tm_tm;
+                int tm_msec;
+            };
+
             struct Time
             {
                 Time()
                     : m_time(std::time(nullptr))
                 { }
 
-                Time(const std::time_t& time)
+                Time(std::time_t time)
                     : m_time(time)
                 { }
+
+                Time(const std::tm& tm, int msec, std::time_t time = 0)
+                    : m_time(time)
+                    , m_tm(tm, msec)
+                {
+                }
 
                 std::time_t time() const
                 {
                     return m_time;
                 }
 
+                Tm tm() const
+                {
+                    return m_tm;
+                }
+
             private:
                 std::time_t m_time;
+                Tm m_tm;
             };
 
             using UnderlyingType = Time;

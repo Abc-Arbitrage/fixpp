@@ -349,13 +349,13 @@ inline bool match_int(int* val, StreamCursor& cursor)
     return true;
 }
 
-inline bool match_int_fast(int* val, StreamCursor& cursor)
+inline bool match_int_fast_n(int *val, StreamCursor& cursor, size_t size)
 {
     if (cursor.eof())
         return false;
 
     size_t i = 0;
-    const char *p = cursor.offset();
+    const char* p = cursor.offset();
     size_t remaining = cursor.remaining();
 
     int integer = 0;
@@ -367,9 +367,10 @@ inline bool match_int_fast(int* val, StreamCursor& cursor)
             break;
 
         integer *= 10;
-        integer += c - '0';
+        integer += (c - '0');
+
         ++i;
-        if (--remaining == 0)
+        if (--remaining == 0 || (size > 0 && i == size))
             break;
     }
 
@@ -380,6 +381,12 @@ inline bool match_int_fast(int* val, StreamCursor& cursor)
     }
 
     return false;
+
+}
+
+inline bool match_int_fast(int* val, StreamCursor& cursor)
+{
+    return match_int_fast_n(val, cursor, 0);
 }
 
 inline void skip_whitespaces(StreamCursor& cursor)

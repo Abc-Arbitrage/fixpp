@@ -27,6 +27,8 @@ namespace should_visit_logon_frame
             ASSERT_EQ(Fixpp::get<Fixpp::Tag::SenderCompID>(header), "ABC");
             ASSERT_EQ(Fixpp::get<Fixpp::Tag::HeartBtInt>(logon), 60);
 
+            Fixpp::get<Fixpp::Tag::SendingTime>(header);
+
             ASSERT_THROW(Fixpp::get<Fixpp::Tag::MaxMessageSize>(logon), std::runtime_error);
         }
 
@@ -482,6 +484,23 @@ template<typename Visitor, typename Rules>
 Fixpp::VisitError<typename Visitor::ResultType> doVisit(const char* frame, Visitor visitor, Rules rules)
 {
     return Fixpp::visit(frame, std::strlen(frame), visitor, rules);
+}
+
+TEST(visitor_test, should_parse_utc_timestamp)
+{
+    const char* str = "20171105-14:09:30.125";
+    auto time = Fixpp::details::LexicalCast<Fixpp::Type::UTCTimestamp>::cast(str, std::strlen(str));
+
+    auto tm = time.tm();
+    auto& tm_tm = tm.tm_tm;
+
+    ASSERT_EQ(tm_tm.tm_year, 2017);
+    ASSERT_EQ(tm_tm.tm_mon, 11);
+    ASSERT_EQ(tm_tm.tm_mday, 5);
+    ASSERT_EQ(tm_tm.tm_hour, 14);
+    ASSERT_EQ(tm_tm.tm_min, 9);
+    ASSERT_EQ(tm_tm.tm_sec, 30);
+    ASSERT_EQ(tm.tm_msec, 125);
 }
 
 TEST(visitor_test, should_visit_logon_frame)
