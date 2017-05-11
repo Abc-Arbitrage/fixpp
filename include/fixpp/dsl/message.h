@@ -11,6 +11,7 @@
 #include <bitset>
 
 #include <fixpp/meta.h>
+#include <fixpp/view.h>
 #include <fixpp/dsl/details/chars.h>
 #include <fixpp/dsl/details/unwrap.h>
 #include <fixpp/dsl/details/traits.h>
@@ -275,7 +276,6 @@ namespace Fixpp
         return details::FromRef<Ref>::fromRef(ref);
     }
 
-
     // ------------------------------------------------
     // operations
     // ------------------------------------------------
@@ -323,7 +323,21 @@ namespace Fixpp
     }
 
     template<typename Tag, typename Message>
-    decltype(auto)
+    View getView(const Message& message)
+    {
+        //static_assert(Message::IsRef, "Can only retrieve raw tags on ref-message types"); 
+
+        using Index = details::TagIndex<typename Message::TagsList, Tag>;
+        static_assert(Index::Valid, "Invalid tag for given message");
+
+        if (!message.allBits.test(Index::Value))
+            throw std::runtime_error("Bad tag access: tag is not present in message");
+
+        return std::get<Index::Value>(message.values).view();
+    }
+
+    template<typename Tag, typename Message>
+    bool
     tryGet(const Message& message, typename Tag::Type::UnderlyingType& value)
     {
         using Index = details::TagIndex<typename Message::TagsList, Tag>;
@@ -333,6 +347,22 @@ namespace Fixpp
             return false;
 
         value = std::get<Index::Value>(message.values).get();
+        return true;
+    }
+
+    template<typename Tag, typename Message>
+    bool
+    tryGetView(const Message& message, View& view)
+    {
+        static_assert(Message::IsRef, "Can only retrieve raw tags on ref-message types"); 
+
+        using Index = details::TagIndex<typename Message::TagsList, Tag>;
+        static_assert(Index::Valid, "Invalid tag for given message");
+
+        if (!message.allBits.test(Index::Value))
+            return false;
+
+        view = std::get<Index::Value>(message.values).view();
         return true;
     }
 

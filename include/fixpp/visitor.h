@@ -17,6 +17,7 @@
 #include <fixpp/utils/result.h>
 #include <fixpp/utils/soh.h>
 #include <fixpp/meta.h>
+#include <fixpp/view.h>
 #include <fixpp/dsl.h>
 #include <fixpp/dsl/details/unwrap.h>
 #include <fixpp/dsl/details/flatten.h>
@@ -25,8 +26,6 @@
 namespace Fixpp
 {
 
-    // @Todo use string_view when available
-    using View = std::pair<const char*, size_t>;
 
     // ------------------------------------------------
     // ErrorKind

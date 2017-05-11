@@ -10,6 +10,7 @@
 #include <type_traits>
 
 #include <fixpp/meta.h>
+#include <fixpp/view.h>
 #include <fixpp/dsl/details/lexical_cast.h>
 
 namespace Fixpp
@@ -100,6 +101,8 @@ namespace Fixpp
         using Tag = TagT;
         using Type = typename TagT::Type::UnderlyingType;
 
+        static constexpr bool IsRef = false;
+
         FieldRef() = default;
 
         constexpr unsigned tag() const
@@ -107,26 +110,28 @@ namespace Fixpp
             return Tag::Id;
         }
 
-        void set(const std::pair<const char*, size_t>& value)
+        void set(const View& view)
         {
-            offset = value.first;
-            size = value.second;
+            m_view = view;
         }
 
         Type get() const
         {
-            return details::LexicalCast<typename TagT::Type>::cast(offset, size);
+            return details::LexicalCast<typename TagT::Type>::cast(m_view.first, m_view.second);
+        }
+
+        View view() const
+        {
+            return m_view;
         }
 
         bool valid() const
         {
-            return offset != nullptr;
+            return m_view.first != nullptr;
         }
 
     private:
-        const char* offset;
-        size_t size;
+        View m_view;
     };
-
 
 } // namespace Fixpp
