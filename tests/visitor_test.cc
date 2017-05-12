@@ -501,6 +501,16 @@ TEST(visitor_test, should_parse_utc_timestamp)
     ASSERT_EQ(tm_tm.tm_min, 9);
     ASSERT_EQ(tm_tm.tm_sec, 30);
     ASSERT_EQ(tm.tm_msec, 125);
+
+    auto epoch = time.time();
+    auto tm2 = gmtime(&epoch);
+
+    ASSERT_EQ(tm2->tm_year, tm_tm.tm_year);
+    ASSERT_EQ(tm2->tm_mon, tm_tm.tm_mon);
+    ASSERT_EQ(tm2->tm_mday, tm_tm.tm_mday);
+    ASSERT_EQ(tm2->tm_hour, tm_tm.tm_hour);
+    ASSERT_EQ(tm2->tm_min, tm_tm.tm_min);
+    ASSERT_EQ(tm2->tm_sec, tm_tm.tm_sec);
 }
 
 TEST(visitor_test, should_visit_logon_frame)
