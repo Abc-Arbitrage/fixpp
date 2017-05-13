@@ -10,9 +10,11 @@
 #include <unordered_map>
 #include <bitset>
 
-#include <fixpp/meta.h>
 #include <fixpp/view.h>
 #include <fixpp/dsl/details/chars.h>
+#include <fixpp/meta/list.h>
+#include <fixpp/meta/tuple.h>
+
 #include <fixpp/dsl/details/unwrap.h>
 #include <fixpp/dsl/details/traits.h>
 #include <fixpp/dsl/details/flatten.h>
@@ -204,11 +206,11 @@ namespace Fixpp
                 template<typename FieldRef, typename Field>
                 static void copyFields(const FieldRef& src, Field& dst)
                 {
-                    copyInstanceFields(src, dst, meta::make_index_sequence<FieldRef::TotalTags>());
+                    copyInstanceFields(src, dst, meta::seq::make_index_sequence<FieldRef::TotalTags>());
                 }
 
                 template<typename FieldRef, typename Field, size_t ... Indexes>
-                static void copyInstanceFields(const FieldRef& src, Field& dst, meta::index_sequence<Indexes...>)
+                static void copyInstanceFields(const FieldRef& src, Field& dst, meta::seq::index_sequence<Indexes...>)
                 {
                     int dummy[] = {0, ((void) copyInstanceFieldAt<Indexes>(src, dst), 0)...};
                     (void) dummy;
@@ -219,8 +221,8 @@ namespace Fixpp
                 {
                     if (src.allBits.test(Index))
                     {
-                        const auto& srcField = std::get<Index>(src.values);
-                        auto& dstField = std::get<Index>(dst.values);
+                        const auto& srcField = meta::get<Index>(src.values);
+                        auto& dstField = meta::get<Index>(dst.values);
                         copyInstanceField(srcField, dstField);
                         dst.allBits.set(Index);
                     }
@@ -236,12 +238,12 @@ namespace Fixpp
             static Message fromRef(const Ref& ref)
             {
                 Message message;
-                copyFields(ref, message, meta::make_index_sequence<Ref::TotalTags>());
+                copyFields(ref, message, meta::seq::make_index_sequence<Ref::TotalTags>());
                 return message;
             }
 
             template<size_t... Indexes>
-            static void copyFields(const Ref& ref, Message& message, meta::index_sequence<Indexes...>)
+            static void copyFields(const Ref& ref, Message& message, meta::seq::index_sequence<Indexes...>)
             {
                 int dummy[] = {0, ((void) copyFieldAt<Indexes>(ref, message), 0)...};
                 (void) dummy;
@@ -252,8 +254,8 @@ namespace Fixpp
             {
                 if (ref.allBits.test(Index))
                 {
-                    const auto& srcField = std::get<Index>(ref.values);
-                    auto& dstField = std::get<Index>(message.values);
+                    const auto& srcField = meta::get<Index>(ref.values);
+                    auto& dstField = meta::get<Index>(message.values);
 
                     copyField(srcField, dstField);
                     message.allBits.set(Index);
@@ -301,7 +303,7 @@ namespace Fixpp
         static_assert(Index::Valid, "Invalid tag for given message");
         static_assert(details::IsValidTypeFor<Tag, Value>::value, "Invalid data type for given Tag");
 
-        std::get<Index::Value>(message.values).set(std::forward<Value>(value));
+        meta::get<Index::Value>(message.values).set(std::forward<Value>(value));
 
         message.allBits.set(Index::Value);
 
@@ -319,7 +321,7 @@ namespace Fixpp
         if (!message.allBits.test(Index::Value))
             throw std::runtime_error("Bad tag access: tag is not present in message");
 
-        return std::get<Index::Value>(message.values).get();
+        return meta::get<Index::Value>(message.values).get();
     }
 
     template<typename Tag, typename Message>
@@ -333,7 +335,7 @@ namespace Fixpp
         if (!message.allBits.test(Index::Value))
             throw std::runtime_error("Bad tag access: tag is not present in message");
 
-        return std::get<Index::Value>(message.values).view();
+        return meta::get<Index::Value>(message.values).view();
     }
 
     template<typename Tag, typename Message>
@@ -346,7 +348,7 @@ namespace Fixpp
         if (!message.allBits.test(Index::Value))
             return false;
 
-        value = std::get<Index::Value>(message.values).get();
+        value = meta::get<Index::Value>(message.values).get();
         return true;
     }
 
@@ -362,7 +364,7 @@ namespace Fixpp
         if (!message.allBits.test(Index::Value))
             return false;
 
-        view = std::get<Index::Value>(message.values).view();
+        view = meta::get<Index::Value>(message.values).view();
         return true;
     }
 
@@ -378,7 +380,7 @@ namespace Fixpp
         if (identity(RequiredIndex::Valid))
             message.requiredBits.set(static_cast<size_t>(RequiredIndex::Value));
 
-        auto& group = std::get<GroupIndex::Value>(message.values);
+        auto& group = meta::get<GroupIndex::Value>(message.values);
         group.reserve(size);
 
         return makeGroup(group);

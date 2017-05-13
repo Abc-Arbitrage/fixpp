@@ -64,7 +64,7 @@ TEST(message_test, should_create_repeating_group)
     auto& values = logon.values;
 
     // NoMsgTypes RepeatinGroup is the 7th field in the Logon message
-    auto& repeatingGroup = std::get<6>(values);
+    auto& repeatingGroup = meta::get<6>(values);
 
     ASSERT_FALSE(repeatingGroup.empty());
     ASSERT_EQ(repeatingGroup.size(), 2);
@@ -72,11 +72,11 @@ TEST(message_test, should_create_repeating_group)
     const auto& groupValues = repeatingGroup.get();
     ASSERT_EQ(groupValues.size(), 2);
 
-    ASSERT_EQ(std::get<0>(groupValues[0].values).get(), "TEST");
-    ASSERT_EQ(std::get<1>(groupValues[0].values).get(), 'S');
+    ASSERT_EQ(meta::get<0>(groupValues[0].values).get(), "TEST");
+    ASSERT_EQ(meta::get<1>(groupValues[0].values).get(), 'S');
 
-    ASSERT_EQ(std::get<0>(groupValues[1].values).get(), "MD");
-    ASSERT_EQ(std::get<1>(groupValues[1].values).get(), 'S');
+    ASSERT_EQ(meta::get<0>(groupValues[1].values).get(), "MD");
+    ASSERT_EQ(meta::get<1>(groupValues[1].values).get(), 'S');
 }
 
 TEST(message_test, should_throw_when_missing_fields_in_repeating_group)

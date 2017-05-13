@@ -57,6 +57,7 @@ namespace Fixpp
         static constexpr size_t TotalTags = GroupType::TotalTags;
 
         Field() = default;
+
         Field(const Field& other) = default;
         Field& operator=(const Field& other) = default;
 
@@ -128,6 +129,14 @@ namespace Fixpp
 
 		using GroupType = InstanceGroupRef<SmallRepeatingGroup<GroupTag, SizeHint<Size>, Tags...>>;
         using Values = llvm::SmallVector<GroupType, Size>;
+
+        FieldRef() = default;
+
+        FieldRef(const FieldRef& other) = default;
+        FieldRef& operator=(const FieldRef& other) = default;
+
+        FieldRef(FieldRef&& other) = default;
+        FieldRef& operator=(FieldRef&& other) = default;
 
         constexpr unsigned tag() const
         {

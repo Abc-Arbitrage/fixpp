@@ -47,9 +47,9 @@ namespace Fixpp
                 template<typename T1, typename T2> struct TupleCat;
 
                 template<typename... Args1, typename... Args2>
-                struct TupleCat<std::tuple<Args1...>, std::tuple<Args2...>>
+                struct TupleCat<meta::tuple<Args1...>, meta::tuple<Args2...>>
                 {
-                    using Result = std::tuple<Args1..., Args2...>;
+                    using Result = meta::tuple<Args1..., Args2...>;
                 };
 
                 template<template<typename> class FieldT, typename... Tags>
@@ -58,7 +58,7 @@ namespace Fixpp
                 template<template<typename> class FieldT, typename T>
                 struct FlattenSingle
                 {
-                    using Result = std::tuple<FieldT<T>>;
+                    using Result = meta::tuple<FieldT<T>>;
                 };
 
                 template<template<typename> class FieldT, typename Head, typename... Tail>
@@ -83,7 +83,7 @@ namespace Fixpp
                 template<template<typename> class FieldT>
                 struct Flatten<FieldT>
                 {
-                    using Result = std::tuple<>;
+                    using Result = meta::tuple<>;
                 };
 
             } // namespace tuple

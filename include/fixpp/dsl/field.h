@@ -105,6 +105,12 @@ namespace Fixpp
 
         FieldRef() = default;
 
+        FieldRef(const FieldRef& other) = default;
+        FieldRef& operator=(const FieldRef& other) = default;
+
+        FieldRef(FieldRef&& other) = default;
+        FieldRef& operator=(FieldRef& other) = default;
+
         constexpr unsigned tag() const
         {
             return Tag::Id;

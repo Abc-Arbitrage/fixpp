@@ -420,10 +420,10 @@ namespace Fixpp
 
         template<typename Message, typename Visitor, size_t... Indexes>
         bool doVisitField(Message& message, unsigned tag, Visitor& visitor,
-                          meta::index_sequence<Indexes...>)
+                          meta::seq::index_sequence<Indexes...>)
         {
             int index = -1;
-            int dummy[] = {0, (doVisitSingleField<Indexes>(tag, std::get<Indexes>(message.values), visitor, &index), 0)...};
+            int dummy[] = {0, (doVisitSingleField<Indexes>(tag, meta::get<Indexes>(message.values), visitor, &index), 0)...};
 
             if (index != -1)
                 message.allBits.set(static_cast<size_t>(index));
@@ -435,7 +435,7 @@ namespace Fixpp
         bool visitField(Message& message, unsigned tag, Visitor& visitor)
         {
             static constexpr size_t Size = Message::TotalTags;
-            return doVisitField(message, tag, visitor, meta::make_index_sequence<Size>{});
+            return doVisitField(message, tag, visitor, meta::seq::make_index_sequence<Size>{});
         }
 
 
@@ -572,7 +572,7 @@ namespace Fixpp
 
              // copy the array but with the elements at `index0` and `index1` swapped
              template<typename T, size_t Size, size_t... Is>
-             constexpr const_array<T, Size> const_swap(const const_array<T, Size>& arr, size_t index0, size_t index1, meta::index_sequence<Is...>)
+             constexpr const_array<T, Size> const_swap(const const_array<T, Size>& arr, size_t index0, size_t index1, meta::seq::index_sequence<Is...>)
              {
                   return {{arr[Is == index0 ? index1 : Is == index1 ? index0 : Is]...}};
              }
@@ -583,7 +583,7 @@ namespace Fixpp
             {
                 return cur == Size ? arr :
                                      const_selection_sort(
-                                           const_swap(arr, cur, const_min_index(arr, cur, cur), meta::make_index_sequence<Size>{}), cur+1 );
+                                           const_swap(arr, cur, const_min_index(arr, cur, cur), meta::seq::make_index_sequence<Size>{}), cur+1 );
             }
 
             template<typename Tag>

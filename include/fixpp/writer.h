@@ -44,7 +44,7 @@ namespace details
             const auto& group = field.get();
             for (const auto& instance: group)
             {
-                doWriteGroupFields(os, instance, meta::make_index_sequence<GroupSize>{});
+                doWriteGroupFields(os, instance, meta::seq::make_index_sequence<GroupSize>{});
             }
 
             return os;
@@ -52,9 +52,9 @@ namespace details
 
     private:
         template<typename Tuple, size_t... Index>
-        static void doWriteGroupFields(std::ostream& os, const Tuple& tuple, meta::index_sequence<Index...>)
+        static void doWriteGroupFields(std::ostream& os, const Tuple& tuple, meta::seq::index_sequence<Index...>)
         {
-            int dummy[] = { 0, ((void) doWriteField(os, std::get<Index>(tuple.values)), 0)... };
+            int dummy[] = { 0, ((void) doWriteField(os, meta::get<Index>(tuple.values)), 0)... };
             (void) dummy;
         }
 
@@ -117,8 +117,8 @@ struct Writer
         }
 
         writeRaw<Tag::MsgType>(os, Message::MsgType::Value, Message::MsgType::Size);
-        write(os, header.values, meta::make_index_sequence<Header::TotalTags>());
-        write(os, message.values, meta::make_index_sequence<Message::TotalTags>());
+        write(os, header.values, meta::seq::make_index_sequence<Header::TotalTags>());
+        write(os, message.values, meta::seq::make_index_sequence<Message::TotalTags>());
 
         const size_t size = buf.count();
 
@@ -140,9 +140,9 @@ struct Writer
     }
 
     template<typename Tuple, size_t... Idx>
-    void write(std::ostream& os, const Tuple& tuple, meta::index_sequence<Idx...>)
+    void write(std::ostream& os, const Tuple& tuple, meta::seq::index_sequence<Idx...>)
     {
-        int dummy[] = {0, ((void) doWriteField(os, std::get<Idx>(tuple)), 0)...};
+        int dummy[] = {0, ((void) doWriteField(os, meta::get<Idx>(tuple)), 0)...};
         (void) dummy;
     }
 
