@@ -10,4 +10,5 @@
 #include <fixpp/meta/map.h>
 #include <fixpp/meta/pack.h>
 #include <fixpp/meta/seq.h>
+#include <fixpp/meta/detect.h>
 #include <fixpp/meta/tuple.h>

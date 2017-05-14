@@ -233,64 +233,14 @@ namespace Fixpp
 
         namespace rules
         {
-            template<typename... > using void_t = void;
 
-            template<typename T, typename = void> struct HasOverrides : std::false_type { };
-            template<typename T>
-            struct HasOverrides<
-                    T,
-                    void_t<typename T::Overrides>
-                  > : std::true_type
-            { };
-
-            template<typename T, typename = void> struct HasDictionary : std::false_type { };
-            template<typename T>
-            struct HasDictionary<
-                    T,
-                    void_t<typename T::Dictionary>
-                  > : std::true_type
-            { };
-
-            template<typename T, typename = void> struct HasValidateChecksum : std::false_type { };
-            template<typename T>
-            struct HasValidateChecksum<
-                    T,
-                    void_t<decltype(&T::ValidateChecksum)>
-                  > : std::true_type
-            { };
-
-            template<typename T, typename = void> struct HasValidateLength : std::false_type { };
-            template<typename T>
-            struct HasValidateLength<
-                    T,
-                    void_t<decltype(&T::ValidateLength)>
-                  > : std::true_type
-            { };
-
-            template<typename T, typename = void> struct HasStrictMode : std::false_type { };
-            template<typename T>
-            struct HasStrictMode<
-                    T,
-                    void_t<decltype(&T::StrictMode)>
-                  > : std::true_type
-            { };
-
-            template<typename T, typename = void> struct HasSkipUnknownTags : std::false_type { };
-            template<typename T>
-            struct HasSkipUnknownTags<
-                    T,
-                    void_t<decltype(&T::SkipUnknownTags)>
-                  > : std::true_type
-            { };
-
-            template<typename T, typename = void> struct IsStaticVisitor : std::false_type { };
-            template<typename T>
-            struct IsStaticVisitor<
-                    T,
-                    void_t<typename T::ResultType>
-                   > : std::true_type
-            {
-            };
+			template<typename T> using HasOverrides = typename T::Overrides;
+			template<typename T> using HasDictionary = typename T::Dictionary;
+			template<typename T> using HasResultType = typename T::ResultType;
+			template<typename T> using HasValidateChecksum = decltype(&T::ValidateChecksum);
+			template<typename T> using HasValidateLength = decltype(&T::ValidateLength);
+			template<typename T> using HasStrictMode = decltype(&T::StrictMode);
+			template<typename T> using HasSkipUnknownTags = decltype(&T::SkipUnknownTags);
 
             template<typename Overrides>
             struct OverridesValidator;
@@ -1200,12 +1150,30 @@ namespace Fixpp
     {
         static_assert(std::is_base_of<VisitRules, Rules>::value, "Visit rules must inherit from VisitRules");
 
-        static_assert(impl::rules::HasOverrides<Rules>::value, "Visit rules must provide an Overrides typedef");
-        static_assert(impl::rules::HasDictionary<Rules>::value, "Visit rules must provide a Dictionary typedef");
-        static_assert(impl::rules::HasValidateChecksum<Rules>::value, "Visit rules must provide a static ValidateChecksum boolean");
-        static_assert(impl::rules::HasValidateLength<Rules>::value, "Visit rules must provide a static ValidateLength boolean");
-        static_assert(impl::rules::HasStrictMode<Rules>::value, "Visit rules must provide a static StrictMode boolean");
-        static_assert(impl::rules::HasSkipUnknownTags<Rules>::value, "Visit rules must provide a static SkipUnknownTags boolean");
+        static_assert(
+			meta::is_detected<impl::rules::HasOverrides, Rules>::value,
+			"Visit rules must provide an Overrides typedef"
+		);
+        static_assert(
+			meta::is_detected<impl::rules::HasDictionary, Rules>::value,
+			"Visit rules must provide a Dictionary typedef"
+		);
+        static_assert(
+			meta::is_detected<impl::rules::HasValidateChecksum, Rules>::value,
+			"Visit rules must provide a static ValidateChecksum boolean"
+		);
+        static_assert(
+			meta::is_detected<impl::rules::HasValidateLength, Rules>::value,
+			"Visit rules must provide a static ValidateLength boolean"
+		);
+        static_assert(
+			meta::is_detected<impl::rules::HasStrictMode, Rules>::value,
+			"Visit rules must provide a static StrictMode boolean"
+		);
+        static_assert(
+			meta::is_detected<impl::rules::HasSkipUnknownTags, Rules>::value,
+			"Visit rules must provide a static SkipUnknownTags boolean"
+		);
 
         impl::rules::OverridesValidator<typename Rules::Overrides> validator {};
     }
@@ -1218,8 +1186,10 @@ namespace Fixpp
     template<typename Visitor, typename Rules>
     auto visit(const char* frame, size_t size, Visitor& visitor, Rules rules) -> VisitError<typename Visitor::ResultType>
     {
-        static_assert(impl::rules::IsStaticVisitor<Visitor>::value,
-                "Visitor must fulfill StaticVisitor requirement and must expose an inner type ResultType");
+        static_assert(
+			meta::is_detected<impl::rules::HasResultType, Visitor>::value,
+			"Visitor must fulfill StaticVisitor requirement and must expose an inner ResultType type"
+		);
         checkRules<Rules>();
 
         RawStreamBuf<> streambuf(const_cast<char *>(frame), size);
