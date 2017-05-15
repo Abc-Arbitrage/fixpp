@@ -109,7 +109,7 @@ namespace Fixpp
         FieldRef& operator=(const FieldRef& other) = default;
 
         FieldRef(FieldRef&& other) = default;
-        FieldRef& operator=(FieldRef& other) = default;
+        FieldRef& operator=(FieldRef&& other) = default;
 
         constexpr unsigned tag() const
         {

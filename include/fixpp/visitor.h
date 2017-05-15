@@ -6,11 +6,9 @@
 
 #pragma once
 
-#include <cstring>
 #include <cstdio>
 #include <cstdarg>
 #include <type_traits>
-#include <algorithm>
 
 #include <fixpp/tag.h>
 #include <fixpp/utils/cursor.h>
@@ -19,7 +17,6 @@
 #include <fixpp/meta.h>
 #include <fixpp/view.h>
 #include <fixpp/dsl.h>
-#include <fixpp/dsl/details/unwrap.h>
 #include <fixpp/dsl/details/flatten.h>
 #include <fixpp/dsl/details/lexical_cast.h>
 

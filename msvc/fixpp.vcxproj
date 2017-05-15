@@ -26,6 +26,12 @@
     <ClInclude Include="..\include\fixpp\dsl\required.h" />
     <ClInclude Include="..\include\fixpp\message_type.h" />
     <ClInclude Include="..\include\fixpp\meta.h" />
+    <ClInclude Include="..\include\fixpp\meta\detect.h" />
+    <ClInclude Include="..\include\fixpp\meta\list.h" />
+    <ClInclude Include="..\include\fixpp\meta\map.h" />
+    <ClInclude Include="..\include\fixpp\meta\pack.h" />
+    <ClInclude Include="..\include\fixpp\meta\seq.h" />
+    <ClInclude Include="..\include\fixpp\meta\tuple.h" />
     <ClInclude Include="..\include\fixpp\streambuf.h" />
     <ClInclude Include="..\include\fixpp\tag.h" />
     <ClInclude Include="..\include\fixpp\utils\cursor.h" />
@@ -40,6 +46,7 @@
     <ClInclude Include="..\include\fixpp\versions\v44\component_blocks.h" />
     <ClInclude Include="..\include\fixpp\versions\v44\messages.h" />
     <ClInclude Include="..\include\fixpp\versions\v44\spec.h" />
+    <ClInclude Include="..\include\fixpp\view.h" />
     <ClInclude Include="..\include\fixpp\visitor.h" />
     <ClInclude Include="..\include\fixpp\writer.h" />
   </ItemGroup>

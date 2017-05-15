@@ -40,15 +40,15 @@ namespace meta
 
   template< std::size_t I, typename... Ts >
   FIXPP_META_TUPLE_CONSTEXPR
-  const seq::type_by_index_t< I, Ts... >& get( const tuple< Ts... >& ) noexcept;
+  decltype(auto) get( const tuple< Ts... >& ) noexcept;
 
   template< std::size_t I, typename... Ts >
   FIXPP_META_TUPLE_CONSTEXPR
-  seq::type_by_index_t< I, Ts... >& get( tuple< Ts... >& ) noexcept;
+  decltype(auto) get( tuple< Ts... >& ) noexcept;
 
   template< std::size_t I, typename... Ts >
   FIXPP_META_TUPLE_CONSTEXPR
-  seq::type_by_index_t< I, Ts... >&& get( const tuple< Ts... >&& ) noexcept;
+  decltype(auto) get( const tuple< Ts... >&& ) noexcept;
 
   namespace impl
   {
@@ -63,9 +63,48 @@ namespace meta
     template< bool B, typename T = void >
     using enable_if_t = typename std::enable_if< B, T >::type;
 
-    // TODO: using std::swap?
-    template< typename T >
-    using is_nothrow_swappable = std::integral_constant< bool, noexcept( swap( std::declval< T& >(), std::declval< T& >() ) ) >;
+	template<typename __T, typename __U>
+	class __is_swappable_test {
+
+		struct __swap_not_found_type {};
+
+		template<typename __V1, typename __V2>
+		static auto __test(__V1&& __v1, __V2&& __v2) -> decltype(swap(std::forward<__V1>(__v1), std::forward<__V2>(__v2)));
+
+		template<typename __V1, typename __V2>
+		static auto __test(...)->__swap_not_found_type;
+
+		using __test_type_tu = decltype(__test<__T, __U>(std::declval<__T>(), std::declval<__U>()));
+		using __test_type_ut = decltype(__test<__U, __T>(std::declval<__U>(), std::declval<__T>()));
+
+	public:
+		static constexpr bool __value =
+			!std::is_same<__test_type_tu, __swap_not_found_type>::value &&
+			!std::is_same<__test_type_ut, __swap_not_found_type>::value;
+	};
+
+	using std::swap;
+
+	// http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3619.html
+
+	template<bool, typename __T, typename __U>
+	struct __is_nothrow_swappable_test :
+		std::conditional<
+		noexcept(swap(std::declval<__T>(), std::declval<__U>())),
+		std::true_type, std::false_type>::type {};
+
+	template<typename __T, typename __U>
+	struct __is_nothrow_swappable_test<false, __T, __U> :
+		std::false_type {};
+
+	template<typename __T, typename __U = __T>
+	struct is_swappable :
+		std::conditional<__is_swappable_test<__T, __U>::__value,
+		std::true_type, std::false_type>::type {};
+
+	template<typename __T, typename __U = __T>
+	struct is_nothrow_swappable :
+		__is_nothrow_swappable_test<is_swappable<__T, __U>::value, __T, __U> {};
 
 #if __cplusplus >= 201402L
     template< typename T >
@@ -156,7 +195,7 @@ namespace meta
       }
 
       void swap( tuple_value& v )
-        noexcept( is_nothrow_swappable< T >::value )
+		  noexcept(is_nothrow_swappable< T >::value)
       {
         using std::swap;
         swap( value, v.value );
@@ -235,7 +274,7 @@ namespace meta
       }
 
       void swap( tuple_value& v )
-        noexcept( is_nothrow_swappable< T >::value )
+		  noexcept(is_nothrow_swappable< T >::value)
       {
         using std::swap;
         swap( *this, v );
@@ -307,7 +346,7 @@ namespace meta
 #ifdef FIXPP_META_FOLD_EXPRESSIONS
         ( tuple_value< Is, Ts >::operator=( get< Is >( v ) ), ... );
 #else
-        (void)swallow{ ( tuple_value< Is, Ts >::operator=( get< Is >( v ) ), true )..., true };
+        (void)swallow{ ( tuple_value< Is, Ts >::operator=( meta::get< Is >( v ) ), true )..., true };
 #endif
         return *this;
       }
@@ -319,13 +358,13 @@ namespace meta
 #ifdef FIXPP_META_FOLD_EXPRESSIONS
         ( tuple_value< Is, Ts >::operator=( get< Is >( std::move( v ) ) ), ... );
 #else
-        (void)swallow{ ( tuple_value< Is, Ts >::operator=( get< Is >( std::move( v ) ) ), true )..., true };
+        (void)swallow{ ( tuple_value< Is, Ts >::operator=( meta::get< Is >( std::move( v ) ) ), true )..., true };
 #endif
         return *this;
       }
 
       void swap( tuple_base& v )
-        noexcept( seq::is_all< impl::is_nothrow_swappable< Ts >::value... >::value )
+		  noexcept(seq::is_all< impl::is_nothrow_swappable< Ts >::value... >::value)
       {
 #ifdef FIXPP_META_FOLD_EXPRESSIONS
         ( static_cast< tuple_value< Is, Ts >& >( *this ).swap( static_cast< tuple_value< Is, Ts >& >( v ) ), ... );
@@ -348,15 +387,15 @@ namespace meta
 
     template< std::size_t I, typename... Us >
     friend FIXPP_META_TUPLE_CONSTEXPR
-    const seq::type_by_index_t< I, Us... >& get( const tuple< Us... >& ) noexcept;
+    decltype(auto) get( const tuple< Us... >& ) noexcept;
 
     template< std::size_t I, typename... Us >
     friend FIXPP_META_TUPLE_CONSTEXPR
-    seq::type_by_index_t< I, Us... >& get( tuple< Us... >& ) noexcept;
+		decltype(auto) get( tuple< Us... >& ) noexcept;
 
     template< std::size_t I, typename... Us >
     friend FIXPP_META_TUPLE_CONSTEXPR
-    seq::type_by_index_t< I, Us... >&& get( tuple< Us... >&& ) noexcept;
+		decltype(auto) get( tuple< Us... >&& ) noexcept;
 
   public:
     // 20.4.2.1 Construction [tuple.cnstr]
@@ -377,6 +416,7 @@ namespace meta
       : base( ts... )
     {}
 
+#if 0
     template< typename... Us,
               typename = impl::enable_if_t< sizeof...( Us ) == sizeof...( Ts ) >,
               typename = impl::enable_if_t< seq::is_all< std::is_constructible< Ts, Us&& >::value... >::value > >
@@ -385,6 +425,7 @@ namespace meta
       noexcept( seq::is_all< std::is_nothrow_constructible< Ts, Us&& >::value... >::value )
       : base( std::forward< Us >( us )... )
     {}
+#endif
 
     tuple( const tuple& ) = default;
     tuple( tuple&& ) = default;
@@ -584,21 +625,21 @@ namespace meta
   // get<I>
   template< std::size_t I, typename... Ts >
   FIXPP_META_TUPLE_CONSTEXPR
-  const seq::type_by_index_t< I, Ts... >& get( const tuple< Ts... >& v ) noexcept
+  decltype(auto) get( const tuple< Ts... >& v ) noexcept
   {
     return static_cast< const impl::tuple_value< I, seq::type_by_index_t< I, Ts... > >& >( v.base ).get();
   }
 
   template< std::size_t I, typename... Ts >
   FIXPP_META_TUPLE_CONSTEXPR
-  seq::type_by_index_t< I, Ts... >& get( tuple< Ts... >& v ) noexcept
+  decltype(auto) get( tuple< Ts... >& v ) noexcept
   {
     return static_cast< impl::tuple_value< I, seq::type_by_index_t< I, Ts... > >& >( v.base ).get();
   }
 
   template< std::size_t I, typename... Ts >
   FIXPP_META_TUPLE_CONSTEXPR
-  seq::type_by_index_t< I, Ts... >&& get( tuple< Ts... >&& v ) noexcept
+  decltype(auto) get( tuple< Ts... >&& v ) noexcept
   {
     using type = seq::type_by_index_t< I, Ts... >;
     return static_cast< type&& >( static_cast< impl::tuple_value< I, type >& >( v.base ).get() );
@@ -628,21 +669,21 @@ namespace meta
   // get<T>
   template< typename T, typename... Ts >
   FIXPP_META_TUPLE_CONSTEXPR
-  const T& get( const tuple< Ts... >& v ) noexcept
+  decltype(auto) get( const tuple< Ts... >& v ) noexcept
   {
     return get< impl::index_of< T, Ts... >::value >( v );
   }
 
   template< typename T, typename... Ts >
   FIXPP_META_TUPLE_CONSTEXPR
-  T& get( tuple< Ts... >& v ) noexcept
+  decltype(auto) get( tuple< Ts... >& v ) noexcept
   {
     return get< impl::index_of< T, Ts... >::value >( v );
   }
 
   template< typename T, typename... Ts >
   FIXPP_META_TUPLE_CONSTEXPR
-  T&& get( tuple< Ts... >&& v ) noexcept
+  decltype(auto) get( tuple< Ts... >&& v ) noexcept
   {
     return get< impl::index_of< T, Ts... >::value >( std::move( v ) );
   }

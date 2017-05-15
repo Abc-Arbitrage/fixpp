@@ -2,6 +2,7 @@
 
 #include <cmath>
 
+#include <fixpp/tag.h>
 #include <fixpp/utils/cursor.h>
 #include <fixpp/utils/time.h>
 

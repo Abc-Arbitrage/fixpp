@@ -74,6 +74,25 @@
       <Filter>dsl\details</Filter>
     </ClInclude>
     <ClInclude Include="..\include\fixpp\message_type.h" />
+    <ClInclude Include="..\include\fixpp\view.h" />
+    <ClInclude Include="..\include\fixpp\meta\detect.h">
+      <Filter>meta</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\fixpp\meta\list.h">
+      <Filter>meta</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\fixpp\meta\map.h">
+      <Filter>meta</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\fixpp\meta\pack.h">
+      <Filter>meta</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\fixpp\meta\seq.h">
+      <Filter>meta</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\fixpp\meta\tuple.h">
+      <Filter>meta</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="dsl">
@@ -93,6 +112,9 @@
     </Filter>
     <Filter Include="compiler">
       <UniqueIdentifier>{0475c813-dab1-4c54-9c8b-55de284450e4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="meta">
+      <UniqueIdentifier>{376330a7-2d4b-4a58-b978-8056d762ec09}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
