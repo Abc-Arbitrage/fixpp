@@ -358,7 +358,7 @@ namespace meta
 #ifdef FIXPP_META_FOLD_EXPRESSIONS
         ( tuple_value< Is, Ts >::operator=( get< Is >( v ) ), ... );
 #else
-        (void)swallow{ ( tuple_value< Is, Ts >::operator=( get< Is >( v ) ), true )..., true };
+        (void)swallow{ ( tuple_value< Is, Ts >::operator=( meta::get< Is >( v ) ), true )..., true };
 #endif
         return *this;
       }
@@ -370,7 +370,7 @@ namespace meta
 #ifdef FIXPP_META_FOLD_EXPRESSIONS
         ( tuple_value< Is, Ts >::operator=( get< Is >( std::move( v ) ) ), ... );
 #else
-        (void)swallow{ ( tuple_value< Is, Ts >::operator=( get< Is >( std::move( v ) ) ), true )..., true };
+        (void)swallow{ ( tuple_value< Is, Ts >::operator=( meta::get< Is >( std::move( v ) ) ), true )..., true };
 #endif
         return *this;
       }
