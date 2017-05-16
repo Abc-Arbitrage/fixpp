@@ -26,7 +26,7 @@ namespace Fixpp
     struct Field
     {
         using Tag = TagT;
-        using Type = typename TagT::Type::UnderlyingType;
+        using Type = typename TagT::Type::StorageType;
 
         Field()
             : empty_(true)
@@ -99,7 +99,7 @@ namespace Fixpp
     struct FieldRef
     {
         using Tag = TagT;
-        using Type = typename TagT::Type::UnderlyingType;
+        using Type = typename TagT::Type::StorageType;
 
         static constexpr bool IsRef = false;
 

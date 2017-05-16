@@ -61,7 +61,7 @@ static void SetFieldsNewOrderSingleBenchmark(benchmark::State& state)
         auto id = makeId(i++);
         Fixpp::set<Fixpp::Tag::ClOrdID>(orderSingle, id + "-50000");
 
-        Fixpp::set<Fixpp::Tag::OrderQty>(orderSingle, intDis(gen));
+        Fixpp::set<Fixpp::Tag::OrderQty>(orderSingle, static_cast<double>(intDis(gen)));
         Fixpp::set<Fixpp::Tag::Price>(orderSingle, realDis(gen));
     }
 }
@@ -98,7 +98,7 @@ static void WriteNewOrderSingleBenchmark(benchmark::State& state)
 
     while (state.KeepRunning())
     {
-        Fixpp::set<Fixpp::Tag::OrderQty>(orderSingle, intDis(gen));
+        Fixpp::set<Fixpp::Tag::OrderQty>(orderSingle, static_cast<double>(intDis(gen)));
         Fixpp::set<Fixpp::Tag::Price>(orderSingle, realDis(gen));
 
         auto id = makeId(i++);

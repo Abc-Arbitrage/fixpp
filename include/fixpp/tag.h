@@ -7,6 +7,7 @@
 #pragma once
 
 #include <string>
+#include <cstring>
 #include <iostream>
 #include <ctime>
 #include <tuple>
@@ -18,6 +19,7 @@ namespace Fixpp
         template<typename T>
         struct Base
         {
+            using StorageType = T;
             using UnderlyingType = T;
 
             Base() { }
@@ -53,15 +55,42 @@ namespace Fixpp
                 bool m_value;
             };
 
-            using UnderlyingType = Boxed;
+            using StorageType = Boxed;
+            using UnderlyingType = bool;
 
             Boolean(bool);
             Boolean(const Boxed&);
         };
 
-        struct Float : public Base<double>
+        struct Float
         {
-            using Base::Base;
+            struct Boxed
+            {
+                Boxed(double value = 0.0)
+                    : m_value(value)
+                { }
+
+                Boxed(const Boxed& other) = default;
+                Boxed(Boxed&& other) = default;
+
+                Boxed& operator=(const Boxed& other) = default;
+                Boxed& operator=(Boxed&& other) = default;
+
+                operator double() const
+                {
+                    return m_value;
+                }
+
+            private:
+                double m_value;
+            };
+
+            using StorageType = Boxed;
+            using UnderlyingType = double;
+
+            Float(float);
+            Float(double);
+            Float(const Boxed&);
         };
 
         using Amt = Float;
@@ -75,6 +104,7 @@ namespace Fixpp
 
         struct Data
         {
+            using StorageType = std::string;
             using UnderlyingType = std::string;
 
             Data(const std::string&);
@@ -143,6 +173,7 @@ namespace Fixpp
                 Tm m_tm;
             };
 
+            using StorageType = Time;
             using UnderlyingType = Time;
 
             UTCTimestamp(const std::string &);
@@ -162,6 +193,15 @@ namespace Fixpp
         inline std::ostream& operator<<(std::ostream& os, const Boolean::Boxed& value)
         {
             os << (value ? 'Y' : 'N');
+            return os;
+        }
+
+        inline std::ostream& operator<<(std::ostream& os, const Float::Boxed& value)
+        {
+            char buf[64];
+            std::memset(buf, 0, sizeof buf);
+            std::sprintf(buf, "%-.*G", 16, static_cast<double>(value));
+            os << buf;
             return os;
         }
 
