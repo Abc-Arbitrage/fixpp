@@ -8,6 +8,7 @@
 #include <fixpp/versions/v42.h>
 #include <fixpp/versions/v44.h>
 #include <fixpp/writer.h>
+#include <fixpp/utils/time.h>
 
 template<typename Header>
 Header createHeader()
@@ -58,6 +59,98 @@ void check(const Header& header, const Message& message, std::initializer_list<s
         auto it = fields.find(value.first);
         ASSERT_EQ(it->second, value.second);
     }
+}
+
+TEST(writer_test, should_write_bool_field)
+{
+    using Field = Fixpp::Field<Fixpp::Tag::PossDupFlag>;
+    Field field;
+    field.set(true);
+
+    std::ostringstream oss;
+    writeField(oss, field);
+
+    ASSERT_EQ(oss.str(), "43=Y|");
+
+    oss.str("");
+
+    field.set(false);
+    Fixpp::details::FieldWriter<Field>::write(oss, field);
+
+    ASSERT_EQ(oss.str(), "43=N|");
+}
+
+TEST(writer_test, should_write_char_field)
+{
+    using Field = Fixpp::Field<Fixpp::Tag::OrdStatus>;
+    Field field;
+    field.set('4');
+
+    std::ostringstream oss;
+    writeField(oss, field);
+
+    ASSERT_EQ(oss.str(), "39=4|");
+}
+
+TEST(writer_test, should_write_float_field)
+{
+    using Field = Fixpp::Field<Fixpp::Tag::Price>;
+    Field field;
+
+    field.set(17.35);
+
+    std::ostringstream oss;
+    writeField(oss, field);
+
+    ASSERT_EQ(oss.str(), "44=17.35|");
+
+    field.set(1234567.45);
+
+    oss.str("");
+    writeField(oss, field);
+
+    ASSERT_EQ(oss.str(), "44=1234567.45|");
+
+    field.set(1000000.0);
+
+    oss.str("");
+    writeField(oss, field);
+
+    ASSERT_EQ(oss.str(), "44=1000000|");
+}
+
+TEST(writer_test, should_write_utc_timestamp_field)
+{
+    using Field = Fixpp::Field<Fixpp::Tag::SendingTime>;
+    Field field;
+
+    std::tm tm;
+    tm.tm_year = 117;
+    tm.tm_mon = 4;
+    tm.tm_mday = 16;
+    tm.tm_hour = 13;
+    tm.tm_min = 45;
+    tm.tm_sec = 30;
+
+    auto epoch = mkgmtime(&tm);
+    field.set(epoch);
+
+    std::ostringstream oss;
+    writeField(oss, field);
+
+    ASSERT_EQ(oss.str(), "52=20170516-13:45:30|");
+}
+
+TEST(writer_test, should_write_int_field)
+{
+    using Field = Fixpp::Field<Fixpp::Tag::MsgSeqNum>;
+    Field field;
+    field.set(25);
+
+    std::ostringstream oss;
+    writeField(oss, field);
+
+    ASSERT_EQ(oss.str(), "34=25|");
 }
 
 TEST(writer_test, should_write_heartbeat_message_42)
