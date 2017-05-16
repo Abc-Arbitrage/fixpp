@@ -49,7 +49,7 @@ void check(const Header& header, const Message& message, std::initializer_list<s
     {
         auto tagValue = split(token, '=');
         ASSERT_EQ(tagValue.size(), 2);
-    
+
         fields.insert(std::make_pair(std::stoi(tagValue[0]), tagValue[1]));
     }
 
@@ -77,6 +77,44 @@ TEST(writer_test, should_write_heartbeat_message_44)
     auto header = createHeader<Fixpp::v44::Header>();
 
     check(header, heartbeat, { { 8, "FIX.4.4" } });
+}
+
+TEST(writer_test, should_compute_proper_length_and_checksum)
+{
+    Fixpp::v42::Message::Heartbeat heartbeat;
+    Fixpp::set<Fixpp::Tag::TestReqID>(heartbeat, "TestReq");
+
+    auto header = createHeader<Fixpp::v42::Header>();
+    Fixpp::Writer writer;
+
+    auto frame = writer.write(header, heartbeat);
+
+    auto bodyLengthStartPos = frame.find("9=");
+    auto bodyLengthEnd = frame.find(SOH_CHARACTER, bodyLengthStartPos);
+    auto bodyLengthValueStart = bodyLengthStartPos + 2;
+
+    auto bodyLength = frame.substr(bodyLengthValueStart, bodyLengthEnd - bodyLengthValueStart);
+    auto extractedBodyLength = std::stoi(bodyLength);
+
+    auto checksumStartPos = frame.find("10=");
+    auto checksumEnd = frame.find(SOH_CHARACTER, checksumStartPos);
+    auto checksumValueStart = checksumStartPos + 3;
+
+    auto checksum = frame.substr(checksumValueStart, checksumEnd - checksumValueStart);
+    auto extractedChecksum = std::stoi(checksum);
+
+    auto expectedBodyLength = checksumStartPos - bodyLengthEnd - 1;
+
+    size_t sum = 0;
+    for (size_t i = 0; i < checksumStartPos; ++i)
+    {
+        sum += static_cast<size_t>(frame[i]);
+    }
+    
+    auto expectedChecksum = sum % 256;
+
+    ASSERT_EQ(expectedBodyLength, extractedBodyLength);
+    ASSERT_EQ(expectedChecksum, extractedChecksum);
 }
 
 TEST(writer_test, should_write_repeating_groups)

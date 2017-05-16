@@ -102,6 +102,8 @@ namespace Fixpp
         static constexpr size_t BeginStringSize = sizeof("8=") + Message::Version::Size;
         static constexpr size_t BodyLengthSize = sizeof("9=00000");
 
+        static constexpr size_t MaxBodyLengthDigits = 5;
+
         static constexpr size_t HeaderStartLength = BeginStringSize + BodyLengthSize;
 
         struct Context
@@ -112,25 +114,37 @@ namespace Fixpp
         };
 
         StreamBufBase()
-            : sum_(0)
-            , count_(0)
+            : off_(0)
         {
             Base::pbump(HeaderStartLength);
         }
 
+        std::streamsize offset() const
+        {
+            return static_cast<std::streamsize>(Base::pptr() - Base::pbase());
+        }
+
+        void prepareWriteHeader(size_t bodySize)
+        {
+            const auto bodySizeDigits = digitsCount(bodySize);
+            off_ = MaxBodyLengthDigits - bodySizeDigits;
+            Base::pubseekpos(off_);
+        }
+
         size_t checksum() const
         {
-            return sum_ % 256;
-        }
+            const char* p = Base::pbase() + off_;
+            const char* end = Base::pptr();
 
-        size_t sum() const
-        {
-            return sum_;
-        }
+            size_t sum = 0;
 
-        size_t count() const
-        {
-            return count_;
+            while (p != end)
+            {
+                sum += static_cast<size_t>(*p);
+                ++p;
+            }
+
+            return sum % 256;
         }
 
         Context save() const
@@ -146,24 +160,27 @@ namespace Fixpp
 
         std::string asString() const
         {
-            return std::string(Base::pbase(), Base::pptr());
+            return std::string(Base::pbase() + off_, Base::pptr());
+        }
+
+    private:
+        size_t off_;
+
+        int digitsCount(size_t x)
+        {  
+            return (x < 10 ? 1 :   
+                (x < 100 ? 2 :   
+                (x < 1000 ? 3 :   
+                (x < 10000 ? 4 :   
+                (x < 100000 ? 5 :   
+                (x < 1000000 ? 6 :   
+                (x < 10000000 ? 7 :  
+                (x < 100000000 ? 8 :  
+                (x < 1000000000 ? 9 :  
+                10)))))))));  
         }
 
     protected:
-        std::streamsize xsputn(const char_type* s, std::streamsize count) override
-        {
-            auto result = Base::xsputn(s, count);
-
-            for (std::streamsize i = 0; i < count; ++i)
-            {
-                sum_ += static_cast<size_t>(s[i]);
-            }
-
-            count_ += count;
-
-            return result;
-        }
-
         pos_type seekpos(pos_type pos, std::ios_base::openmode) override
         {
             auto* base = Base::pbase();
@@ -172,10 +189,6 @@ namespace Fixpp
             Base::setp(base + pos, end); 
             return pos;
         }
-
-    private:
-        size_t sum_;
-        size_t count_;
     };
 
     namespace internal

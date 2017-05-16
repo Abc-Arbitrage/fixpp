@@ -67,6 +67,7 @@ namespace details
 
     };
 
+
 } // namespace details
 
 template<typename Tag, typename Value>
@@ -116,18 +117,22 @@ struct Writer
             throw std::runtime_error("Missing values for header");
         }
 
+        const auto startOffset = buf.offset();
+
         writeRaw<Tag::MsgType>(os, Message::MsgType::Value, Message::MsgType::Size);
         write(os, header.values, meta::seq::make_index_sequence<Header::TotalTags>());
         write(os, message.values, meta::seq::make_index_sequence<Message::TotalTags>());
 
-        const size_t size = buf.count();
+        const auto endOffset = buf.offset();        
+
+        const size_t size = endOffset - startOffset;
 
         auto context = buf.save();
 
-        buf.pubseekpos(0);
+        buf.prepareWriteHeader(size);
 
         writeTag<Tag::BeginString>(os, Message::Version::Str);
-        os << Tag::BodyLength::Id << "=" << std::setfill('0') << std::setw(5) << size << SOH;
+        os << Tag::BodyLength::Id << "=" << size << SOH;
 
         buf.restore(context);
 
