@@ -22,6 +22,27 @@ namespace Fixpp
 
             using TestRequest = MessageV<Chars<'1'>, Required<Tag::TestReqID>>;
 
+            using ResendRequest = MessageV<MessageType::ResendRequest, Required<Tag::BeginSeqNo>, Required<Tag::EndSeqNo>>;
+
+            using Reject = MessageV<MessageType::Reject,
+                  Required<Tag::RefSeqNum>, Tag::RefTagID, Tag::RefMsgType, Tag::SessionRejectReason,
+                  Tag::Text, Tag::EncodedTextLen, Tag::EncodedText
+            >;
+
+            using SequenceReset = MessageV<MessageType::SequenceReset, Tag::GapFillFlag, Required<Tag::NewSeqNo>>;
+
+            using Logout = MessageV<MessageType::Logout, Tag::Text, Tag::EncodedTextLen, Tag::EncodedText>;
+
+            using Logon = MessageV<MessageType::Logon,
+                  Required<Tag::EncryptMethod>, Required<Tag::HeartBtInt>, Tag::RawDataLength, Tag::RawData,
+                  Tag::ResetSeqNumFlag, Tag::NextExpectedMsgSeqNum, Tag::MaxMessageSize,
+                  RepeatingGroup
+                  <
+                      Tag::NoMsgTypes,
+                      Tag::RefMsgType, Tag::MsgDirection
+                  >, Tag::TestMessageIndicator, Tag::Username, Tag::Password
+            >;
+
             using MarketDataSnapshot = MessageV<MessageType::MarketDataSnapshotFullRefresh,
                   Tag::MDReqID,
                   Component::Instrument,
