@@ -865,9 +865,10 @@ namespace Fixpp
                                 StreamCursor::Token valueToken(cursor);
                                 TRY_MATCH_UNTIL(SOH, "Expected value after tag %d, got EOF", tag);
 
-                                if (!skipUnknown && !strict)
+                                if (!strict)
                                 {
-                                    groupRef.unparsed.emplace_back(tag, valueToken.view());
+                                    if (!skipUnknown)
+                                        groupRef.unparsed.emplace_back(tag, valueToken.view());
                                     TRY_ADVANCE("Got early EOF after tag %d value", tag);
                                     continue;
                                 }

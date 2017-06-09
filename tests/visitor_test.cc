@@ -5,6 +5,7 @@
 #include <fixpp/versions/v42.h>
 #include <fixpp/versions/v44.h>
 #include <fixpp/visitor.h>
+#include <fixpp/dsl/message.h>
 
 template<typename Dict>
 struct DefaultTestRules : public Fixpp::VisitRules
@@ -454,6 +455,69 @@ namespace should_convert_from_ref
     using VisitRules = DefaultTestRules<Fixpp::v42::Spec::Dictionary>;
 };
 
+namespace should_skip_unknown_tags
+{
+    using Message = Fixpp::VersionnedMessage<
+        Fixpp::v44::Version,
+        Fixpp::MessageType::MarketDataSnapshotFullRefresh,
+
+        Fixpp::Tag::TransactTime,
+        Fixpp::Tag::MDReqID,
+        Fixpp::Tag::Symbol,
+        Fixpp::RepeatingGroup<
+            Fixpp::Tag::NoMDEntries,
+            Fixpp::Tag::MDEntryType,
+            Fixpp::Tag::MDEntryPx,
+            Fixpp::Tag::MDEntrySize,
+            Fixpp::Tag::NumberOfOrders,
+            Fixpp::Tag::MDEntryDate,
+            Fixpp::Tag::QuoteEntryID
+        >
+    >;
+
+    namespace Spec
+    {
+
+        struct Dictionary
+        {
+            using Version = Fixpp::v44::Version;
+            using Header = Fixpp::v44::Header;
+
+            using Messages = typename meta::typelist::make<Message>::Result;
+
+        };
+
+    }
+
+    struct VisitRules : public Fixpp::VisitRules
+    {
+        using Overrides = OverrideSet<>;
+        using Dictionary = Spec::Dictionary;
+
+        static constexpr bool ValidateChecksum = false;
+        static constexpr bool ValidateLength = false;
+        static constexpr bool StrictMode = false;
+        static constexpr bool SkipUnknownTags = true;
+    };
+
+    struct Visitor : Fixpp::StaticVisitor<void>
+    {
+        void operator()(const Fixpp::v44::Header::Ref&, const Message::Ref& message)
+        {
+            ASSERT_TRUE(message.unparsed.empty());
+
+            const auto& mdEntries = Fixpp::get<Fixpp::Tag::NoMDEntries>(message);
+            ASSERT_EQ(mdEntries.size(), 2);
+
+            auto mdEntry0 = mdEntries[0];
+            ASSERT_TRUE(mdEntry0.unparsed.empty());
+
+            auto mdEntry1 = mdEntries[1];
+            ASSERT_TRUE(mdEntry1.unparsed.empty());
+        }
+    };
+}
+
 struct AssertVisitRules : public Fixpp::VisitRules
 {
     using Overrides = OverrideSet<>;
@@ -678,5 +742,16 @@ TEST(visitor_test, should_visit_message_with_multiple_chars_message_type)
     const char* frame = "8=FIX.4.4|9=84|35=BF|923=123|924=1|553=username|10=248";
 
     auto err = doVisit(frame, should_visit_message_with_multiple_chars_message_type::Visitor(), should_visit_message_with_multiple_chars_message_type::VisitRules());
+    ASSERT_TRUE(err.isOk());
+}
+
+TEST(visitor_test, should_skip_unknown_tags)
+{
+    const char* frame = "8=FIX.4.4|9=0234|35=W|49=SNDR|59=ABC|34=1|52=20170609-09:27:24|55=AAA/BBB|262=123|268=2|"
+                        "269=0|270=1.181|271=50000|272=20170613|299=ABCDEFGH|9063=AB|"
+                        "269=1|270=1.1182|271=50000|272=20170613|299=ABCDEFH|9063=AB|"
+                        "9066=189718761|10=076|";
+
+    auto err = doVisit(frame, should_skip_unknown_tags::Visitor(), should_skip_unknown_tags::VisitRules());
     ASSERT_TRUE(err.isOk());
 }
