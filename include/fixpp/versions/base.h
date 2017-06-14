@@ -41,7 +41,7 @@ inline uint64_t getAsciiStringAsInt(const char* str, size_t size)
     return getAsciiStringAsIntConst(str, size);
 }
 
-#define FIX_BEGIN_VERSION_NAMESPACE(name, string)                               \
+#define FIXPP_DECLARE_VERSION(name, string)                                     \
     namespace name                                                              \
     {                                                                           \
         template<typename VersionT>                                             \
@@ -82,6 +82,8 @@ inline uint64_t getAsciiStringAsInt(const char* str, size_t size)
         template<typename... Tags>                                              \
         using StandardMessage = VersionnedMessage<Version, Empty, Tags...>;     \
     }                                                                           \
-    namespace name                                                              \
 
-#define FIX_END_VERSION_NAMESPACE
+#define FIXPP_BEGIN_VERSION_NAMESPACE(name, _)                                  \
+	namespace name
+
+#define FIXPP_END_VERSION_NAMESPACE

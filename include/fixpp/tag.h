@@ -730,7 +730,6 @@ namespace Fixpp
         using SecuritySubType = TagT<762, Type::String>;
         using UnderlyingSecuritySubType = TagT<763, Type::String>;
         using LegSecuritySubType = TagT<764, Type::String>;
-        using NextExpectedMsgSeqNum = TagT<789, Type::Int>;
         using UnderlyingPx = TagT<810, Type::Price>;
         using PriceDelta = TagT<811, Type::Float>;
         using ApplQueueDepth = TagT<813, Type::Int>;

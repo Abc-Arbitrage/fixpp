@@ -12,7 +12,7 @@
 #include <stdexcept>
 
 #include <fixpp/tag.h>
-#include <fixpp/dsl/message.h>
+#include <fixpp/dsl.h>
 #include <fixpp/streambuf.h>
 #include <fixpp/utils/soh.h>
 

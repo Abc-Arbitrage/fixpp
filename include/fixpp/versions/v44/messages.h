@@ -1,4 +1,4 @@
-/* v44.h
+/* messages.h
    Mathieu Stefani, 04 january 2017
    
    Messages definition for FIX 4.4
@@ -6,99 +6,5 @@
 
 #pragma once
 
-#include <fixpp/message_type.h>
-#include <fixpp/versions/base.h>
-#include <fixpp/versions/v44/component_blocks.h>
-#include <fixpp/dsl.h>
-
-namespace Fixpp
-{
-    FIX_BEGIN_VERSION_NAMESPACE(v44, "FIX.4.4")
-    {
-
-        namespace Message
-        {
-            using Heartbeat = MessageV<Chars<'0'>, Tag::TestReqID>;
-
-            using TestRequest = MessageV<Chars<'1'>, Required<Tag::TestReqID>>;
-
-            using ResendRequest = MessageV<MessageType::ResendRequest, Required<Tag::BeginSeqNo>, Required<Tag::EndSeqNo>>;
-
-            using Reject = MessageV<MessageType::Reject,
-                  Required<Tag::RefSeqNum>, Tag::RefTagID, Tag::RefMsgType, Tag::SessionRejectReason,
-                  Tag::Text, Tag::EncodedTextLen, Tag::EncodedText
-            >;
-
-            using SequenceReset = MessageV<MessageType::SequenceReset, Tag::GapFillFlag, Required<Tag::NewSeqNo>>;
-
-            using Logout = MessageV<MessageType::Logout, Tag::Text, Tag::EncodedTextLen, Tag::EncodedText>;
-
-            using Logon = MessageV<MessageType::Logon,
-                  Required<Tag::EncryptMethod>, Required<Tag::HeartBtInt>, Tag::RawDataLength, Tag::RawData,
-                  Tag::ResetSeqNumFlag, Tag::NextExpectedMsgSeqNum, Tag::MaxMessageSize,
-                  RepeatingGroup
-                  <
-                      Tag::NoMsgTypes,
-                      Tag::RefMsgType, Tag::MsgDirection
-                  >, Tag::TestMessageIndicator, Tag::Username, Tag::Password
-            >;
-
-            using MarketDataSnapshot = MessageV<MessageType::MarketDataSnapshotFullRefresh,
-                  Tag::MDReqID,
-                  Component::Instrument,
-                  RepeatingGroup<
-                      Tag::NoUnderlyings,
-                      Component::UnderlyingInstrument
-                  >,
-                  RepeatingGroup<
-                      Tag::NoLegs,
-                      Component::InstrumentLeg
-                  >,
-                  Tag::FinancialStatus, Tag::CorporateAction, Tag::NetChgPrevDay,
-                  Required<RepeatingGroup<
-                      Tag::NoMDEntries,
-                      Required<Tag::MDEntryType>, Tag::MDEntryPx, Tag::Currency, Tag::MDEntrySize,
-                      Tag::MDEntryDate, Tag::MDEntryTime, Tag::TickDirection, Tag::MDMkt,
-                      Tag::TradingSessionID, Tag::TradingSessionSubID, Tag::QuoteCondition,
-                      Tag::TradeCondition, Tag::MDEntryOriginator, Tag::LocationID, Tag::DeskID,
-                      Tag::OpenCloseSettleFlag, Tag::TimeInForce, Tag::ExpireDate, Tag::ExpireTime,
-                      Tag::MinQty, Tag::ExecInst, Tag::SellerDays, Tag::OrderID, Tag::QuoteEntryID,
-                      Tag::MDEntryBuyer, Tag::MDEntrySeller, Tag::NumberOfOrders, Tag::Scope, Tag::PriceDelta,
-                      Tag::Text, Tag::EncodedTextLen, Tag::EncodedText
-                  >>,
-                  Tag::ApplQueueDepth, Tag::ApplQueueResolution
-              >;
-
-            using UserRequest = MessageV<MessageType::UserRequest,
-                Required<Tag::UserRequestID>,
-                Required<Tag::Username>,
-                Tag::UserStatus,
-                Tag::UserStatusText
-            >;
-                        
-            using UserResponse = MessageV<MessageType::UserResponse,
-                Required<Tag::UserRequestID>,
-                Required<Tag::UserRequestType>,
-                Required<Tag::Username>,
-                Tag::Password,
-                Tag::NewPassword,
-                Tag::RawDataLength,
-                Tag::RawData
-            >;
-
-        } // namespace Message
-
-        using Header = StandardMessage<
-                          Tag::MsgSeqNum,
-                          Required<Tag::SenderCompID>, Required<Tag::TargetCompID>, Tag::OnBehalfOfCompID, Tag::DeliverToCompID,
-                          Tag::SecureDataLen, Tag::SecureData, Required<Tag::MsgSeqNum>, Tag::SenderSubID,
-                          Tag::SenderLocationID, Tag::TargetSubID, Tag::TargetLocationID, Tag::OnBehalfOfSubID,
-                          Tag::OnBehalfOfLocationID, Tag::DeliverToSubID, Tag::DeliverToLocationID,
-                          Tag::PossDupFlag, Tag::PossResend, Required<Tag::SendingTime>, Tag::OrigSendingTime,
-                          Tag::XmlDataLen, Tag::XmlData, Tag::MessageEncoding,
-                          Tag::LastMsgSeqNumProcessed, Tag::OnBehalfOfSendingTime>;
-
-    }
-    FIX_END_VERSION_NAMESPACE
-
-} // namespace Fixpp
+#include <fixpp/versions/v44/messages/session.h>
+#include <fixpp/versions/v44/messages/application.h>

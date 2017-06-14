@@ -161,7 +161,7 @@ namespace meta
       template< std::size_t N, typename T, T... Ns >
       struct sum
       {
-        using type = std::integral_constant<
+          using type = std::integral_constant<
           T,
           T( sizeof( collector< make_index_sequence< N >, ( ( Ns > 0 ) ? Ns : 0 )... > ) - N ) -
           T( sizeof( collector< make_index_sequence< N >, ( ( Ns < 0 ) ? -Ns : 0 )... > ) - N ) >;
@@ -392,6 +392,35 @@ namespace meta
     // type_by_index
     // ------------------------------------------------
 
+#if 0
+
+    namespace impl
+    {
+        template<std::size_t N, std::size_t Index, typename... Ts>
+        struct get_nth;
+
+        template<std::size_t N, std::size_t Index, typename Head, typename... Tail>
+        struct get_nth<N, Index, Head, Tail...>
+        {
+            using type = typename get_nth<N, Index + 1, Tail...>::type;
+        };
+
+        template<std::size_t Index, typename Head, typename... Tail>
+        struct get_nth<Index, Index, Head, Tail...>
+        {
+            using type = Head;
+        };
+
+    }
+
+    template< std::size_t I, typename... Ts >
+    using type_by_index = impl::get_nth<I, 0, Ts...>;
+
+    template< std::size_t I, typename... Ts >
+    using type_by_index_t = typename type_by_index< I, Ts... >::type;
+
+#else
+
 	// based on http://stackoverflow.com/questions/18942322
 
     namespace impl
@@ -431,6 +460,8 @@ namespace meta
 
     template< std::size_t I, typename... Ts >
     using type_by_index_t = typename type_by_index< I, Ts... >::type;
+
+#endif
 
     // ------------------------------------------------
     // select
