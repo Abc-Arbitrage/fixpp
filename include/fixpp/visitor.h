@@ -372,6 +372,10 @@ namespace Fixpp
             int index = -1;
             int dummy[] = {0, (doVisitSingleField<Indexes>(tag, meta::get<Indexes>(message.values), visitor, &index), 0)...};
 
+            (void) dummy;
+            (void) tag;
+            (void) visitor;
+
             if (index != -1)
                 message.allBits.set(static_cast<size_t>(index));
 
