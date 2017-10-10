@@ -828,6 +828,12 @@ namespace Fixpp
                      GroupTag::Id, CURSOR_CURRENT(cursor)
                 );
 
+                if (!instances)
+                {
+                    TRY_ADVANCE("Got early EOF after tag %d value", GroupTag::Id);
+                    return;
+                }
+
                 // Literal('=')
                 TRY_ADVANCE("Expected RepeatingGroup %d, got EOF", GroupTag::Id);
 

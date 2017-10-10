@@ -344,6 +344,27 @@ namespace should_visit_nested_repeating_groups
     using VisitRules = DefaultTestRules<Fixpp::v44::Spec::Dictionary>;
 }
 
+namespace should_visit_empty_repeating_group
+{
+    struct Visitor : public Fixpp::StaticVisitor<void>
+    {
+        void operator()(const Fixpp::v44::Header::Ref&, const Fixpp::v44::Message::MarketDataSnapshot::Ref& message)
+        {
+            using namespace Fixpp;
+
+            auto mdEntries = Fixpp::get<Tag::NoMDEntries>(message);
+            ASSERT_EQ(mdEntries.size(), 0);
+        }
+
+        template<typename HeaderT, typename MessageT> void operator()(HeaderT, MessageT)
+        {
+            ASSERT_TRUE(false);
+        }
+    };
+
+    using VisitRules = DefaultTestRules<Fixpp::v44::Spec::Dictionary>;
+}
+
 namespace should_visit_unknown_tags_in_non_strict_mode
 {
     struct VisitRules : public Fixpp::VisitRules
@@ -638,6 +659,13 @@ TEST(visitor_test, should_visit_nested_repeating_groups)
                             "269=1|271=500000|272=20170103|299=02z00000hdi:A|"
                         "10=213";
     auto err = doVisit(frame, should_visit_nested_repeating_groups::Visitor(), should_visit_nested_repeating_groups::VisitRules());
+    ASSERT_TRUE(err.isOk());
+}
+
+TEST(visitor_test, should_visit_empty_repeating_group)
+{
+    const char* frame = "8=FIX.4.4|9=0000|35=W|49=Prov|56=MDABC|55=AUD/CAD|262=1709|268=0|10=213";
+    auto err = doVisit(frame, should_visit_empty_repeating_group::Visitor(), should_visit_empty_repeating_group::VisitRules());
     ASSERT_TRUE(err.isOk());
 }
 
