@@ -670,6 +670,7 @@ namespace Fixpp
         using FundRenewWaiv = TagT<497, Type::Char>;
         using NestedPartyID = TagT<524, Type::String>;
         using NestedPartyIDSource = TagT<525, Type::String>;
+        using QuoteType = TagT<537, Type::Int>;
         using NestedPartyRole = TagT<538, Type::Int>;
         using NoNestedPartyIDs = TagT<539, Type::Int>;
         using MaturityDate = TagT<541, Type::LocalMktDate>;
