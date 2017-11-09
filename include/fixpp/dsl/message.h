@@ -354,6 +354,21 @@ namespace Fixpp
 
     template<typename Tag, typename Message>
     bool
+    tryUnsafeGet(const Message& message, typename Tag::Type::UnderlyingType& value)
+    {
+        using Index = details::TagIndex<typename Message::TagsList, Tag>;
+        if (!Index::Valid)
+            return false;
+
+        if (!message.allBits.test(static_cast<size_t>(Index::Value)))
+            return false;
+
+        value = meta::get<Index::Value>(message.values).get();
+        return true;
+    }
+
+    template<typename Tag, typename Message>
+    bool
     tryGetView(const Message& message, View& view)
     {
         static_assert(Message::IsRef, "Can only retrieve raw tags on ref-message types"); 
