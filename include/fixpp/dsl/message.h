@@ -318,7 +318,7 @@ namespace Fixpp
         using Index = details::TagIndex<typename Message::TagsList, Tag>;
         static_assert(Index::Valid, "Invalid tag for given message");
 
-        if (!message.allBits.test(Index::Value))
+        if (!message.allBits.test(static_cast<size_t>(Index::Value)))
             throw std::runtime_error("Bad tag access: tag is not present in message");
 
         return meta::get<Index::Value>(message.values).get();
@@ -332,7 +332,7 @@ namespace Fixpp
         using Index = details::TagIndex<typename Message::TagsList, Tag>;
         static_assert(Index::Valid, "Invalid tag for given message");
 
-        if (!message.allBits.test(Index::Value))
+        if (!message.allBits.test(static_cast<size_t>(Index::Value)))
             throw std::runtime_error("Bad tag access: tag is not present in message");
 
         return meta::get<Index::Value>(message.values).view();
@@ -345,7 +345,7 @@ namespace Fixpp
         using Index = details::TagIndex<typename Message::TagsList, Tag>;
         static_assert(Index::Valid, "Invalid tag for given message");
 
-        if (!message.allBits.test(Index::Value))
+        if (!message.allBits.test(static_cast<size_t>(Index::Value)))
             return false;
 
         value = meta::get<Index::Value>(message.values).get();
