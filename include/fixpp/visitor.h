@@ -647,7 +647,7 @@ namespace Fixpp
                 bits.set(tag);
             }
 
-            bool isset(unsigned tag)
+            bool test(unsigned tag)
             {
                 return bits.test(tag);
             }
@@ -894,7 +894,7 @@ namespace Fixpp
                         }
 
                         // The tag is already set in our GroupSet, we finished parsing the current instance
-                        if (groupSet.isset(tag))
+                        if (groupSet.test(tag))
                             break;
 
                         revertTag.ignore();
