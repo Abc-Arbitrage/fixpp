@@ -269,7 +269,12 @@ namespace Fixpp
             }
         };
 
-    };
+        template<typename Tag, typename Message>
+        struct IsTagDefined : std::integral_constant< bool, details::TagIndex<typename Message::TagsList, Tag>::Valid >
+        { };
+
+    } // namespace details
+
 
     template<typename VersionT, typename Chars, typename... Tags>
     VersionnedMessage<VersionT, Chars, Tags...> fromRef(const VersionnedMessageRef<VersionT, Chars, Tags...>& ref)
@@ -283,8 +288,7 @@ namespace Fixpp
     // ------------------------------------------------
 
     // get / set operations on a FIX Message
-
-
+    
     // identity function used to remove warning C4127 in a constant expression
     // warning C4127 : conditional expression is constant
     template<typename T>
@@ -310,6 +314,18 @@ namespace Fixpp
         if (identity(RequiredIndex::Valid))
             message.requiredBits.set(static_cast<size_t>(RequiredIndex::Value));
     }
+
+    template<typename Tag, typename Message, typename Value>
+    typename std::enable_if<details::IsTagDefined< Tag, Message >::value>::type
+    setIfDefined(Message& message, const Value& value)
+    {
+        Fixpp::set< Tag >(message, value);
+    }
+
+    template<typename Tag, typename Message, typename Value>
+    typename std::enable_if<!details::IsTagDefined< Tag, Message >::value>::type
+    setIfDefined(Message&, const Value&)
+    { }
 
     template<typename Tag, typename Message>
     decltype(auto)

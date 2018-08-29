@@ -191,3 +191,20 @@ TEST(message_test, should_overwrite_tags_in_message)
     Fixpp::set<MyTag>(message, 1212);
     ASSERT_EQ(Fixpp::get<MyTag>(message), 1212);
 }
+
+TEST(message_test, should_set_tag_if_defined)
+{
+    using MyTag = Fixpp::TagT<2154, Fixpp::Type::Int>;
+    using MyMessage = Fixpp::ExtendedMessage<Fixpp::v42::Message::Logon, MyTag>;
+
+    using MyOtherTag = Fixpp::TagT<9999, Fixpp::Type::Int>;
+    
+    MyMessage message;
+
+    Fixpp::setIfDefined<MyTag>(message, 1);
+    ASSERT_EQ(Fixpp::get<MyTag>(message), 1);
+
+    Fixpp::setIfDefined<MyOtherTag>(message, 1);
+    int64_t i;
+    ASSERT_FALSE(Fixpp::tryUnsafeGet<MyOtherTag>(message, i));
+}

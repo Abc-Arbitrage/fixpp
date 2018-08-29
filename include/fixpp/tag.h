@@ -765,6 +765,7 @@ namespace Fixpp
         using StrikeCurrency = TagT<947, Type::String>;
         using LegContractSettlMonth = TagT<955, Type::String>;
         using LegInterestAccrualDate = TagT<956, Type::String>;
+        using DefaultCstmApplVerID = TagT<1408, Type::String>;
 
     } // namespace Tag
 
