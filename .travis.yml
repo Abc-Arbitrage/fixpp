@@ -20,15 +20,14 @@ matrix:
             - llvm-toolchain-precise-3.6
 
     # Clang 3.7
-    - env: COMPILER=clang++-3.7
-      addons: &clang37
+    - dist: precise
+      compiler: clang
+      addons:
         apt:
-          packages:
-            - clang-3.7
-            - g++-5
-          sources:
-            - ubuntu-toolchain-r-test
-            - llvm-toolchain-precise-3.7
+          sources: ['ubuntu-toolchain-r-test', 'llvm-toolchain-precise-3.7']
+          packages: ['clang-3.7']
+      env:
+        - COMPILER=clang++-3.7
 
     # Clang 3.8
     - env: COMPILER=clang++-3.8
