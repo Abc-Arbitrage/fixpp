@@ -14,6 +14,7 @@
 #include <functional>
 #include <type_traits>
 
+namespace Fixpp {
 namespace result {
 
 namespace types {
@@ -899,7 +900,8 @@ bool operator==(const Result<T, E>& lhs, types::Err<E> err) {
     return lhs.storage().template get<E>() == err.val;
 }
 
-}
+} // namespace result
+} // namespace Fixpp
 
 #define TRY(...)                                                   \
     ({                                                             \
