@@ -1101,8 +1101,8 @@ namespace Fixpp
                 context.setValue(res);
             }
 
-            Visitor& visitor;
             Context& context;
+            Visitor& visitor;
         };
 
     } // namespace impl
@@ -1185,6 +1185,7 @@ namespace Fixpp
         );
 
         impl::rules::OverridesValidator<typename Rules::Overrides> validator {};
+        (void)validator;
     }
 
 
