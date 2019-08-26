@@ -792,11 +792,12 @@ namespace Fixpp
             struct Visitor
             {
                 Visitor(ParsingContext& context, GroupSet& groupSet, bool strict, bool skipUnknown)
-                    : context(context)
+                    : recursive(false)
+                    , context(context)
                     , groupSet(groupSet)
                     , strict(strict)
                     , skipUnknown(skipUnknown)
-                    , recursive(0)
+                    
                 { }
 
                 template<typename Field>
@@ -811,7 +812,7 @@ namespace Fixpp
                 }
 
                 // Indicates whether we are in a recursive RepeatingGroup or not
-                int recursive;
+                bool recursive;
 
             private:
                 ParsingContext& context;
