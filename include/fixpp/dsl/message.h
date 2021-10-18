@@ -268,12 +268,15 @@ namespace Fixpp
                 FieldRefCast<FieldRef>::cast(src, dst);
             }
         };
-
-        template<typename Tag, typename Message>
-        struct IsTagDefined : std::integral_constant< bool, details::TagIndex<typename Message::TagsList, Tag>::Valid >
-        { };
-
     } // namespace details
+
+
+    template<typename Tag, typename Message>
+    struct IsTagDefined : std::integral_constant< bool, details::TagIndex<typename Message::TagsList, Tag>::Valid >
+    { };
+
+    template<typename Tag, typename Message>
+    static constexpr bool IsTagDefinedV = IsTagDefined<Tag, Message>::value;
 
 
     template<typename VersionT, typename Chars, typename... Tags>
@@ -316,14 +319,14 @@ namespace Fixpp
     }
 
     template<typename Tag, typename Message, typename Value>
-    typename std::enable_if<details::IsTagDefined< Tag, Message >::value>::type
+    typename std::enable_if_t<IsTagDefinedV< Tag, Message >>
     setIfDefined(Message& message, const Value& value)
     {
         Fixpp::set< Tag >(message, value);
     }
 
     template<typename Tag, typename Message, typename Value>
-    typename std::enable_if<!details::IsTagDefined< Tag, Message >::value>::type
+    typename std::enable_if_t<!IsTagDefinedV< Tag, Message >>
     setIfDefined(Message&, const Value&)
     { }
 
@@ -369,7 +372,7 @@ namespace Fixpp
     }
 
     template<typename Tag, typename Message>
-    typename std::enable_if<details::IsTagDefined< Tag, Message >::value, bool>::type
+    typename std::enable_if_t<IsTagDefinedV< Tag, Message >, bool>
     tryUnsafeGet(const Message& message, typename Tag::Type::UnderlyingType& value)
     {
         using Index = details::TagIndex<typename Message::TagsList, Tag>;
@@ -382,7 +385,7 @@ namespace Fixpp
     }
 
     template<typename Tag, typename Message>
-    typename std::enable_if<!details::IsTagDefined< Tag, Message >::value, bool>::type
+    typename std::enable_if_t<!IsTagDefinedV< Tag, Message >, bool>
     tryUnsafeGet(const Message&, typename Tag::Type::UnderlyingType&)
     {
         return false;
