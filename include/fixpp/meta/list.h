@@ -185,19 +185,19 @@ namespace meta
                 using Result = List2;
             };
 
-            template<typename, typename Ret, Ret Result, template<typename, Ret> class Op>
+            template<typename, typename Ret, template<typename, Ret> typename Op, Ret Result>
             struct Fold;
 
-            template<typename Ret, Ret Result, template<typename, Ret> class Op>
-            struct Fold<NullType, Ret, Result, Op>
+            template<typename Ret, template<typename, Ret> typename Op, Ret Result>
+            struct Fold<NullType, Ret, Op, Result>
             {
                 static constexpr Ret Value = Result;
             };
 
-            template<typename Head, typename Tail, typename Ret, Ret Result, template<typename, Ret> class Op>
-            struct Fold<TypeList<Head, Tail>, Ret, Result, Op>
+            template<typename Head, typename Tail, typename Ret, template<typename, Ret> typename Op, Ret Result>
+            struct Fold<TypeList<Head, Tail>, Ret, Op, Result>
             {
-                static constexpr Ret Value = Fold<Tail, Ret, Op<Head, Result>::Result, Op>::Value;
+                static constexpr Ret Value = Fold<Tail, Ret, Op, Op<Head, Result>::Result>::Value;
             };
 
             template<typename List, typename VisitorT>

@@ -85,7 +85,7 @@ namespace Fixpp
         static constexpr size_t TotalTags = meta::typelist::ops::Length<TagsList>::value;
 
         static constexpr int MaxTag = meta::typelist::ops::Fold<
-            List, int, 0, details::Max
+            List, int, details::Max, 0
         >::Value;
 
         Fields values;
