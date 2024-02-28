@@ -24,8 +24,12 @@ namespace Fixpp
         using OrderCancelReject = Chars<'9'>;
         using QuoteStatusRequest = Chars<'a'>;
         using Logon = Chars<'A'>;
+        using QuoteRequestReject = Chars<'A', 'G'>;
+        using QuoteResponse = Chars<'A', 'J'>;
         using QuoteAcknowledgement = Chars<'b'>;
         using News = Chars<'B'>;
+        using UserRequest = Chars<'B', 'E'>;
+        using UserResponse = Chars<'B', 'F'>;
         using SecurityDefinitionRequest = Chars<'c'>;
         using Email = Chars<'C'>;
         using SecurityDefinition = Chars<'d'>;
@@ -55,13 +59,10 @@ namespace Fixpp
         using SettlementInstructions = Chars<'T'>;
         using MarketDataRequest = Chars<'V'>;
         using MarketDataSnapshotFullRefresh = Chars<'W'>;
+        using SecurityListRequest = Chars<'x'>;
         using MarketDataIncrementalRefresh = Chars<'X'>;
+        using SecurityList = Chars<'y'>;
         using MarketDataRequestReject = Chars<'Y'>;
         using QuoteCancel = Chars<'Z'>;
-        using QuoteRequestReject = Chars<'A', 'G'>;
-        using QuoteResponse = Chars<'A', 'J'>;
-        using UserRequest = Chars<'B', 'E'>;
-        using UserResponse = Chars<'B', 'F'>;
     }
-
 } // namespace Fixpp
