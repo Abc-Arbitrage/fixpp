@@ -49,7 +49,7 @@ inline uint64_t getAsciiStringAsInt(const char* str, size_t size)
         {                                                                       \
             static constexpr const char* Str = string;                          \
             static constexpr size_t Size = sizeof(string) - 1;                  \
-            static constexpr auto StrInt = getAsciiStringAsIntConst(Str, Size); \
+            static constexpr uint64_t StrInt = getAsciiStringAsIntConst(Str, Size); \
         };                                                                      \
         template<typename VersionT>                                             \
         constexpr const char* __VersionStaticHolder<VersionT>::Str;             \

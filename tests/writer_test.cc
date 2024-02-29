@@ -124,7 +124,7 @@ TEST(writer_test, should_write_utc_timestamp_field)
     using Field = Fixpp::Field<Fixpp::Tag::SendingTime>;
     Field field;
 
-    std::tm tm;
+    std::tm tm{};
     tm.tm_year = 117;
     tm.tm_mon = 4;
     tm.tm_mday = 16;
@@ -255,18 +255,32 @@ TEST(writer_test, should_write_nested_repeating_groups)
 
     Fixpp::set<Fixpp::Tag::CorporateAction>(snapshot, 'D');
 
+    std::tm entryDateTm{};
+    entryDateTm.tm_year = 117; // 2017
+    entryDateTm.tm_mon = 4;    // May
+    entryDateTm.tm_mday = 16;
+    Fixpp::Type::UTCDate::Date entryDate{entryDateTm, mkgmtime(&entryDateTm)};
+
+    std::tm entryTimeTm{};
+    entryTimeTm.tm_hour = 15;
+    entryTimeTm.tm_min = 10;
+    entryTimeTm.tm_sec = 5;
+    Fixpp::Type::UTCTimeOnly::Time entryTime{mkgmtime(&entryTimeTm), 100};
+
     auto mdEntries = Fixpp::createGroup<Fixpp::Tag::NoMDEntries>(snapshot, 2);
     auto mdEntry0 = mdEntries.instance();
     Fixpp::set<Fixpp::Tag::MDEntryType>(mdEntry0, '0');
     Fixpp::set<Fixpp::Tag::MDEntrySize>(mdEntry0, 500000.0);
-    Fixpp::set<Fixpp::Tag::MDEntryDate>(mdEntry0, "20170103");
+    Fixpp::set<Fixpp::Tag::MDEntryDate>(mdEntry0, entryDate);
+    Fixpp::set<Fixpp::Tag::MDEntryTime>(mdEntry0, entryTime);
     Fixpp::set<Fixpp::Tag::QuoteEntryID>(mdEntry0, "02z00000hdi:A");
     mdEntries.add(mdEntry0);
 
     auto mdEntry1 = mdEntries.instance();
     Fixpp::set<Fixpp::Tag::MDEntryType>(mdEntry1, '1');
     Fixpp::set<Fixpp::Tag::MDEntrySize>(mdEntry1, 500000.0);
-    Fixpp::set<Fixpp::Tag::MDEntryDate>(mdEntry1, "20170103");
+    Fixpp::set<Fixpp::Tag::MDEntryDate>(mdEntry1, entryDate);
+    Fixpp::set<Fixpp::Tag::MDEntryTime>(mdEntry0, entryTime);
     Fixpp::set<Fixpp::Tag::QuoteEntryID>(mdEntry1, "02z00000hdi:A");
     mdEntries.add(mdEntry1);
 

@@ -99,7 +99,7 @@ namespace Fixpp
         {
             static std::string cast(const char* offset, size_t size)
             {
-                return std::string(offset, size);
+                return {offset, size};
             }
         };
 
@@ -111,40 +111,37 @@ namespace Fixpp
                 RawStreamBuf<> buf(const_cast<char *>(offset), size);
                 StreamCursor cursor(&buf);
 
-                auto parseFragment = [&](size_t size, const char* error)
+                const auto parseFragment = [&](size_t size, const char* error)
                 {
                     int value;
                     if (!match_int_fast_n(&value, cursor, size))
                         throw std::runtime_error(error);
-
                     return value;
                 };
 
-                int year = parseFragment(4, "Could not parse year from UTCTimestamp");
-                int month = parseFragment(2, "Could not parse month from UTCTimestamp");
-                int day = parseFragment(2, "Could not parse month from UTCTimestamp");
-
+                const int year  = parseFragment(4, "Could not parse year from UTCTimestamp");
+                const int month = parseFragment(2, "Could not parse month from UTCTimestamp");
+                const int day   = parseFragment(2, "Could not parse month from UTCTimestamp");
 
                 // Literal('-')
                 if (!cursor.advance(1))
                     throw std::runtime_error("Could not parse hour from UTCTimestamp, expected '-' got EOF");
 
-                int hour = parseFragment(2, "Could not parse hours from UTCTimestamp");
+                const int hour = parseFragment(2, "Could not parse hours from UTCTimestamp");
                 //
                 // Literal(':')
                 if (!cursor.advance(1))
                     throw std::runtime_error("Could not parse minutes from UTCTimestamp, expected ':' got EOF");
 
-                int min = parseFragment(2, "Could not parse minutes from UTCTimestamp");
+                const int min = parseFragment(2, "Could not parse minutes from UTCTimestamp");
                 //
                 // Literal(':')
                 if (!cursor.advance(1))
                     throw std::runtime_error("Could not parse seconds from UTCTimestamp, expected ':' got EOF");
 
-                int sec = parseFragment(2, "Could not parse seconds from UTCTimestamp");
+                const int sec = parseFragment(2, "Could not parse seconds from UTCTimestamp");
 
                 int msec = 0;
-
                 if (!cursor.eof())
                 {
                     // Literal('.')
@@ -152,7 +149,7 @@ namespace Fixpp
                     msec = parseFragment(3, "Could not parse milliseconds from UTCTimestamp");
                 }
 
-                std::tm tm;
+                std::tm tm{};
                 // tm_year is year since 1900
                 tm.tm_year = year - 1900;
                 // tm_mon is 0-indexed
@@ -162,7 +159,85 @@ namespace Fixpp
                 tm.tm_min = min;
                 tm.tm_sec = sec;
 
-                return Type::UTCTimestamp::Time(tm, msec, mkgmtime(&tm));
+                return {tm, msec, mkgmtime(&tm)};
+            }
+        };
+
+        template<>
+        struct LexicalCast<Type::UTCDate>
+        {
+            static Type::UTCDate::Date cast(const char* offset, size_t size)
+            {
+                RawStreamBuf<> buf(const_cast<char *>(offset), size);
+                StreamCursor cursor(&buf);
+
+                const auto parseFragment = [&](size_t size, const char* error)
+                {
+                    int value;
+                    if (!match_int_fast_n(&value, cursor, size))
+                        throw std::runtime_error(error);
+                    return value;
+                };
+
+                const int year  = parseFragment(4, "Could not parse year from UTCDate");
+                const int month = parseFragment(2, "Could not parse month from UTCDate");
+                const int day   = parseFragment(2, "Could not parse month from UTCDate");
+
+                std::tm tm{};
+                // tm_year is year since 1900
+                tm.tm_year = year - 1900;
+                // tm_mon is 0-indexed
+                tm.tm_mon = month - 1;
+                tm.tm_mday = day;
+
+                return {tm, mkgmtime(&tm)};
+            }
+        };
+
+        template<>
+        struct LexicalCast<Type::UTCTimeOnly>
+        {
+            static Type::UTCTimeOnly::Time cast(const char* offset, size_t size)
+            {
+                RawStreamBuf<> buf(const_cast<char *>(offset), size);
+                StreamCursor cursor(&buf);
+
+                const auto parseFragment = [&](size_t size, const char* error)
+                {
+                    int value;
+                    if (!match_int_fast_n(&value, cursor, size))
+                        throw std::runtime_error(error);
+                    return value;
+                };
+
+                const int hour = parseFragment(2, "Could not parse hours from UTCTimeOnly");
+                //
+                // Literal(':')
+                if (!cursor.advance(1))
+                    throw std::runtime_error("Could not parse minutes from UTCTimeOnly, expected ':' got EOF");
+
+                const int min = parseFragment(2, "Could not parse minutes from UTCTimeOnly");
+                //
+                // Literal(':')
+                if (!cursor.advance(1))
+                    throw std::runtime_error("Could not parse seconds from UTCTimeOnly, expected ':' got EOF");
+
+                const int sec = parseFragment(2, "Could not parse seconds from UTCTimeOnly");
+
+                int msec = 0;
+                if (!cursor.eof())
+                {
+                    // Literal('.')
+                    cursor.advance(1);
+                    msec = parseFragment(3, "Could not parse milliseconds from UTCTimeOnly");
+                }
+
+                std::tm tm{};
+                tm.tm_hour = hour;
+                tm.tm_min = min;
+                tm.tm_sec = sec;
+
+                return {mkgmtime(&tm), msec};
             }
         };
 

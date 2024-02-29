@@ -41,7 +41,9 @@ inline std::time_t mkgmtime(const struct std::tm* ptm)
             secs += SecondsPerDay;
     }
 
-    secs += (ptm->tm_mday - 1) * SecondsPerDay;
+    // ptm may reprensent a time only
+    if (ptm->tm_mday)
+        secs += (ptm->tm_mday - 1) * SecondsPerDay;
     secs += ptm->tm_hour       * SecondsPerHour;
     secs += ptm->tm_min        * SecondsPerMinute;
     secs += ptm->tm_sec;

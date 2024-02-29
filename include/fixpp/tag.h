@@ -125,21 +125,32 @@ namespace Fixpp
 
         struct UTCTimestamp
         {
-
             struct Tm
             {
                 Tm()
-                    : tm_tm()
-                    , tm_msec(0)
+                    : m_tm()
+                    , m_msec(0)
                 { }
 
                 Tm(const std::tm& tm, int msec)
-                    : tm_tm(tm)
-                    , tm_msec(msec)
+                    : m_tm(tm)
+                    , m_msec(msec)
                 { }
 
-                std::tm tm_tm;
-                int tm_msec;
+                std::tm tm() const
+                {
+                    return m_tm;
+                }
+
+                int msec() const
+                {
+                    return m_msec;
+                }
+
+            private:
+            private:
+                std::tm m_tm;
+                int m_msec;
             };
 
             struct Time
@@ -155,8 +166,7 @@ namespace Fixpp
                 Time(const std::tm& tm, int msec, std::time_t time = 0)
                     : m_time(time)
                     , m_tm(tm, msec)
-                {
-                }
+                { }
 
                 std::time_t time() const
                 {
@@ -175,10 +185,77 @@ namespace Fixpp
 
             using StorageType = Time;
             using UnderlyingType = Time;
-
-            UTCTimestamp(const std::string &);
+            
             UTCTimestamp(const Time&);
             UTCTimestamp(const std::time_t&);
+        };
+
+        struct UTCDate
+        {
+            struct Date
+            {
+                Date()
+                    : m_time(std::time(nullptr))
+                { }
+
+                Date(const std::tm& tm, std::time_t time)
+                    : m_time(time)
+                    , m_tm(tm)
+                { }
+
+                std::time_t time() const
+                {
+                    return m_time;
+                }
+
+                std::tm tm() const
+                {
+                    return m_tm;
+                }
+
+            private:
+                std::time_t m_time;
+                std::tm m_tm{};
+            };
+
+            using StorageType = Date;
+            using UnderlyingType = Date;
+
+            UTCDate(const Date&);
+        };
+        
+        struct UTCTimeOnly
+        {
+            struct Time
+            {
+                Time()
+                    : m_time(std::time(nullptr))
+                { }
+
+                Time(std::time_t time, int msec = 0)
+                    : m_time(time)
+                    , m_msec(msec)
+                { }
+
+                std::time_t time() const
+                {
+                    return m_time;
+                }
+
+                int msec() const
+                {
+                    return m_msec;
+                }
+
+            private:
+                std::time_t m_time;
+                int m_msec{};
+            };
+
+            using StorageType = Time;
+            using UnderlyingType = Time;
+
+            UTCTimeOnly(const Time&);
         };
 
         inline std::ostream& operator<<(std::ostream& os, const UTCTimestamp::Time& value)
@@ -187,6 +264,33 @@ namespace Fixpp
             char buffer[32];
             strftime(buffer, sizeof buffer, "%Y%m%d-%H:%M:%S", std::gmtime(&time)); 
             os << buffer;
+            if (value.tm().msec())
+            {
+                sprintf(buffer, ".%03d", value.tm().msec());
+                os << buffer;
+            }
+            return os;
+        }
+
+        inline std::ostream& operator<<(std::ostream& os, const UTCDate::Date& value)
+        {
+            auto time = value.time();
+            char buffer[32];
+            strftime(buffer, sizeof buffer, "%Y%m%d", std::gmtime(&time)); 
+            return os << buffer;
+        }
+
+        inline std::ostream& operator<<(std::ostream& os, const UTCTimeOnly::Time& value)
+        {
+            auto time = value.time();
+            char buffer[32];
+            strftime(buffer, sizeof buffer, "%H:%M:%S", std::gmtime(&time)); 
+            os << buffer;
+            if (value.msec())
+            {
+                sprintf(buffer, ".%03d", value.msec());
+                os << buffer;
+            }
             return os;
         }
 
@@ -198,16 +302,12 @@ namespace Fixpp
 
         inline std::ostream& operator<<(std::ostream& os, const Float::Boxed& value)
         {
-            char buf[64];
-            std::memset(buf, 0, sizeof buf);
+            char buf[64] = {};
             std::sprintf(buf, "%-.*G", 16, static_cast<double>(value));
-            os << buf;
-            return os;
+            return os << buf;
         }
 
         using LocalMktDate = String;
-        using UTCDate = String;
-        using UTCTimeOnly = String;
 
     } // namespace Type
 
@@ -682,6 +782,10 @@ namespace Fixpp
         using Password = TagT<554, Type::String>;
         using NoLegs = TagT<555, Type::Int>;
         using LegCurrency = TagT<556, Type::String>;
+        using SecurityListRequestType = TagT<559, Type::Int>;
+        using SecurityRequestResult = TagT<560, Type::Int>;
+        using MinTradeVol = TagT<562, Type::Qty>;
+        using TradSesStatusRejReason = TagT<567, Type::Int>;
         using UnderlyingCountryOfIssue = TagT<592, Type::String>;
         using UnderlyingStateOrProvinceOfIssue = TagT<593, Type::String>;
         using UnderlyingLocaleOfIssue = TagT<594, Type::String>;
@@ -755,6 +859,7 @@ namespace Fixpp
         using NoUnderlyingStips = TagT<887, Type::Int>;
         using UnderlyingStipType = TagT<888, Type::String>;
         using UnderlyingStipValue = TagT<889, Type::String>;
+        using LastFragment = TagT<893, Type::Boolean>;
         using UserRequestID = TagT<923, Type::String>;
         using UserRequestType = TagT<924, Type::Int>;
         using NewPassword = TagT<925, Type::Int>;
