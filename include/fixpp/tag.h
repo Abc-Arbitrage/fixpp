@@ -126,14 +126,15 @@ namespace Fixpp
         {
             struct Tm
             {
-                Tm()
-                    : m_tm()
-                    , m_msec(0)
+                Tm(int msec = 0, int usec = 0)
+                    : m_msec(msec)
+                    , m_usec(usec)
                 { }
 
-                Tm(const std::tm& tm, int msec)
+                Tm(const std::tm& tm, int msec = 0, int usec = 0)
                     : m_tm(tm)
                     , m_msec(msec)
+                    , m_usec(usec)
                 { }
 
                 std::tm tm() const
@@ -146,10 +147,15 @@ namespace Fixpp
                     return m_msec;
                 }
 
+                int usec() const
+                {
+                    return m_usec;
+                }
+                
             private:
-            private:
-                std::tm m_tm;
-                int m_msec;
+                std::tm m_tm{};
+                int m_msec{};
+                int m_usec;
             };
 
             struct Time
@@ -158,13 +164,14 @@ namespace Fixpp
                     : m_time(std::time(nullptr))
                 { }
 
-                Time(std::time_t time)
+                Time(std::time_t time, int msec = 0, int usec = 0)
                     : m_time(time)
+                    , m_tm(msec, usec)
                 { }
 
-                Time(const std::tm& tm, int msec, std::time_t time = 0)
+                Time(const std::tm& tm, int msec, int usec = 0, std::time_t time = 0)
                     : m_time(time)
-                    , m_tm(tm, msec)
+                    , m_tm(tm, msec, usec)
                 { }
 
                 std::time_t time() const
@@ -231,9 +238,10 @@ namespace Fixpp
                     : m_time(std::time(nullptr))
                 { }
 
-                Time(std::time_t time, int msec = 0)
+                Time(std::time_t time, int msec = 0, int usec = 0)
                     : m_time(time)
                     , m_msec(msec)
+                    , m_usec(usec)
                 { }
 
                 std::time_t time() const
@@ -246,9 +254,15 @@ namespace Fixpp
                     return m_msec;
                 }
 
+                int usec() const
+                {
+                    return m_usec;
+                }
+
             private:
                 std::time_t m_time;
                 int m_msec{};
+                int m_usec{};
             };
 
             using StorageType = Time;
@@ -266,6 +280,11 @@ namespace Fixpp
             if (value.tm().msec())
             {
                 sprintf(buffer, ".%03d", value.tm().msec());
+                os << buffer;
+            }
+            if (value.tm().usec())
+            {
+                sprintf(buffer, "%03d", value.tm().usec());
                 os << buffer;
             }
             return os;
@@ -288,6 +307,11 @@ namespace Fixpp
             if (value.msec())
             {
                 sprintf(buffer, ".%03d", value.msec());
+                os << buffer;
+            }
+            if (value.usec())
+            {
+                sprintf(buffer, "%03d", value.usec());
                 os << buffer;
             }
             return os;

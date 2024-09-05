@@ -158,6 +158,12 @@ namespace Fixpp
                     msec = parseFragment(3, "Could not parse milliseconds from UTCTimestamp");
                 }
 
+                int usec = 0;
+                if (!cursor.eof())
+                {
+                    usec = parseFragment(3, "Could not parse microseconds from UTCTimeOnly");
+                }
+
                 std::tm tm{};
                 // tm_year is year since 1900
                 tm.tm_year = year - 1900;
@@ -168,7 +174,7 @@ namespace Fixpp
                 tm.tm_min = min;
                 tm.tm_sec = sec;
 
-                return {tm, msec, mkgmtime(&tm)};
+                return {tm, msec, usec, mkgmtime(&tm)};
             }
         };
 
@@ -241,12 +247,18 @@ namespace Fixpp
                     msec = parseFragment(3, "Could not parse milliseconds from UTCTimeOnly");
                 }
 
+                int usec = 0;
+                if (!cursor.eof())
+                {
+                    usec = parseFragment(3, "Could not parse microseconds from UTCTimeOnly");
+                }
+
                 std::tm tm{};
                 tm.tm_hour = hour;
                 tm.tm_min = min;
                 tm.tm_sec = sec;
 
-                return {mkgmtime(&tm), msec};
+                return {mkgmtime(&tm), msec, usec};
             }
         };
 
