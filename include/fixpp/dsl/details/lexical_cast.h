@@ -95,6 +95,15 @@ namespace Fixpp
         };
 
         template<>
+        struct LexicalCast<Type::Data>
+        {
+            static std::string cast(const char* offset, size_t size)
+            {
+                return {offset, size};
+            }
+        };
+
+        template<>
         struct LexicalCast<Type::String>
         {
             static std::string cast(const char* offset, size_t size)

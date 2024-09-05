@@ -103,12 +103,10 @@ namespace Fixpp
             using Base::Base;
         };
 
-        struct Data
+        struct Data : public Base<std::string>
         {
-            using StorageType = std::string;
-            using UnderlyingType = std::string;
+            using Base::Base;
 
-            Data(const std::string&);
             Data(const char *);
         };
 
