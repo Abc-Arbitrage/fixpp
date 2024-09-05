@@ -95,6 +95,7 @@ namespace Fixpp
 
         using Amt = Float;
         using Price = Float;
+        using PriceOffset = Float;
         using Qty = Float;
 
         struct Int : public Base<int64_t>
@@ -870,8 +871,11 @@ namespace Fixpp
         using StrikeCurrency = TagT<947, Type::String>;
         using LegContractSettlMonth = TagT<955, Type::String>;
         using LegInterestAccrualDate = TagT<956, Type::String>;
+        using MinPriceIncrement = TagT<956, Type::Float>;
+        using MDEntryForwardPoints = TagT<1027, Type::PriceOffset>;
+        using MDQuoteType = TagT<1070, Type::Int>;
+        using DefaultApplVerID = TagT<1137, Type::String>;
         using DefaultCstmApplVerID = TagT<1408, Type::String>;
-
+        using MDSecurityTradingStatus = TagT<1682, Type::Int>;
     } // namespace Tag
-
 } // namespace Fixpp

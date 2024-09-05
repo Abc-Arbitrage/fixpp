@@ -9,6 +9,7 @@
 #include <fixpp/versions/v42.h>
 #include <fixpp/versions/v43.h>
 #include <fixpp/versions/v44.h>
+#include <fixpp/versions/v50sp2.h>
 
 namespace Fixpp
 {
@@ -43,5 +44,15 @@ namespace Fixpp
 
         using Dictionary = Fixpp::v44::Spec::Dictionary;
         using Header = Fixpp::v44::Header;
+    };
+
+    template<>
+    struct VersionTraits<Fixpp::v50sp2::Version>
+    {
+        using Session = Fixpp::v50sp2::Spec::Session;
+        using Application = Fixpp::v50sp2::Spec::Application;
+
+        using Dictionary = Fixpp::v50sp2::Spec::Dictionary;
+        using Header = Fixpp::v50sp2::Header;
     };
 } // namespace Fix

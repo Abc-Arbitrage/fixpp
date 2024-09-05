@@ -84,8 +84,8 @@ namespace Fixpp
         }
 
     private:        
-        Type val_;
-        bool empty_;
+        Type val_{};
+        bool empty_{};
     };
 
     // ------------------------------------------------
