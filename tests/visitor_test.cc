@@ -571,31 +571,132 @@ Fixpp::VisitError<typename Visitor::ResultType> doVisit(const char* frame, Visit
     return Fixpp::visit(frame, std::strlen(frame), visitor, rules);
 }
 
+TEST(visitor_test, should_parse_utc_date)
+{
+    const char* str = "20171105";
+    auto time = Fixpp::details::LexicalCast<Fixpp::Type::UTCDate>::cast(str, std::strlen(str));
+
+    auto t = time.time();
+    std::tm tm{};
+    gmtime_r(&t, &tm);
+
+    ASSERT_EQ(tm.tm_year, 117);
+    ASSERT_EQ(tm.tm_mon, 10);
+    ASSERT_EQ(tm.tm_mday, 5);
+    ASSERT_EQ(tm.tm_hour, 0);
+    ASSERT_EQ(tm.tm_min, 0);
+    ASSERT_EQ(tm.tm_sec, 0);
+}
+
+TEST(visitor_test, should_parse_utc_time)
+{
+    const char* str = "14:09:30";
+    auto time = Fixpp::details::LexicalCast<Fixpp::Type::UTCTimeOnly>::cast(str, std::strlen(str));
+
+    auto t = time.time();
+    std::tm tm{};
+    gmtime_r(&t, &tm);
+
+    ASSERT_EQ(tm.tm_hour, 14);
+    ASSERT_EQ(tm.tm_min, 9);
+    ASSERT_EQ(tm.tm_sec, 30);
+
+    ASSERT_EQ(time.msec().has_value(), false);
+    ASSERT_EQ(time.usec().has_value(), false);
+}
+
+TEST(visitor_test, should_parse_utc_time_with_milliseconds)
+{
+    const char* str = "14:09:30.125";
+    auto time = Fixpp::details::LexicalCast<Fixpp::Type::UTCTimeOnly>::cast(str, std::strlen(str));
+
+    auto t = time.time();
+    std::tm tm{};
+    gmtime_r(&t, &tm);
+
+    ASSERT_EQ(tm.tm_hour, 14);
+    ASSERT_EQ(tm.tm_min, 9);
+    ASSERT_EQ(tm.tm_sec, 30);
+
+    ASSERT_EQ(time.msec().value(), 125);
+    ASSERT_EQ(time.usec().has_value(), false);
+}
+
+TEST(visitor_test, should_parse_utc_time_with_microseconds)
+{
+    const char* str = "14:09:30.125456";
+    auto time = Fixpp::details::LexicalCast<Fixpp::Type::UTCTimeOnly>::cast(str, std::strlen(str));
+
+    auto t = time.time();
+    std::tm tm{};
+    gmtime_r(&t, &tm);
+
+    ASSERT_EQ(tm.tm_hour, 14);
+    ASSERT_EQ(tm.tm_min, 9);
+    ASSERT_EQ(tm.tm_sec, 30);
+
+    ASSERT_EQ(time.msec().value(), 125);
+    ASSERT_EQ(time.usec().value(), 456);
+}
+
 TEST(visitor_test, should_parse_utc_timestamp)
+{
+    const char* str = "20171105-14:09:30";
+    auto time = Fixpp::details::LexicalCast<Fixpp::Type::UTCTimestamp>::cast(str, std::strlen(str));
+
+    auto t = time.time();
+    std::tm tm{};
+    gmtime_r(&t, &tm);
+
+    ASSERT_EQ(tm.tm_year, 117);
+    ASSERT_EQ(tm.tm_mon, 10);
+    ASSERT_EQ(tm.tm_mday, 5);
+    ASSERT_EQ(tm.tm_hour, 14);
+    ASSERT_EQ(tm.tm_min, 9);
+    ASSERT_EQ(tm.tm_sec, 30);
+
+    ASSERT_EQ(time.msec().has_value(), false);
+    ASSERT_EQ(time.usec().has_value(), false);
+}
+
+TEST(visitor_test, should_parse_utc_timestamp_with_milliseconds)
 {
     const char* str = "20171105-14:09:30.125";
     auto time = Fixpp::details::LexicalCast<Fixpp::Type::UTCTimestamp>::cast(str, std::strlen(str));
 
-    auto tm = time.tm();
-    auto& tm_tm = tm.tm_tm;
+    auto t = time.time();
+    std::tm tm{};
+    gmtime_r(&t, &tm);
 
-    ASSERT_EQ(tm_tm.tm_year, 117);
-    ASSERT_EQ(tm_tm.tm_mon, 10);
-    ASSERT_EQ(tm_tm.tm_mday, 5);
-    ASSERT_EQ(tm_tm.tm_hour, 14);
-    ASSERT_EQ(tm_tm.tm_min, 9);
-    ASSERT_EQ(tm_tm.tm_sec, 30);
-    ASSERT_EQ(tm.tm_msec, 125);
+    ASSERT_EQ(tm.tm_year, 117);
+    ASSERT_EQ(tm.tm_mon, 10);
+    ASSERT_EQ(tm.tm_mday, 5);
+    ASSERT_EQ(tm.tm_hour, 14);
+    ASSERT_EQ(tm.tm_min, 9);
+    ASSERT_EQ(tm.tm_sec, 30);
 
-    auto epoch = time.time();
-    auto tm2 = gmtime(&epoch);
+    ASSERT_EQ(time.msec().value(), 125);
+    ASSERT_EQ(time.usec().has_value(), false);
+}
 
-    ASSERT_EQ(tm2->tm_year, tm_tm.tm_year);
-    ASSERT_EQ(tm2->tm_mon, tm_tm.tm_mon);
-    ASSERT_EQ(tm2->tm_mday, tm_tm.tm_mday);
-    ASSERT_EQ(tm2->tm_hour, tm_tm.tm_hour);
-    ASSERT_EQ(tm2->tm_min, tm_tm.tm_min);
-    ASSERT_EQ(tm2->tm_sec, tm_tm.tm_sec);
+TEST(visitor_test, should_parse_utc_timestamp_with_microseconds)
+{
+    const char* str = "20171105-14:09:30.125456";
+    auto time = Fixpp::details::LexicalCast<Fixpp::Type::UTCTimestamp>::cast(str, std::strlen(str));
+
+    auto t = time.time();
+    std::tm tm{};
+    gmtime_r(&t, &tm);
+
+    ASSERT_EQ(tm.tm_year, 117);
+    ASSERT_EQ(tm.tm_mon, 10);
+    ASSERT_EQ(tm.tm_mday, 5);
+    ASSERT_EQ(tm.tm_hour, 14);
+    ASSERT_EQ(tm.tm_min, 9);
+    ASSERT_EQ(tm.tm_sec, 30);
+
+    ASSERT_EQ(time.msec().value(), 125);
+    ASSERT_EQ(time.usec().value(), 456);
 }
 
 TEST(visitor_test, should_visit_logon_frame)

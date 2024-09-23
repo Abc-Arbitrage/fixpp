@@ -6,11 +6,11 @@
 
 #pragma once
 
-#include <string>
 #include <cstring>
-#include <iostream>
 #include <ctime>
-#include <tuple>
+#include <iostream>
+#include <optional>
+#include <string>
 
 namespace Fixpp
 {
@@ -124,54 +124,16 @@ namespace Fixpp
 
         struct UTCTimestamp
         {
-            struct Tm
-            {
-                Tm(int msec = 0, int usec = 0)
-                    : m_msec(msec)
-                    , m_usec(usec)
-                { }
-
-                Tm(const std::tm& tm, int msec = 0, int usec = 0)
-                    : m_tm(tm)
-                    , m_msec(msec)
-                    , m_usec(usec)
-                { }
-
-                std::tm tm() const
-                {
-                    return m_tm;
-                }
-
-                int msec() const
-                {
-                    return m_msec;
-                }
-
-                int usec() const
-                {
-                    return m_usec;
-                }
-                
-            private:
-                std::tm m_tm{};
-                int m_msec{};
-                int m_usec;
-            };
-
             struct Time
             {
                 Time()
                     : m_time(std::time(nullptr))
                 { }
 
-                Time(std::time_t time, int msec = 0, int usec = 0)
+                Time(std::time_t time, std::optional<int> msec = {}, std::optional<int> usec = {})
                     : m_time(time)
-                    , m_tm(msec, usec)
-                { }
-
-                Time(const std::tm& tm, int msec, int usec = 0, std::time_t time = 0)
-                    : m_time(time)
-                    , m_tm(tm, msec, usec)
+                    , m_msec(msec)
+                    , m_usec(usec)
                 { }
 
                 std::time_t time() const
@@ -179,14 +141,20 @@ namespace Fixpp
                     return m_time;
                 }
 
-                Tm tm() const
+                std::optional<int> msec() const
                 {
-                    return m_tm;
+                    return m_msec;
+                }
+
+                std::optional<int> usec() const
+                {
+                    return m_usec;
                 }
 
             private:
                 std::time_t m_time;
-                Tm m_tm;
+                std::optional<int> m_msec;
+                std::optional<int> m_usec;
             };
 
             using StorageType = Time;
@@ -204,9 +172,8 @@ namespace Fixpp
                     : m_time(std::time(nullptr))
                 { }
 
-                Date(const std::tm& tm, std::time_t time)
+                Date(std::time_t time)
                     : m_time(time)
-                    , m_tm(tm)
                 { }
 
                 std::time_t time() const
@@ -214,14 +181,8 @@ namespace Fixpp
                     return m_time;
                 }
 
-                std::tm tm() const
-                {
-                    return m_tm;
-                }
-
             private:
                 std::time_t m_time;
-                std::tm m_tm{};
             };
 
             using StorageType = Date;
@@ -238,7 +199,7 @@ namespace Fixpp
                     : m_time(std::time(nullptr))
                 { }
 
-                Time(std::time_t time, int msec = 0, int usec = 0)
+                Time(std::time_t time, std::optional<int> msec = {}, std::optional<int> usec = {})
                     : m_time(time)
                     , m_msec(msec)
                     , m_usec(usec)
@@ -249,20 +210,20 @@ namespace Fixpp
                     return m_time;
                 }
 
-                int msec() const
+                std::optional<int> msec() const
                 {
                     return m_msec;
                 }
 
-                int usec() const
+                std::optional<int> usec() const
                 {
                     return m_usec;
                 }
 
             private:
                 std::time_t m_time;
-                int m_msec{};
-                int m_usec{};
+                std::optional<int> m_msec;
+                std::optional<int> m_usec;
             };
 
             using StorageType = Time;
@@ -275,17 +236,17 @@ namespace Fixpp
         {
             auto time = value.time();
             char buffer[32];
-            strftime(buffer, sizeof buffer, "%Y%m%d-%H:%M:%S", std::gmtime(&time)); 
+            strftime(buffer, sizeof buffer, "%Y%m%d-%H:%M:%S", std::gmtime(&time));
             os << buffer;
-            if (value.tm().msec())
+            if (value.msec())
             {
-                sprintf(buffer, ".%03d", value.tm().msec());
+                sprintf(buffer, ".%03d", value.msec().value());
                 os << buffer;
-            }
-            if (value.tm().usec())
-            {
-                sprintf(buffer, "%03d", value.tm().usec());
-                os << buffer;
+                if (value.usec())
+                {
+                    sprintf(buffer, "%03d", value.usec().value());
+                    os << buffer;
+                }
             }
             return os;
         }
@@ -294,7 +255,7 @@ namespace Fixpp
         {
             auto time = value.time();
             char buffer[32];
-            strftime(buffer, sizeof buffer, "%Y%m%d", std::gmtime(&time)); 
+            strftime(buffer, sizeof buffer, "%Y%m%d", std::gmtime(&time));
             return os << buffer;
         }
 
@@ -302,17 +263,17 @@ namespace Fixpp
         {
             auto time = value.time();
             char buffer[32];
-            strftime(buffer, sizeof buffer, "%H:%M:%S", std::gmtime(&time)); 
+            strftime(buffer, sizeof buffer, "%H:%M:%S", std::gmtime(&time));
             os << buffer;
             if (value.msec())
             {
-                sprintf(buffer, ".%03d", value.msec());
+                sprintf(buffer, ".%03d", value.msec().value());
                 os << buffer;
-            }
-            if (value.usec())
-            {
-                sprintf(buffer, "%03d", value.usec());
-                os << buffer;
+                if (value.usec())
+                {
+                    sprintf(buffer, "%03d", value.usec().value());
+                    os << buffer;
+                }
             }
             return os;
         }

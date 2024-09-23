@@ -132,13 +132,57 @@ TEST(writer_test, should_write_utc_timestamp_field)
     tm.tm_min = 45;
     tm.tm_sec = 30;
 
-    auto epoch = mkgmtime(&tm);
-    field.set(epoch);
+    auto ts = mkgmtime(&tm);
+    field.set(ts);
 
     std::ostringstream oss;
     writeField(oss, field);
 
     ASSERT_EQ(oss.str(), "52=20170516-13:45:30|");
+}
+
+TEST(writer_test, should_write_utc_timestamp_field_with_milliseconds)
+{
+    using Field = Fixpp::Field<Fixpp::Tag::SendingTime>;
+    Field field;
+
+    std::tm tm{};
+    tm.tm_year = 117;
+    tm.tm_mon = 4;
+    tm.tm_mday = 16;
+    tm.tm_hour = 13;
+    tm.tm_min = 45;
+    tm.tm_sec = 30;
+
+    auto ts = mkgmtime(&tm);
+    field.set(Fixpp::Type::UTCTimestamp::Time{ts, 123});
+
+    std::ostringstream oss;
+    writeField(oss, field);
+
+    ASSERT_EQ(oss.str(), "52=20170516-13:45:30.123|");
+}
+
+TEST(writer_test, should_write_utc_timestamp_field_with_microseconds)
+{
+    using Field = Fixpp::Field<Fixpp::Tag::SendingTime>;
+    Field field;
+
+    std::tm tm{};
+    tm.tm_year = 117;
+    tm.tm_mon = 4;
+    tm.tm_mday = 16;
+    tm.tm_hour = 13;
+    tm.tm_min = 45;
+    tm.tm_sec = 30;
+
+    auto ts = mkgmtime(&tm);
+    field.set(Fixpp::Type::UTCTimestamp::Time{ts, 123, 456});
+
+    std::ostringstream oss;
+    writeField(oss, field);
+
+    ASSERT_EQ(oss.str(), "52=20170516-13:45:30.123456|");
 }
 
 TEST(writer_test, should_write_int_field)
@@ -259,7 +303,7 @@ TEST(writer_test, should_write_nested_repeating_groups)
     entryDateTm.tm_year = 117; // 2017
     entryDateTm.tm_mon = 4;    // May
     entryDateTm.tm_mday = 16;
-    Fixpp::Type::UTCDate::Date entryDate{entryDateTm, mkgmtime(&entryDateTm)};
+    Fixpp::Type::UTCDate::Date entryDate{mkgmtime(&entryDateTm)};
 
     std::tm entryTimeTm{};
     entryTimeTm.tm_hour = 15;

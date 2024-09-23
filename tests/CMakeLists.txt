@@ -24,7 +24,7 @@ fixpp_test(visitor_test)
 fixpp_test(writer_test)
 
 add_executable(run_bench_test bench_test.cc)
-configure_file(${CMAKE_SOURCE_DIR}/tests/data/fix42.log ${CMAKE_CURRENT_BINARY_DIR}/data/fix42.log COPYONLY)
+# configure_file(${CMAKE_SOURCE_DIR}/tests/data/fix42.log ${CMAKE_CURRENT_BINARY_DIR}/data/fix42.log COPYONLY)
 
 fixpp_bench(serialize_bench)
 fixpp_bench(visit_bench)

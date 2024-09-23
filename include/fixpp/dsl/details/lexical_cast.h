@@ -150,7 +150,7 @@ namespace Fixpp
 
                 const int sec = parseFragment(2, "Could not parse seconds from UTCTimestamp");
 
-                int msec = 0;
+                std::optional<int> msec;
                 if (!cursor.eof())
                 {
                     // Literal('.')
@@ -158,7 +158,7 @@ namespace Fixpp
                     msec = parseFragment(3, "Could not parse milliseconds from UTCTimestamp");
                 }
 
-                int usec = 0;
+                std::optional<int> usec;
                 if (!cursor.eof())
                 {
                     usec = parseFragment(3, "Could not parse microseconds from UTCTimeOnly");
@@ -174,7 +174,7 @@ namespace Fixpp
                 tm.tm_min = min;
                 tm.tm_sec = sec;
 
-                return {tm, msec, usec, mkgmtime(&tm)};
+                return {mkgmtime(&tm), msec, usec};
             }
         };
 
@@ -205,7 +205,7 @@ namespace Fixpp
                 tm.tm_mon = month - 1;
                 tm.tm_mday = day;
 
-                return {tm, mkgmtime(&tm)};
+                return {mkgmtime(&tm)};
             }
         };
 
@@ -239,7 +239,7 @@ namespace Fixpp
 
                 const int sec = parseFragment(2, "Could not parse seconds from UTCTimeOnly");
 
-                int msec = 0;
+                std::optional<int> msec;
                 if (!cursor.eof())
                 {
                     // Literal('.')
@@ -247,7 +247,7 @@ namespace Fixpp
                     msec = parseFragment(3, "Could not parse milliseconds from UTCTimeOnly");
                 }
 
-                int usec = 0;
+                std::optional<int> usec;
                 if (!cursor.eof())
                 {
                     usec = parseFragment(3, "Could not parse microseconds from UTCTimeOnly");
