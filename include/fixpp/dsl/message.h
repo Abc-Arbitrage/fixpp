@@ -6,9 +6,10 @@
 
 #pragma once
 
+#include <bitset>
+#include <optional>
 #include <tuple>
 #include <unordered_map>
-#include <bitset>
 
 #include <fixpp/view.h>
 #include <fixpp/dsl/details/chars.h>
@@ -358,7 +359,7 @@ namespace Fixpp
     }
 
     template<typename Tag, typename Message>
-    bool
+    bool 
     tryGet(const Message& message, typename Tag::Type::UnderlyingType& value)
     {
         using Index = details::TagIndex<typename Message::TagsList, Tag>;
@@ -372,6 +373,31 @@ namespace Fixpp
     }
 
     template<typename Tag, typename Message>
+    std::optional< typename Tag::Type::UnderlyingType >
+    tryGet(const Message& message)
+    {
+        using Index = details::TagIndex<typename Message::TagsList, Tag>;
+        static_assert(Index::Valid, "Invalid tag for given message");
+
+        if (!message.allBits.test(static_cast<size_t>(Index::Value)))
+            return {};
+
+        return meta::get<Index::Value>(message.values).get();
+    }
+
+    template<typename Tag, typename Message>
+    typename std::enable_if_t<IsTagDefinedV< Tag, Message >, std::optional< typename Tag::Type::UnderlyingType >>
+    tryUnsafeGet(const Message& message)
+    {
+        using Index = details::TagIndex<typename Message::TagsList, Tag>;
+
+        if (!message.allBits.test(static_cast<size_t>(Index::Value)))
+            return {};
+
+        return meta::get<Index::Value>(message.values).get();
+    }
+
+    template<typename Tag, typename Message>
     typename std::enable_if_t<IsTagDefinedV< Tag, Message >, bool>
     tryUnsafeGet(const Message& message, typename Tag::Type::UnderlyingType& value)
     {
@@ -382,6 +408,13 @@ namespace Fixpp
 
         value = meta::get<Index::Value>(message.values).get();
         return true;
+    }
+
+    template<typename Tag, typename Message>
+    typename std::enable_if_t<!IsTagDefinedV< Tag, Message >, std::optional< typename Tag::Type::UnderlyingType >>
+    tryUnsafeGet(const Message&)
+    {
+        return {};
     }
 
     template<typename Tag, typename Message>
